@@ -2,7 +2,7 @@ package global
 
 import (
 	"github.com/go-echarts/go-echarts/charts"
-	"github.com/yuanyangen/trader1024/engine/model"
+	"github.com/yuanyangen/trader1024/engine/indicator"
 	"github.com/yuanyangen/trader1024/engine/utils"
 )
 
@@ -26,7 +26,7 @@ func (cw *CashIndicator) DoPlot(p *charts.Page) {
 	p.Add(line)
 }
 
-func (cw *CashIndicator) AddData(ctx *model.GlobalMsg) {
+func (cw *CashIndicator) AddData(ctx *indicator.GlobalMsg) {
 	ts := ctx.TimeStamp
 	t := utils.TsToString(ts)
 	cw.x = append(cw.x, t)

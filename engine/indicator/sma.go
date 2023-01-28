@@ -1,27 +1,24 @@
-package market
+package indicator
 
 import (
 	"fmt"
 	"github.com/go-echarts/go-echarts/charts"
-	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/utils"
 )
 
 type SimpleMovingAverageIndicator struct {
 	kline   *KLineIndicator
-	smaLine *model.Line
+	smaLine *Line
 	period  int64
 }
 
-func NewSMAIndicator(kline *model.KLineIndicator, period int64) *SimpleMovingAverageIndicator {
+func NewSMAIndicator(kline *KLineIndicator, period int64) *SimpleMovingAverageIndicator {
 	sma := &SimpleMovingAverageIndicator{
 		period:  period,
-		smaLine: model.NewLine(kline.Type, fmt.Sprintf("sma_%v", period)),
+		smaLine: NewLine(kline.Type, fmt.Sprintf("sma_%v", period)),
+		kline:   kline,
 	}
-	var tmp any
-	tmp = kline
-	k := tmp.(KLineIndicator)
-	k.AddIndicatorLine(sma)
+	kline.AddIndicatorLine(sma)
 	return sma
 }
 
@@ -52,20 +49,12 @@ func (sma *SimpleMovingAverageIndicator) GetCurrentValue(ts int64) float64 {
 	if sma.period == 0 {
 		panic("period empty")
 	}
-	data, err := sma.kline.GetByTsAndCount(ts, sma.period)
-	avg := 0.0
+	data, err := sma.smaLine.GetByTs(ts)
 	if err != nil {
 		return 0
 	} else {
-		sum := 0.0
-		for _, node := range data {
-			sum += node.Close
-		}
-		avg = sum / float64(sma.period)
-		sma.smaLine.AddData(ts, avg)
+		return data.Value
 	}
-
-	return avg
 }
 
 func (sma *SimpleMovingAverageIndicator) DoPlot(kline *charts.Kline) {
@@ -77,7 +66,7 @@ func (sma *SimpleMovingAverageIndicator) DoPlot(kline *charts.Kline) {
 		y[i] = v.Value
 	}
 	line := charts.NewLine()
-	line.SetGlobalOptions(charts.TitleOpts{Title: "现金"})
-	line.AddXAxis(x).AddYAxis(sma.Name(), y)
+	line.SetGlobalOptions(charts.TitleOpts{Title: sma.Name()})
+	line.AddXAxis(x).AddYAxis(sma.Name(), y, charts.LineOpts{Smooth: true})
 	kline.Overlap(line)
 }

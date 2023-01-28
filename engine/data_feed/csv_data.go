@@ -1,7 +1,7 @@
 package data_feed
 
 import (
-	"github.com/yuanyangen/trader1024/engine/model"
+	"github.com/yuanyangen/trader1024/engine/indicator"
 	"github.com/yuanyangen/trader1024/engine/utils"
 	"os"
 	"strconv"
@@ -30,8 +30,8 @@ var DefaultCsvFieldIndex = []CsvFieldIndex{
 	CsvFieldIndex_High,
 	CsvFieldIndex_Low,
 }
-var csvFieldHandler = map[CsvFieldIndex]func(*CsvKLineDataFeed, *model.KNode, string){
-	CsvFieldIndex_Date: func(ckdf *CsvKLineDataFeed, node *model.KNode, value string) {
+var csvFieldHandler = map[CsvFieldIndex]func(*CsvKLineDataFeed, *indicator.KNode, string){
+	CsvFieldIndex_Date: func(ckdf *CsvKLineDataFeed, node *indicator.KNode, value string) {
 		t, err := time.Parse(ckdf.option.DateFormate, value)
 		if err != nil {
 			panic("time format error")
@@ -39,28 +39,28 @@ var csvFieldHandler = map[CsvFieldIndex]func(*CsvKLineDataFeed, *model.KNode, st
 		node.Date = value
 		node.TimeStamp = t.Unix()
 	},
-	CsvFieldIndex_Open: func(feed *CsvKLineDataFeed, node *model.KNode, s string) {
+	CsvFieldIndex_Open: func(feed *CsvKLineDataFeed, node *indicator.KNode, s string) {
 		v, err := strconv.ParseFloat(s, 64)
 		if err != nil {
 			panic("open data error" + s)
 		}
 		node.Open = v
 	},
-	CsvFieldIndex_Close: func(feed *CsvKLineDataFeed, node *model.KNode, s string) {
+	CsvFieldIndex_Close: func(feed *CsvKLineDataFeed, node *indicator.KNode, s string) {
 		v, err := strconv.ParseFloat(s, 64)
 		if err != nil {
 			panic("close data error" + s)
 		}
 		node.Close = v
 	},
-	CsvFieldIndex_High: func(feed *CsvKLineDataFeed, node *model.KNode, s string) {
+	CsvFieldIndex_High: func(feed *CsvKLineDataFeed, node *indicator.KNode, s string) {
 		v, err := strconv.ParseFloat(s, 64)
 		if err != nil {
 			panic("high data error" + s)
 		}
 		node.High = v
 	},
-	CsvFieldIndex_Low: func(feed *CsvKLineDataFeed, node *model.KNode, s string) {
+	CsvFieldIndex_Low: func(feed *CsvKLineDataFeed, node *indicator.KNode, s string) {
 		v, err := strconv.ParseFloat(s, 64)
 		if err != nil {
 			panic("low data error" + s)
@@ -103,8 +103,8 @@ func NewCsvKLineDataFeed(fileName string, options ...Option) *CsvKLineDataFeed {
 	return cdf
 }
 
-func (ckdf *CsvKLineDataFeed) StartFeed() chan *model.Data {
-	respChan := make(chan *model.Data, 1024)
+func (ckdf *CsvKLineDataFeed) StartFeed() chan *indicator.Data {
+	respChan := make(chan *indicator.Data, 1024)
 	utils.AsyncRun(func() {
 		content, err := os.ReadFile(ckdf.fileAddr)
 		if err != nil {
@@ -120,10 +120,10 @@ func (ckdf *CsvKLineDataFeed) StartFeed() chan *model.Data {
 			if len(tmp2) != len(ckdf.option.index) {
 				panic("csv data type error")
 			}
-			data := &model.Data{
-				DataType: model.DataTypeKLine,
+			data := &indicator.Data{
+				DataType: indicator.DataTypeKLine,
 			}
-			node := &model.KNode{}
+			node := &indicator.KNode{}
 			for i, v := range tmp2 {
 				v := strings.TrimSpace(v)
 				fieldName := ckdf.option.index[i]

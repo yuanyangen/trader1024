@@ -2,29 +2,29 @@ package engine
 
 import (
 	"github.com/go-echarts/go-echarts/charts"
-	"github.com/yuanyangen/trader1024/engine/indicator/market"
+	"github.com/yuanyangen/trader1024/engine/indicator"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/utils"
 )
 
 type Market struct {
 	Name       string
-	DailyData  *model.DailyData
+	DailyData  *indicator.DailyData
 	Broker     model.Broker
 	Account    *model.Account
-	Strategys  []model.Strategy
-	globalChan chan *model.GlobalMsg
+	Strategies []model.Strategy
+	globalChan chan *indicator.GlobalMsg
 }
 
-func NewMarket(name string, df model.DataFeed, strategy []model.Strategy) *Market {
+func NewMarket(name string, df indicator.DataFeed, strategy []model.Strategy) *Market {
 	ed := &Market{
 		Name: name,
-		DailyData: &model.DailyData{
+		DailyData: &indicator.DailyData{
 			DataFeed:       df,
-			Line:           market.NewKLine(model.LineType_Day),
-			ReceiveChannel: make(chan *model.Data, 1024),
+			Line:           indicator.NewKLine(indicator.LineType_Day),
+			ReceiveChannel: make(chan *indicator.Data, 1024),
 		},
-		Strategys: strategy,
+		Strategies: strategy,
 	}
 	if ed.DailyData != nil && ed.DailyData.ReceiveChannel != nil {
 		df.RegisterChan(ed.DailyData.ReceiveChannel)
@@ -34,21 +34,21 @@ func NewMarket(name string, df model.DataFeed, strategy []model.Strategy) *Marke
 
 func (m *Market) Start() {
 	m.startDataFeed()
+	m.initStrategy()
 	m.startOnBarLoop()
 }
 
 func (m *Market) DoPlot(p *charts.Page) {
 	kline := m.plotKline()
-	p.Add(kline)
-	if m.DailyData != nil {
-		for _, w := range m.DailyData.Indicators {
+	if m.DailyData != nil && m.DailyData.Line != nil {
+		for _, w := range m.DailyData.Line.Indicators {
 			w.DoPlot(kline)
 		}
 	}
-
+	p.Add(kline)
 }
 
-func (m *Market) getKline() *market.KLineIndicator {
+func (m *Market) getKline() *indicator.KLineIndicator {
 	return m.DailyData.Line
 }
 
@@ -60,17 +60,17 @@ func (m *Market) startOnBarLoop() {
 	})
 }
 
-func (m *Market) eventHandler(data *model.Data) {
+func (m *Market) eventHandler(data *indicator.Data) {
 	ctx := &model.MarketStrategyContext{
 		DailyData: m.DailyData,
 		Broker:    m.Broker,
 		Account:   m.Account,
 	}
-	for _, st := range m.Strategys {
-		st.OnBar(ctx)
+	for _, st := range m.Strategies {
+		st.OnBar(ctx, data.KData.TimeStamp)
 	}
 	if m.globalChan != nil {
-		msg := &model.GlobalMsg{}
+		msg := &indicator.GlobalMsg{}
 		m.globalChan <- msg
 	}
 }
@@ -81,8 +81,17 @@ func (m *Market) startDataFeed() {
 	}
 }
 
-func (m *Market) startOneDataFeed(df model.DataFeed) {
-	ch := make(chan *model.Data, 1024)
+func (m *Market) initStrategy() {
+	if m.Strategies != nil {
+		for _, strategy := range m.Strategies {
+			ctx := &model.MarketStrategyContext{DailyData: m.DailyData}
+			strategy.Init(ctx)
+		}
+	}
+}
+
+func (m *Market) startOneDataFeed(df indicator.DataFeed) {
+	ch := make(chan *indicator.Data, 1024)
 	df.RegisterChan(ch)
 	utils.AsyncRun(func() {
 		for v := range ch {
@@ -108,7 +117,7 @@ func (m *Market) plotKline() *charts.Kline {
 	return kline
 }
 
-func (m *Market) convertData(kline *market.KLineIndicator) ([]string, [][4]float32) {
+func (m *Market) convertData(kline *indicator.KLineIndicator) ([]string, [][4]float32) {
 	kDatas := kline.GetAllSortedData()
 	x := make([]string, len(kDatas))
 	y := make([][4]float32, len(kDatas))

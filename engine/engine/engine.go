@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"github.com/go-echarts/go-echarts/charts"
+	"github.com/yuanyangen/trader1024/engine/indicator"
 	"github.com/yuanyangen/trader1024/engine/indicator/global"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/utils"
@@ -13,17 +14,17 @@ type Engine struct {
 	Strategys      []model.Strategy
 	watcherBackend *WatcherBackend
 	Account        *model.Account
-	globalEvent    chan *model.GlobalMsg
-	globalWatchers []model.GlobalIndicator
+	globalEvent    chan *indicator.GlobalMsg
+	globalWatchers []indicator.GlobalIndicator
 }
 
 func NewEngine() *Engine {
 	e := &Engine{
 		Markets:     map[string]*Market{},
-		globalEvent: make(chan *model.GlobalMsg, 1024),
+		globalEvent: make(chan *indicator.GlobalMsg, 1024),
 	}
 	e.watcherBackend = NewPlotterServers(e)
-	e.globalWatchers = []model.GlobalIndicator{
+	e.globalWatchers = []indicator.GlobalIndicator{
 		global.NewCashIndicator(),
 	}
 	return e
@@ -37,7 +38,7 @@ func (ec *Engine) RegisterAccount(account *model.Account) {
 	ec.Account = account
 }
 
-func (ec *Engine) RegisterMarket(name string, df model.DataFeed) {
+func (ec *Engine) RegisterMarket(name string, df indicator.DataFeed) {
 	if len(ec.Strategys) == 0 {
 		panic("should register strategy first")
 	}

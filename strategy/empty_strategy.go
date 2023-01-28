@@ -11,6 +11,6 @@ func NewEmptyStrategy() *EmptyStrategy {
 	return &EmptyStrategy{}
 }
 
-func (es *EmptyStrategy) OnBar(ctx *model.MarketStrategyContext) {
+func (es *EmptyStrategy) OnBar(ctx *model.MarketStrategyContext, ts int64) {
 
 }

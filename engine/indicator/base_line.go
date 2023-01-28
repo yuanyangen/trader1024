@@ -1,4 +1,4 @@
-package model
+package indicator
 
 import (
 	"fmt"
@@ -13,33 +13,61 @@ type BaseLine struct {
 	data    map[int64]any
 }
 
-func (bl *BaseLine) UnityTimeStamp(ts int64) int64 {
-	offset := int64(0)
-	if bl.Type == LineType_Day {
-		offset = 86400
+func NewBaseLine(t LineType) *BaseLine {
+	bl := &BaseLine{
+		Type: t,
+		data: map[int64]any{},
 	}
+	return bl
+}
+func (bl *BaseLine) offset() int64 {
+	if bl.Type == LineType_Day {
+		return 86400
+	} else if bl.Type == LineType_Hour {
+		return 1440
+	} else if bl.Type == LineType_Minite {
+		return 60
+	}
+	panic("not support")
+}
+
+func (bl *BaseLine) UnityTimeStamp(ts int64) int64 {
+	offset := bl.offset()
 	ts = (ts / offset) * offset
 	return ts
 }
+func (bl *BaseLine) GetByTs(ts int64) (any, error) {
+	ts = bl.UnityTimeStamp(ts)
+	bl.Mu.Lock()
+	defer bl.Mu.Unlock()
+	node, ok := bl.data[ts]
+	if ok {
+		return node, nil
+	} else {
+		return nil, fmt.Errorf("no data for_%v", ts)
+	}
+}
 
 func (bl *BaseLine) GetByTsAndCount(ts int64, count int64) ([]any, error) {
-	var offset int64
-
+	offset := bl.offset()
 	ts = bl.UnityTimeStamp(ts)
 	resp := make([]any, count)
 	bl.Mu.Lock()
 	defer bl.Mu.Unlock()
-	for i := int64(0); i < count; i++ {
+	found := int64(0)
+	for i := int64(0); found < count; i++ {
 		timeK := ts - i*offset
+		if timeK < bl.StartTs {
+			return nil, fmt.Errorf("no enough data for %v", timeK)
+		}
+
 		node, ok := bl.data[timeK]
 		if ok {
-			resp[count-i-1] = node
-		} else {
-			return nil, fmt.Errorf("no data for %v", timeK)
+			resp[count-found-1] = node
+			found++
 		}
 	}
 	return resp, nil
-
 }
 
 func (bl *BaseLine) AddData(ts int64, node any) {
