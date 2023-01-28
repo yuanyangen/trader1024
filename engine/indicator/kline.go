@@ -1,6 +1,7 @@
 package indicator
 
 import (
+	"github.com/yuanyangen/trader1024/engine/data_feed"
 	"sort"
 )
 
@@ -16,20 +17,20 @@ func NewKLine(t LineType) *KLineIndicator {
 	}
 }
 
-func (k *KLineIndicator) GetByTsAndCount(ts int64, count int64) ([]*KNode, error) {
+func (k *KLineIndicator) GetByTsAndCount(ts int64, count int64) ([]*data_feed.KNode, error) {
 	res, err := k.BaseLine.GetByTsAndCount(ts, count)
 	if err != nil {
 		return nil, err
 	}
-	newRes := make([]*KNode, len(res))
+	newRes := make([]*data_feed.KNode, len(res))
 	for i, v := range res {
-		newRes[i] = v.(*KNode)
+		newRes[i] = v.(*data_feed.KNode)
 	}
 
 	return newRes, nil
 }
 
-func (k *KLineIndicator) AddData(ts int64, node *KNode) {
+func (k *KLineIndicator) AddData(ts int64, node *data_feed.KNode) {
 	k.BaseLine.AddData(ts, node)
 	for _, ind := range k.Indicators {
 		ind.AddData(ts, node)
@@ -41,11 +42,11 @@ func (k *KLineIndicator) AddIndicatorLine(line MarketIndicator) {
 	k.Indicators = append(k.Indicators, line)
 }
 
-func (k *KLineIndicator) GetAllSortedData() []*KNode {
+func (k *KLineIndicator) GetAllSortedData() []*data_feed.KNode {
 	oldRes := k.BaseLine.GetAllSortedData()
-	res := make([]*KNode, len(oldRes))
+	res := make([]*data_feed.KNode, len(oldRes))
 	for i, v := range oldRes {
-		res[i] = v.(*KNode)
+		res[i] = v.(*data_feed.KNode)
 	}
 
 	sort.Slice(res, func(i, j int) bool {

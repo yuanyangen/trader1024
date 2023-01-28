@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"github.com/go-echarts/go-echarts/charts"
+	"github.com/yuanyangen/trader1024/engine/data_feed"
 	"github.com/yuanyangen/trader1024/engine/indicator"
 	"github.com/yuanyangen/trader1024/engine/indicator/global"
 	"github.com/yuanyangen/trader1024/engine/model"
@@ -38,7 +39,7 @@ func (ec *Engine) RegisterAccount(account *model.Account) {
 	ec.Account = account
 }
 
-func (ec *Engine) RegisterMarket(name string, df indicator.DataFeed) {
+func (ec *Engine) RegisterMarket(name string, df data_feed.DataFeed) {
 	if len(ec.Strategys) == 0 {
 		panic("should register strategy first")
 	}

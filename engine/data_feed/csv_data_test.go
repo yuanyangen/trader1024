@@ -1,7 +1,6 @@
 package data_feed
 
 import (
-	"github.com/yuanyangen/trader1024/engine/indicator"
 	"testing"
 	"time"
 )
@@ -9,7 +8,7 @@ import (
 func TestCsvKLineDataFeed(t *testing.T) {
 	df := NewCsvKLineDataFeed("/home/yuanyangen/HomeData/go/trader1024/datas/datas/daily/IC主力合约.csv")
 
-	outChannel := make(chan *indicator.Data, 10)
+	outChannel := make(chan *Data, 10)
 	df.RegisterChan(outChannel)
 	df.StartFeed()
 

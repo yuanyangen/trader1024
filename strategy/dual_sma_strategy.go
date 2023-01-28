@@ -21,7 +21,7 @@ func (es *DualSMAStrategy) Indicators() []indicator.MarketIndicator {
 }
 
 func (es *DualSMAStrategy) Init(ec *model.MarketStrategyContext) {
-	es.slowSMA = indicator.NewSMAIndicator(ec.DailyData.Line, 10)
+	es.slowSMA = indicator.NewSMAIndicator(ec.DailyData.Line, 20)
 	es.fastSMA = indicator.NewSMAIndicator(ec.DailyData.Line, 5)
 }
 

@@ -35,8 +35,8 @@ func (sma *SimpleMovingAverageIndicator) AddData(ts int64, node any) {
 			sum += node.Close
 		}
 		avg = sum / float64(sma.period)
-		sma.smaLine.AddData(ts, avg)
 	}
+	sma.smaLine.AddData(ts, avg)
 }
 func (sma *SimpleMovingAverageIndicator) GetAllSortedData() []any {
 	return nil
@@ -67,6 +67,6 @@ func (sma *SimpleMovingAverageIndicator) DoPlot(kline *charts.Kline) {
 	}
 	line := charts.NewLine()
 	line.SetGlobalOptions(charts.TitleOpts{Title: sma.Name()})
-	line.AddXAxis(x).AddYAxis(sma.Name(), y, charts.LineOpts{Smooth: true})
+	line.AddXAxis(x).AddYAxis(sma.Name(), y, charts.LineOpts{Smooth: true, ConnectNulls: true})
 	kline.Overlap(line)
 }

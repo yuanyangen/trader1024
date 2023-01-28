@@ -2,6 +2,7 @@ package engine
 
 import (
 	"github.com/go-echarts/go-echarts/charts"
+	"github.com/yuanyangen/trader1024/engine/data_feed"
 	"github.com/yuanyangen/trader1024/engine/indicator"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/utils"
@@ -16,13 +17,13 @@ type Market struct {
 	globalChan chan *indicator.GlobalMsg
 }
 
-func NewMarket(name string, df indicator.DataFeed, strategy []model.Strategy) *Market {
+func NewMarket(name string, df data_feed.DataFeed, strategy []model.Strategy) *Market {
 	ed := &Market{
 		Name: name,
 		DailyData: &indicator.DailyData{
 			DataFeed:       df,
 			Line:           indicator.NewKLine(indicator.LineType_Day),
-			ReceiveChannel: make(chan *indicator.Data, 1024),
+			ReceiveChannel: make(chan *data_feed.Data, 1024),
 		},
 		Strategies: strategy,
 	}
@@ -60,7 +61,7 @@ func (m *Market) startOnBarLoop() {
 	})
 }
 
-func (m *Market) eventHandler(data *indicator.Data) {
+func (m *Market) eventHandler(data *data_feed.Data) {
 	ctx := &model.MarketStrategyContext{
 		DailyData: m.DailyData,
 		Broker:    m.Broker,
@@ -90,8 +91,8 @@ func (m *Market) initStrategy() {
 	}
 }
 
-func (m *Market) startOneDataFeed(df indicator.DataFeed) {
-	ch := make(chan *indicator.Data, 1024)
+func (m *Market) startOneDataFeed(df data_feed.DataFeed) {
+	ch := make(chan *data_feed.Data, 1024)
 	df.RegisterChan(ch)
 	utils.AsyncRun(func() {
 		for v := range ch {
