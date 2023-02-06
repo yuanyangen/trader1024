@@ -13,14 +13,8 @@ type MarketIndicator interface {
 	DoPlot(page *charts.Kline)
 }
 
-type GlobalIndicator interface {
-	AddData(ctx *GlobalMsg)
-	DoPlot(page *charts.Page)
-}
-
-type DailyData struct {
+type DailyIndicators struct {
 	Line           *KLineIndicator
-	DataFeed       data_feed.DataFeed
 	ReceiveChannel chan *data_feed.Data
 	Indicators     []MarketIndicator
 }

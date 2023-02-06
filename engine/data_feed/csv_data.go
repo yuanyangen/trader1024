@@ -1,6 +1,7 @@
 package data_feed
 
 import (
+	"github.com/yuanyangen/trader1024/engine/event"
 	"github.com/yuanyangen/trader1024/engine/utils"
 	"os"
 	"strconv"
@@ -12,6 +13,7 @@ type CsvKLineDataFeed struct {
 	*BaseDataFeed
 	fileAddr string
 	option   *CsvDataFeedOption
+	csvData  map[int64]*KNode
 }
 
 type CsvFieldIndex string
@@ -31,7 +33,7 @@ var DefaultCsvFieldIndex = []CsvFieldIndex{
 }
 var csvFieldHandler = map[CsvFieldIndex]func(*CsvKLineDataFeed, *KNode, string){
 	CsvFieldIndex_Date: func(ckdf *CsvKLineDataFeed, node *KNode, value string) {
-		t, err := time.Parse(ckdf.option.DateFormate, value)
+		t, err := time.Parse(ckdf.option.DateFormat, value)
 		if err != nil {
 			panic("time format error")
 		}
@@ -73,8 +75,8 @@ type Option func(*CsvDataFeedOption)
 type CsvDataFeedOption struct {
 	index []CsvFieldIndex
 
-	spliter     string
-	DateFormate string
+	splitter   string
+	DateFormat string
 }
 
 func WithCsvDataIndex(index []CsvFieldIndex) func(*CsvDataFeedOption) {
@@ -83,55 +85,80 @@ func WithCsvDataIndex(index []CsvFieldIndex) func(*CsvDataFeedOption) {
 	}
 }
 
-func NewCsvKLineDataFeed(fileName string, options ...Option) *CsvKLineDataFeed {
+func NewCsvKLineDataFeed(Name string, Type DataType, fileName string, options ...Option) *CsvKLineDataFeed {
 	option := &CsvDataFeedOption{
-		index:       DefaultCsvFieldIndex,
-		spliter:     ",",
-		DateFormate: "2006-01-02",
+		index:      DefaultCsvFieldIndex,
+		splitter:   ",",
+		DateFormat: "2006-01-02",
 	}
 	for _, o := range options {
 		o(option)
 	}
 
 	cdf := &CsvKLineDataFeed{
-		BaseDataFeed: &BaseDataFeed{},
-		fileAddr:     fileName,
-		option:       option,
+
+		BaseDataFeed: &BaseDataFeed{
+			eventTriggerChan: make(chan *event.EventMsg, 1024),
+			DataFeedMeta: &DataMeta{
+				Name:   Name,
+				Type:   Type,
+				Source: SourceType_CSV,
+			},
+		},
+		fileAddr: fileName,
+		option:   option,
+		csvData:  map[int64]*KNode{},
 	}
+	cdf.loadData()
+	cdf.startEventReceiver()
 
 	return cdf
 }
 
-func (ckdf *CsvKLineDataFeed) StartFeed() chan *Data {
+func (ckdf *CsvKLineDataFeed) startEventReceiver() chan *Data {
 	respChan := make(chan *Data, 1024)
+	if ckdf.eventTriggerChan == nil {
+		panic("event chan error")
+	}
 	utils.AsyncRun(func() {
-		content, err := os.ReadFile(ckdf.fileAddr)
-		if err != nil {
-			panic(err)
-			//return
-		}
-		tmp := strings.Split(string(content), "\n")
-		for i := 1; i < len(tmp); i++ {
-			if tmp[i] == "" {
-				continue
+		for event := range ckdf.eventTriggerChan {
+			ts := event.TimeStamp
+			data, ok := ckdf.csvData[utils.UnityDailyTimeStamp(ts)]
+			if ok {
+				node := &Data{
+					DataType: DataTypeKLine,
+					KData:    data,
+				}
+				ckdf.SendData(node)
 			}
-			tmp2 := strings.Split(tmp[i], ckdf.option.spliter)
-			if len(tmp2) != len(ckdf.option.index) {
-				panic("csv data type error")
-			}
-			data := &Data{
-				DataType: DataTypeKLine,
-			}
-			node := &KNode{}
-			for i, v := range tmp2 {
-				v := strings.TrimSpace(v)
-				fieldName := ckdf.option.index[i]
-				handler := csvFieldHandler[fieldName]
-				handler(ckdf, node, v)
-			}
-			data.KData = node
-			ckdf.SendData(data)
 		}
 	})
 	return respChan
+}
+
+func (ckdf *CsvKLineDataFeed) loadData() {
+	content, err := os.ReadFile(ckdf.fileAddr)
+	if err != nil {
+		panic(err)
+		//return
+	}
+	tmp := strings.Split(string(content), "\n")
+	for i := 1; i < len(tmp); i++ {
+		if tmp[i] == "" {
+			continue
+		}
+		tmp2 := strings.Split(tmp[i], ckdf.option.splitter)
+		if len(tmp2) != len(ckdf.option.index) {
+			panic("csv data type error")
+		}
+
+		node := &KNode{}
+		for i, v := range tmp2 {
+			v := strings.TrimSpace(v)
+			fieldName := ckdf.option.index[i]
+			handler := csvFieldHandler[fieldName]
+			handler(ckdf, node, v)
+		}
+		ckdf.csvData[utils.UnityDailyTimeStamp(node.TimeStamp)] = node
+	}
 }

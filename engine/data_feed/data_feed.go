@@ -2,6 +2,7 @@ package data_feed
 
 import (
 	"fmt"
+	"github.com/yuanyangen/trader1024/engine/event"
 )
 
 const DataTypeKLine DataType = 1
@@ -51,6 +52,6 @@ func NewDataMeta(name string, ty DataType, source SourceType) *DataMeta {
 
 type DataFeed interface {
 	GetMeta() *DataMeta
-	StartFeed() chan *Data // 每次data feed生成的数据, 比如一个时间点的k线中的一个点
 	RegisterChan(out chan *Data)
+	SetEventTrigger(et event.EventTrigger)
 }

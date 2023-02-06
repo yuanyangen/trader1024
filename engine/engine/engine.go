@@ -2,68 +2,77 @@ package engine
 
 import (
 	"fmt"
-	"github.com/go-echarts/go-echarts/charts"
+	"github.com/yuanyangen/trader1024/engine/account"
 	"github.com/yuanyangen/trader1024/engine/data_feed"
-	"github.com/yuanyangen/trader1024/engine/indicator"
-	"github.com/yuanyangen/trader1024/engine/indicator/global"
+	"github.com/yuanyangen/trader1024/engine/event"
 	"github.com/yuanyangen/trader1024/engine/model"
-	"github.com/yuanyangen/trader1024/engine/utils"
 )
 
 type Engine struct {
 	Markets        map[string]*Market
-	Strategys      []model.Strategy
+	EventTrigger   event.EventTrigger
+	strategies     []model.Strategy
 	watcherBackend *WatcherBackend
-	Account        *model.Account
-	globalEvent    chan *indicator.GlobalMsg
-	globalWatchers []indicator.GlobalIndicator
+	Account        *account.Account
 }
 
 func NewEngine() *Engine {
 	e := &Engine{
-		Markets:     map[string]*Market{},
-		globalEvent: make(chan *indicator.GlobalMsg, 1024),
+		Markets: map[string]*Market{},
 	}
 	e.watcherBackend = NewPlotterServers(e)
-	e.globalWatchers = []indicator.GlobalIndicator{
-		global.NewCashIndicator(),
-	}
 	return e
 }
 
-//func (ec *Engine) RegisterWatcher(df model.GlobalIndicator) {
-//	ec.Watchers = append(ec.Watchers, df)
-//}
-
-func (ec *Engine) RegisterAccount(account *model.Account) {
+func (ec *Engine) RegisterAccount(account *account.Account) {
 	ec.Account = account
+}
+func (ec *Engine) RegisterEventTrigger(e event.EventTrigger) {
+	ec.EventTrigger = e
 }
 
 func (ec *Engine) RegisterMarket(name string, df data_feed.DataFeed) {
-	if len(ec.Strategys) == 0 {
+	if len(ec.strategies) == 0 {
 		panic("should register strategy first")
 	}
-	m := NewMarket(name, df, ec.Strategys)
+	m := NewMarket(name, df, ec.strategies)
 	ec.Markets[name] = m
 }
 func (ec *Engine) RegisterStrategy(st model.Strategy) {
-	ec.Strategys = append(ec.Strategys, st)
+	ec.strategies = append(ec.strategies, st)
 }
 func (ec *Engine) Start() error {
 	if err := ec.checkEngine(); err != nil {
 		panic(err)
 	}
+
+	ec.connectComponent()
+	ec.doStart()
+	return nil
+}
+
+func (ec *Engine) doStart() {
+	ec.EventTrigger.Start()
+
 	for _, market := range ec.Markets {
 		market.Start()
 	}
-	ec.globalWatcherDataDaemon()
 	ec.watcherBackend.Start()
-	return nil
+}
+
+func (ec *Engine) connectComponent() {
+	for _, v := range ec.Markets {
+		v.DataFeed.SetEventTrigger(ec.EventTrigger)
+	}
+	ec.Account.RegisterEventTrigger(ec.EventTrigger)
 }
 
 func (ec *Engine) checkEngine() error {
 	if len(ec.Markets) == 0 {
 		return fmt.Errorf("market not configed")
+	}
+	if ec.Account == nil {
+		panic("engine .account nil")
 	}
 	//if ec.Sizer == nil {
 	//	return fmt.Errorf("sizer not configed")
@@ -72,20 +81,4 @@ func (ec *Engine) checkEngine() error {
 	//	return fmt.Errorf("broker not configed")
 	//}
 	return nil
-}
-
-func (ec *Engine) DoPlot(p *charts.Page) {
-	for _, v := range ec.globalWatchers {
-		v.DoPlot(p)
-	}
-}
-
-func (ec *Engine) globalWatcherDataDaemon() {
-	utils.AsyncRun(func() {
-		for v := range ec.globalEvent {
-			for _, w := range ec.globalWatchers {
-				w.AddData(v)
-			}
-		}
-	})
 }

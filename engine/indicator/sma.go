@@ -67,6 +67,6 @@ func (sma *SimpleMovingAverageIndicator) DoPlot(kline *charts.Kline) {
 	}
 	line := charts.NewLine()
 	line.SetGlobalOptions(charts.TitleOpts{Title: sma.Name()})
-	line.AddXAxis(x).AddYAxis(sma.Name(), y, charts.LineOpts{Smooth: true, ConnectNulls: true})
+	line.AddXAxis(x).AddYAxis(sma.Name(), y)
 	kline.Overlap(line)
 }

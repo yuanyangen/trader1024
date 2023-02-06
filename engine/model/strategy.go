@@ -1,13 +1,14 @@
 package model
 
 import (
+	"github.com/yuanyangen/trader1024/engine/account"
 	"github.com/yuanyangen/trader1024/engine/indicator"
 )
 
 type MarketStrategyContext struct {
-	DailyData *indicator.DailyData
+	DailyData *indicator.DailyIndicators
 	Broker    Broker
-	Account   *Account
+	Account   *account.Account
 }
 
 type Strategy interface {

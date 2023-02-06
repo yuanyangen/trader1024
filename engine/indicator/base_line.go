@@ -2,6 +2,7 @@ package indicator
 
 import (
 	"fmt"
+	"github.com/yuanyangen/trader1024/engine/utils"
 	"sync"
 )
 
@@ -33,8 +34,7 @@ func (bl *BaseLine) offset() int64 {
 
 func (bl *BaseLine) UnityTimeStamp(ts int64) int64 {
 	offset := bl.offset()
-	ts = (ts / offset) * offset
-	return ts
+	return utils.UnityTimeStamp(ts, offset)
 }
 func (bl *BaseLine) GetByTs(ts int64) (any, error) {
 	ts = bl.UnityTimeStamp(ts)

@@ -18,7 +18,7 @@ func NewPlotterServers(Engine *Engine) *WatcherBackend {
 
 func (ps *WatcherBackend) httpHandler(w http.ResponseWriter, _ *http.Request) {
 	p := charts.NewPage()
-	ps.Engine.DoPlot(p)
+	ps.Engine.Account.DoPlot(p)
 	for _, v := range ps.Engine.Markets {
 		v.DoPlot(p)
 	}
