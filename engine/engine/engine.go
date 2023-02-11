@@ -2,31 +2,26 @@ package engine
 
 import (
 	"fmt"
-	"github.com/yuanyangen/trader1024/engine/account"
 	"github.com/yuanyangen/trader1024/engine/data_feed"
 	"github.com/yuanyangen/trader1024/engine/event"
-	"github.com/yuanyangen/trader1024/engine/model"
+	"github.com/yuanyangen/trader1024/strategy"
 )
 
 type Engine struct {
-	Markets        map[string]*Market
+	Markets        map[string]*MarketEngine
 	EventTrigger   event.EventTrigger
-	strategies     []model.Strategy
+	strategies     []strategy.Strategy
 	watcherBackend *WatcherBackend
-	Account        *account.Account
 }
 
 func NewEngine() *Engine {
 	e := &Engine{
-		Markets: map[string]*Market{},
+		Markets: map[string]*MarketEngine{},
 	}
 	e.watcherBackend = NewPlotterServers(e)
 	return e
 }
 
-func (ec *Engine) RegisterAccount(account *account.Account) {
-	ec.Account = account
-}
 func (ec *Engine) RegisterEventTrigger(e event.EventTrigger) {
 	ec.EventTrigger = e
 }
@@ -38,7 +33,7 @@ func (ec *Engine) RegisterMarket(name string, df data_feed.DataFeed) {
 	m := NewMarket(name, df, ec.strategies)
 	ec.Markets[name] = m
 }
-func (ec *Engine) RegisterStrategy(st model.Strategy) {
+func (ec *Engine) RegisterStrategy(st strategy.Strategy) {
 	ec.strategies = append(ec.strategies, st)
 }
 func (ec *Engine) Start() error {
@@ -64,15 +59,11 @@ func (ec *Engine) connectComponent() {
 	for _, v := range ec.Markets {
 		v.DataFeed.SetEventTrigger(ec.EventTrigger)
 	}
-	ec.Account.RegisterEventTrigger(ec.EventTrigger)
 }
 
 func (ec *Engine) checkEngine() error {
 	if len(ec.Markets) == 0 {
 		return fmt.Errorf("market not configed")
-	}
-	if ec.Account == nil {
-		panic("engine .account nil")
 	}
 	//if ec.Sizer == nil {
 	//	return fmt.Errorf("sizer not configed")

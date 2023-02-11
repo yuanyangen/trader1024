@@ -1,4 +1,4 @@
-package indicator
+package indicator_base
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 )
 
 type BaseLine struct {
+	Name    string
 	Type    LineType
 	StartTs int64
 	EndTs   int64
@@ -14,8 +15,9 @@ type BaseLine struct {
 	data    map[int64]any
 }
 
-func NewBaseLine(t LineType) *BaseLine {
+func NewBaseLine(name string, t LineType) *BaseLine {
 	bl := &BaseLine{
+		Name: name,
 		Type: t,
 		data: map[int64]any{},
 	}

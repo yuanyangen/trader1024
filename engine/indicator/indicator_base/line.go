@@ -1,10 +1,11 @@
-package indicator
+package indicator_base
 
-import "sort"
+import (
+	"sort"
+)
 
 type Line struct {
 	*BaseLine
-	Name string
 }
 
 type LineNode struct {
@@ -14,8 +15,7 @@ type LineNode struct {
 
 func NewLine(t LineType, name string) *Line {
 	return &Line{
-		BaseLine: NewBaseLine(t),
-		Name:     name,
+		BaseLine: NewBaseLine(name, t),
 	}
 }
 

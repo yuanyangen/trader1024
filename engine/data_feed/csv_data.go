@@ -85,7 +85,7 @@ func WithCsvDataIndex(index []CsvFieldIndex) func(*CsvDataFeedOption) {
 	}
 }
 
-func NewCsvKLineDataFeed(Name string, Type DataType, fileName string, options ...Option) *CsvKLineDataFeed {
+func NewCsvKLineDataFeed(fileName string, options ...Option) *CsvKLineDataFeed {
 	option := &CsvDataFeedOption{
 		index:      DefaultCsvFieldIndex,
 		splitter:   ",",
@@ -99,11 +99,7 @@ func NewCsvKLineDataFeed(Name string, Type DataType, fileName string, options ..
 
 		BaseDataFeed: &BaseDataFeed{
 			eventTriggerChan: make(chan *event.EventMsg, 1024),
-			DataFeedMeta: &DataMeta{
-				Name:   Name,
-				Type:   Type,
-				Source: SourceType_CSV,
-			},
+			Source:           SourceType_CSV,
 		},
 		fileAddr: fileName,
 		option:   option,

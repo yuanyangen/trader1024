@@ -2,6 +2,7 @@ package engine
 
 import (
 	"github.com/go-echarts/go-echarts/charts"
+	"github.com/yuanyangen/trader1024/engine/account"
 	"net/http"
 )
 
@@ -18,7 +19,7 @@ func NewPlotterServers(Engine *Engine) *WatcherBackend {
 
 func (ps *WatcherBackend) httpHandler(w http.ResponseWriter, _ *http.Request) {
 	p := charts.NewPage()
-	ps.Engine.Account.DoPlot(p)
+	account.GetAccount().DoPlot(p)
 	for _, v := range ps.Engine.Markets {
 		v.DoPlot(p)
 	}
