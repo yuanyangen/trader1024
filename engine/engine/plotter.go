@@ -20,8 +20,9 @@ func NewPlotterServers(Engine *Engine) *WatcherBackend {
 func (ps *WatcherBackend) httpHandler(w http.ResponseWriter, _ *http.Request) {
 	p := charts.NewPage()
 	account.GetAccount().DoPlot(p)
-	for _, v := range ps.Engine.Markets {
-		v.DoPlot(p)
+	for _, m := range ps.Engine.Markets {
+		m.BackTestClearALl()
+		m.DoPlot(p)
 	}
 
 	p.Render(w) // Render 可接收多个 io.Writer 接口

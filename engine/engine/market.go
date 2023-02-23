@@ -6,7 +6,6 @@ import (
 	"github.com/yuanyangen/trader1024/engine/account"
 	"github.com/yuanyangen/trader1024/engine/data_feed"
 	"github.com/yuanyangen/trader1024/engine/indicator"
-	"github.com/yuanyangen/trader1024/engine/indicator/indicator_base"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/portfolio"
 	"github.com/yuanyangen/trader1024/engine/utils"
@@ -32,7 +31,7 @@ func NewMarket(id string, df data_feed.DataFeed, strategy []strategy.Strategy) *
 		DataFeed:        df,
 		DataFeedChannel: make(chan *data_feed.Data, 1024),
 		DailyIndicators: &indicator.DailyIndicators{
-			Kline:          indicator.NewKLine(market.Name, indicator_base.LineType_Day),
+			Kline:          indicator.NewKLine(market.Name, model.LineType_Day),
 			ReceiveChannel: make(chan *data_feed.Data, 1024),
 		},
 		Strategies: strategy,
@@ -95,6 +94,19 @@ func (m *MarketEngine) eventHandler(data *data_feed.Data) {
 	account.GetAccount().EventTrigger(data.KData.TimeStamp)
 }
 
+func (m *MarketEngine) BackTestClearALl() {
+	req := &model.MarketPortfolioReq{
+		Market: m.Market,
+		Strategies: []*model.StrategyReq{
+			{
+				StrategyName: "BackTestClearAll",
+				Cmds:         []*model.StrategyResult{{Cmd: model.StrategyCmdClean}},
+			},
+		},
+	}
+	portfolio.Portfolio(req)
+}
+
 func (m *MarketEngine) refreshIndicators(data *data_feed.Data) {
 	kline := m.getKline()
 	kline.AddData(data.KData.TimeStamp, data.KData)
@@ -132,7 +144,7 @@ func (m *MarketEngine) plotKline() *charts.Kline {
 	kline.SetGlobalOptions(
 		charts.TitleOpts{Title: m.Market.MarketId},
 		charts.XAxisOpts{SplitNumber: 20},
-		charts.YAxisOpts{Scale: true, Min: 0.01},
+		charts.YAxisOpts{Scale: true},
 		charts.DataZoomOpts{Type: "inside", XAxisIndex: []int{0}, Start: 50, End: 100},
 		charts.DataZoomOpts{Type: "slider", XAxisIndex: []int{0}, Start: 50, End: 100},
 	)

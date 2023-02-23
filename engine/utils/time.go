@@ -14,6 +14,6 @@ func UnityTimeStamp(ts int64, offset int64) int64 {
 	return ts
 }
 
-func UnityDailyTimeStamp(ts int64, ) int64 {
+func UnityDailyTimeStamp(ts int64) int64 {
 	return UnityTimeStamp(ts, 86400)
 }

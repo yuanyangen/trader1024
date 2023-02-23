@@ -10,9 +10,11 @@ import (
 
 func main() {
 	e := engine.NewEngine()
-	e.RegisterStrategy(strategy.NewDualSMAStrategy())
+	e.RegisterStrategy(strategy.NewDualSMAStrategyFactory)
 	e.RegisterEventTrigger(event.NewBackTestDailyEventTrigger(1430494445, 1675697645))
-	e.RegisterMarket("ICM", data_feed.NewCsvKLineDataFeed("/home/yuanyangen/HomeData/go/trader1024/data/datas/daily/IC主力合约.csv"))
+	e.RegisterMarket("jdm", data_feed.NewCsvKLineDataFeed("jdm"))
+	e.RegisterMarket("jm", data_feed.NewCsvKLineDataFeed("jm"))
+
 	account.RegisterAccount(account.NewAccount(10000000))
 	e.Start()
 }

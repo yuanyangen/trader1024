@@ -9,4 +9,7 @@ type Market struct {
 	Name     string
 	Type     MarKetType
 	MarketId string
+	Code     string
+	SecId    string
+	Exchange string
 }

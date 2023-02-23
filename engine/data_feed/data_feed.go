@@ -1,6 +1,9 @@
 package data_feed
 
-import "github.com/yuanyangen/trader1024/engine/event"
+import (
+	"github.com/yuanyangen/trader1024/engine/event"
+	"github.com/yuanyangen/trader1024/engine/model"
+)
 
 type DataType int64
 
@@ -8,16 +11,7 @@ const DataTypeKLine DataType = 1
 
 type Data struct {
 	DataType DataType
-	KData    *KNode
-}
-
-type KNode struct {
-	High      float64
-	Low       float64
-	Open      float64
-	Close     float64
-	Date      string
-	TimeStamp int64
+	KData    *model.KNode
 }
 
 type SourceType int64

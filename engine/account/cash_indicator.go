@@ -2,26 +2,32 @@ package account
 
 import (
 	"github.com/go-echarts/go-echarts/charts"
+	"github.com/yuanyangen/trader1024/engine/indicator/indicator_base"
+	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/utils"
 )
 
 type CashIndicator struct {
-	x []string
-	y []float64
+	cashLine *indicator_base.Line
 }
 
 func NewCashIndicator() *CashIndicator {
-	cw := &CashIndicator{
-		x: []string{},
-		y: []float64{},
-	}
+	cw := &CashIndicator{cashLine: indicator_base.NewLine(model.LineType_Day, "账户金额")}
 	return cw
 }
 
 func (cw *CashIndicator) DoPlot(p *charts.Page) {
 	line := charts.NewLine()
+
+	allData := cw.cashLine.GetAllSortedData()
+	x := make([]string, len(allData))
+	y := make([]float64, len(allData))
+	for i, v := range allData {
+		x[i] = utils.TsToString(v.TimeStamp)
+		y[i] = v.Value
+	}
 	line.SetGlobalOptions(charts.TitleOpts{Title: "现金"}, charts.YAxisOpts{Scale: true})
-	line.AddXAxis(cw.x).AddYAxis("现金", cw.y, charts.LineOpts{Step: false})
+	line.AddXAxis(x).AddYAxis("现金", y, charts.LineOpts{Step: false})
 	line.SetGlobalOptions(
 		charts.DataZoomOpts{Type: "inside", XAxisIndex: []int{0}, Start: 50, End: 100},
 		charts.DataZoomOpts{Type: "slider", XAxisIndex: []int{0}, Start: 50, End: 100},
@@ -30,7 +36,5 @@ func (cw *CashIndicator) DoPlot(p *charts.Page) {
 }
 
 func (cw *CashIndicator) AddData(ts int64, account float64) {
-	t := utils.TsToString(ts)
-	cw.x = append(cw.x, t)
-	cw.y = append(cw.y, account)
+	cw.cashLine.AddData(ts, account)
 }

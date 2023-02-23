@@ -1,6 +1,7 @@
 package indicator_base
 
 import (
+	"github.com/yuanyangen/trader1024/engine/model"
 	"sort"
 )
 
@@ -13,7 +14,7 @@ type LineNode struct {
 	TimeStamp int64
 }
 
-func NewLine(t LineType, name string) *Line {
+func NewLine(t model.LineType, name string) *Line {
 	return &Line{
 		BaseLine: NewBaseLine(name, t),
 	}

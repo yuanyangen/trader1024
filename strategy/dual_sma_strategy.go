@@ -13,7 +13,7 @@ type DualSMAStrategy struct {
 	crossunder *indicator.CrossUnderIndicator
 }
 
-func NewDualSMAStrategy() *DualSMAStrategy {
+func NewDualSMAStrategyFactory() Strategy {
 	return &DualSMAStrategy{}
 }
 func (es *DualSMAStrategy) Indicators() []indicator.MarketIndicator {
@@ -28,8 +28,8 @@ func (es *DualSMAStrategy) Name() string {
 }
 
 func (es *DualSMAStrategy) Init(ec *MarketStrategyContext) {
-	es.slowSMA = indicator.NewSMAIndicator(ec.DailyData.Kline, 15)
-	es.fastSMA = indicator.NewSMAIndicator(ec.DailyData.Kline, 5)
+	es.slowSMA = indicator.NewSMAIndicator(ec.DailyData.Kline, 10)
+	es.fastSMA = indicator.NewSMAIndicator(ec.DailyData.Kline, 3)
 	es.crossover = indicator.NewCrossOverIndicator(ec.DailyData.Kline, es.fastSMA.SMALine, es.slowSMA.SMALine)
 	es.crossunder = indicator.NewCrossUnderIndicator(ec.DailyData.Kline, es.fastSMA.SMALine, es.slowSMA.SMALine)
 }

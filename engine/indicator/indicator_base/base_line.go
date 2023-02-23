@@ -2,20 +2,21 @@ package indicator_base
 
 import (
 	"fmt"
+	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/utils"
 	"sync"
 )
 
 type BaseLine struct {
 	Name    string
-	Type    LineType
+	Type    model.LineType
 	StartTs int64
 	EndTs   int64
 	Mu      sync.Mutex
 	data    map[int64]any
 }
 
-func NewBaseLine(name string, t LineType) *BaseLine {
+func NewBaseLine(name string, t model.LineType) *BaseLine {
 	bl := &BaseLine{
 		Name: name,
 		Type: t,
@@ -24,11 +25,11 @@ func NewBaseLine(name string, t LineType) *BaseLine {
 	return bl
 }
 func (bl *BaseLine) offset() int64 {
-	if bl.Type == LineType_Day {
+	if bl.Type == model.LineType_Day {
 		return 86400
-	} else if bl.Type == LineType_Hour {
+	} else if bl.Type == model.LineType_Hour {
 		return 1440
-	} else if bl.Type == LineType_Minite {
+	} else if bl.Type == model.LineType_Minite {
 		return 60
 	}
 	panic("not support")

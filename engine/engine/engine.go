@@ -10,7 +10,7 @@ import (
 type Engine struct {
 	Markets        map[string]*MarketEngine
 	EventTrigger   event.EventTrigger
-	strategies     []strategy.Strategy
+	strategies     []func() strategy.Strategy
 	watcherBackend *WatcherBackend
 }
 
@@ -30,11 +30,16 @@ func (ec *Engine) RegisterMarket(name string, df data_feed.DataFeed) {
 	if len(ec.strategies) == 0 {
 		panic("should register strategy first")
 	}
-	m := NewMarket(name, df, ec.strategies)
+	strategies := make([]strategy.Strategy, len(ec.strategies))
+	for i, stFactory := range ec.strategies {
+		strategies[i] = stFactory()
+	}
+
+	m := NewMarket(name, df, strategies)
 	ec.Markets[name] = m
 }
-func (ec *Engine) RegisterStrategy(st strategy.Strategy) {
-	ec.strategies = append(ec.strategies, st)
+func (ec *Engine) RegisterStrategy(stFactory func() strategy.Strategy) {
+	ec.strategies = append(ec.strategies, stFactory)
 }
 func (ec *Engine) Start() error {
 	if err := ec.checkEngine(); err != nil {

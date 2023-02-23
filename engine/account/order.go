@@ -45,7 +45,7 @@ func GetBackTestBroker() Broker {
 
 func (btb *BackTestBroker) GetCurrentLivePositions(marketId string) *Position {
 	btb.mu.Lock()
-	btb.mu.Unlock()
+	defer btb.mu.Unlock()
 	position, _ := btb.positions[marketId]
 	if position == nil {
 		position = &Position{Count: decimal.NewFromInt(0)}

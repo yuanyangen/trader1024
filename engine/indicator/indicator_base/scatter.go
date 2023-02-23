@@ -1,6 +1,7 @@
 package indicator_base
 
 import (
+	"github.com/yuanyangen/trader1024/engine/model"
 	"sort"
 )
 
@@ -13,7 +14,7 @@ type ScatterNode struct {
 	TimeStamp int64
 }
 
-func NewScatter(t LineType, name string) *Scatter {
+func NewScatter(t model.LineType, name string) *Scatter {
 	return &Scatter{
 		BaseLine: NewBaseLine(name, t),
 	}

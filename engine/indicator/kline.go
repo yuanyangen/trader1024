@@ -2,8 +2,8 @@ package indicator
 
 import (
 	"github.com/go-echarts/go-echarts/charts"
-	"github.com/yuanyangen/trader1024/engine/data_feed"
 	"github.com/yuanyangen/trader1024/engine/indicator/indicator_base"
+	"github.com/yuanyangen/trader1024/engine/model"
 	"sort"
 )
 
@@ -12,27 +12,27 @@ type KLineIndicator struct {
 	Indicators []MarketIndicator
 }
 
-func NewKLine(name string, t indicator_base.LineType) *KLineIndicator {
+func NewKLine(name string, t model.LineType) *KLineIndicator {
 	return &KLineIndicator{
 		BaseLine:   indicator_base.NewBaseLine(name, t),
 		Indicators: []MarketIndicator{},
 	}
 }
 
-func (k *KLineIndicator) GetByTsAndCount(ts int64, count int64) ([]*data_feed.KNode, error) {
+func (k *KLineIndicator) GetByTsAndCount(ts int64, count int64) ([]*model.KNode, error) {
 	res, err := k.BaseLine.GetByTsAndCount(ts, count)
 	if err != nil {
 		return nil, err
 	}
-	newRes := make([]*data_feed.KNode, len(res))
+	newRes := make([]*model.KNode, len(res))
 	for i, v := range res {
-		newRes[i] = v.(*data_feed.KNode)
+		newRes[i] = v.(*model.KNode)
 	}
 
 	return newRes, nil
 }
 
-func (k *KLineIndicator) AddData(ts int64, node *data_feed.KNode) {
+func (k *KLineIndicator) AddData(ts int64, node *model.KNode) {
 	k.BaseLine.AddData(ts, node)
 	for _, ind := range k.Indicators {
 		ind.AddData(ts, node)
@@ -40,12 +40,12 @@ func (k *KLineIndicator) AddData(ts int64, node *data_feed.KNode) {
 
 }
 
-func (k *KLineIndicator) GetKnodeByTs(ts int64) (*data_feed.KNode, error) {
+func (k *KLineIndicator) GetKnodeByTs(ts int64) (*model.KNode, error) {
 	vI, err := k.BaseLine.GetByTs(ts)
 	if err != nil || vI == nil {
 		return nil, err
 	}
-	node, ok := vI.(*data_feed.KNode)
+	node, ok := vI.(*model.KNode)
 	if !ok {
 		panic("should not reach here")
 	}
@@ -56,11 +56,11 @@ func (k *KLineIndicator) AddIndicatorLine(line MarketIndicator) {
 	k.Indicators = append(k.Indicators, line)
 }
 
-func (k *KLineIndicator) GetAllSortedData() []*data_feed.KNode {
+func (k *KLineIndicator) GetAllSortedData() []*model.KNode {
 	oldRes := k.BaseLine.GetAllSortedData()
-	res := make([]*data_feed.KNode, len(oldRes))
+	res := make([]*model.KNode, len(oldRes))
 	for i, v := range oldRes {
-		res[i] = v.(*data_feed.KNode)
+		res[i] = v.(*model.KNode)
 	}
 
 	sort.Slice(res, func(i, j int) bool {
@@ -74,7 +74,7 @@ func (k *KLineIndicator) plotKline() *charts.Kline {
 	kline.SetGlobalOptions(
 		charts.TitleOpts{Title: k.Name},
 		charts.XAxisOpts{SplitNumber: 20},
-		charts.YAxisOpts{Scale: true, Min: 0.01},
+		charts.YAxisOpts{Scale: true},
 		charts.DataZoomOpts{Type: "inside", XAxisIndex: []int{0}, Start: 50, End: 100},
 		charts.DataZoomOpts{Type: "slider", XAxisIndex: []int{0}, Start: 50, End: 100},
 	)

@@ -1,9 +1,11 @@
 package account
 
 import (
+	"fmt"
 	"github.com/go-echarts/go-echarts/charts"
 	"github.com/shopspring/decimal"
 	"github.com/yuanyangen/trader1024/engine/event"
+	"sync"
 )
 
 type Account struct {
@@ -11,6 +13,7 @@ type Account struct {
 	Positions   map[string]*Position
 	GlobalEvent chan *event.EventMsg
 	indicator   *CashIndicator
+	mu          sync.Mutex
 }
 
 func NewAccount(start int64) *Account {
@@ -24,6 +27,11 @@ func NewAccount(start int64) *Account {
 
 func (a *Account) DoPlot(p *charts.Page) {
 	a.indicator.DoPlot(p)
+	a.showFinalNum()
+}
+func (a *Account) showFinalNum() {
+	total := a.Total
+	fmt.Println(total.String())
 }
 
 func (a *Account) EventTrigger(ts int64) {
@@ -36,6 +44,8 @@ func (a *Account) ChangeValue(count decimal.Decimal) {
 }
 
 func (a *Account) AddPosition(marketId string, count decimal.Decimal) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	position, ok := a.Positions[marketId]
 	if !ok {
 		position = &Position{Count: decimal.NewFromInt(0)}
@@ -45,6 +55,8 @@ func (a *Account) AddPosition(marketId string, count decimal.Decimal) {
 }
 
 func (a *Account) GetPositionByMarket(marketId string) *Position {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	position, ok := a.Positions[marketId]
 	if ok && position != nil && !position.IsEmpty() {
 		return position

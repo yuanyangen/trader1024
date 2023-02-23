@@ -3,17 +3,17 @@ package engine
 import (
 	"github.com/yuanyangen/trader1024/engine/account"
 	"github.com/yuanyangen/trader1024/engine/data_feed"
+	"github.com/yuanyangen/trader1024/engine/event"
 	"github.com/yuanyangen/trader1024/strategy"
 	"testing"
 )
 
 func TestEngine(t *testing.T) {
-	engine := NewEngine()
-	st := strategy.NewDualSMAStrategy()
-	df := data_feed.NewCsvKLineDataFeed("/home/yuanyangen/HomeData/go/trader1024/data/data/daily/IC主力合约.csv")
-	df.SetDataMeta(&data_feed.DataMeta{Name: "IC主力合约", Type: data_feed.DataType_FUTURE, Source: data_feed.SourceType_CSV})
-	engine.RegisterStrategy(st)
-	engine.RegisterMarket("IC主力合约", df)
-	engine.RegisterAccount(&account.Account{Total: 100000})
-	engine.Start()
+	e := NewEngine()
+	e.RegisterStrategy(strategy.NewDualSMAStrategyFactory)
+	e.RegisterEventTrigger(event.NewBackTestDailyEventTrigger(1430494445, 1675697645))
+	//e.RegisterMarket("ICM", data_feed.NewCsvKLineDataFeed("/home/yuanyangen/HomeData/go/trader1024/data/datas/daily/IC主力合约.storage"))
+	e.RegisterMarket("不锈钢主力", data_feed.NewCsvKLineDataFeed("/home/yuanyangen/HomeData/go/trader1024/data/datas/daily/不锈钢主力.storage"))
+	account.RegisterAccount(account.NewAccount(10000000))
+	e.Start()
 }

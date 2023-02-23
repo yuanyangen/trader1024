@@ -90,7 +90,10 @@ func (cou *CrossUnderIndicator) DoPlot(kline *charts.Kline) {
 		y[i] = v.Value
 	}
 	scatter := charts.NewScatter()
-	scatter.SetGlobalOptions(charts.TitleOpts{Title: cou.Name()})
+	scatter.SetGlobalOptions(charts.TitleOpts{Title: cou.Name()}, charts.YAxisOpts{Scale: true}, charts.TooltipOpts{
+		Show:      true,
+		Formatter: "(params: Object|Array, ticket: string, callback: (ticket: string, html: string)) => {}",
+	})
 
 	scatter.AddXAxis(x).AddYAxis(cou.Name(), y)
 	kline.Overlap(scatter)
