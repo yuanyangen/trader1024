@@ -50,24 +50,39 @@ func (em *EastMoney) CrawlDaily(marketId string, startDate string, endDate strin
 	return em.doCrawl(req, "2006-01-02")
 }
 
-func (em *EastMoney) CrawlMinute5(marketId string, startDate string, endDate string) ([]*model.KNode, error) {
+func (em *EastMoney) CrawlMinute5(marketId string) ([]*model.KNode, error) {
 	market := markets.GetMarketById(marketId)
 	if market == nil {
 		return nil, fmt.Errorf("no market")
 	}
-	req := &EastMoneyReq{
-		Fields1:    "f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13",
-		Fields2:    "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
-		StartDate:  startDate,
-		EndDate:    endDate,
-		KlineType:  5,
-		ReturnType: 6,
-		FuQuanType: 2,
-		secId:      market.SecId,
-		Lmt:        120,
-	}
-	return em.doCrawl(req, "2006-01-02 15:04")
 
+	var res []*model.KNode
+	endTs := time.Now()
+	for {
+		endD := endTs.Format("20060102")
+
+		req := &EastMoneyReq{
+			Fields1:    "f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13",
+			Fields2:    "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
+			EndDate:    endD,
+			KlineType:  5,
+			ReturnType: 6,
+			FuQuanType: 2,
+			secId:      market.SecId,
+			Lmt:        1200,
+		}
+
+		oneBatch, err := em.doCrawl(req, "2006-01-02 15:04")
+		if err != nil {
+			continue
+		}
+		res = append(res, oneBatch...)
+		if len(oneBatch) <1200 {
+			break
+		}
+		endTs = time.Unix(oneBatch[0].TimeStamp, 0).Add(time.Second*86400)
+	}
+	return res, nil
 }
 
 type EastMoneyReq struct {

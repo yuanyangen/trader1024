@@ -32,7 +32,8 @@ func crawlMinuteData() {
 	marketIds := markets.GetAllFutureMarketIds()
 	for _, marketId := range marketIds {
 		t := model.LineType_5Minite
-		allNodes, err := eastMoneyCrawler.CrawlMinute5(marketId, "202300201", "20500101")
+
+		allNodes, err := eastMoneyCrawler.CrawlMinute5(marketId)
 		if err != nil {
 			panic("fadsfa")
 		}
