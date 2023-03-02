@@ -50,7 +50,7 @@ func (em *EastMoney) CrawlDaily(marketId string, startDate string, endDate strin
 	return em.doCrawl(req, "2006-01-02")
 }
 
-func (em *EastMoney) CrawlMinute5(marketId string) ([]*model.KNode, error) {
+func (em *EastMoney) CrawlMinute(marketId string) ([]*model.KNode, error) {
 	market := markets.GetMarketById(marketId)
 	if market == nil {
 		return nil, fmt.Errorf("no market")
@@ -65,7 +65,7 @@ func (em *EastMoney) CrawlMinute5(marketId string) ([]*model.KNode, error) {
 			Fields1:    "f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13",
 			Fields2:    "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
 			EndDate:    endD,
-			KlineType:  5,
+			KlineType:  1,
 			ReturnType: 6,
 			FuQuanType: 2,
 			secId:      market.SecId,
@@ -108,7 +108,7 @@ func (em *EastMoney) doCrawl(req *EastMoneyReq, dateformat string) ([]*model.KNo
 	params := url.Values{}
 	params.Set("fields1", req.Fields1)
 	params.Set("fields2", req.Fields2)
-	//params.Set("beg", req.StartDate)
+	params.Set("beg", req.StartDate)
 	params.Set("end", req.EndDate)
 	params.Set("rtntype", fmt.Sprint(req.ReturnType))
 	params.Set("secid", fmt.Sprint(req.secId))

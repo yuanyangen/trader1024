@@ -1,5 +1,10 @@
 package model
 
+import (
+    "encoding/json"
+    "fmt"
+)
+
 type LineType int64
 
 const LineType_Day LineType = 1
@@ -20,4 +25,13 @@ type KNode struct {
 	IncreaseMount float64 // 涨跌额 ??
 	TurnoverRate  float64 //换手率
 	TimeStamp     int64
+}
+
+func NewFromJson(val []byte) *KNode {
+    knode := &KNode{}
+    err :=json.Unmarshal(val, &knode)
+    if err != nil {
+        panic(fmt.Sprintf("data in db unmarshal error %v", err))
+    }
+    return knode
 }

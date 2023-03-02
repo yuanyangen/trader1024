@@ -26,7 +26,7 @@ func (ec *Engine) RegisterEventTrigger(e event.EventTrigger) {
 	ec.EventTrigger = e
 }
 
-func (ec *Engine) RegisterMarket(name string, df data_feed.DataFeed) {
+func (ec *Engine) RegisterMarket(name string) {
 	if len(ec.strategies) == 0 {
 		panic("should register strategy first")
 	}
@@ -34,6 +34,7 @@ func (ec *Engine) RegisterMarket(name string, df data_feed.DataFeed) {
 	for i, stFactory := range ec.strategies {
 		strategies[i] = stFactory()
 	}
+    df := data_feed.NewCsvKLineDataFeed(name)
 
 	m := NewMarket(name, df, strategies)
 	ec.Markets[name] = m
