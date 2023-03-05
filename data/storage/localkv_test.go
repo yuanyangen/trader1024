@@ -8,7 +8,7 @@ import (
 )
 
 func TestKvStorage(t *testing.T) {
-    s := storage.InitStorage("test")
+    s := storage.InitHttpStorage("test")
     s.SaveData("test", model.LineType_Day,[]*model.KNode{&model.KNode{
         Open: 231,
         Close: 231,

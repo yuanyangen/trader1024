@@ -1,17 +1,17 @@
 package storage
 
 import (
-    "encoding/json"
-    "fmt"
-    "github.com/boltdb/bolt"
-    "github.com/yuanyangen/trader1024/engine/model"
-    "github.com/yuanyangen/trader1024/engine/utils"
-    "path"
-    "sort"
-    "github.com/spaolacci/murmur3"
+	"encoding/json"
+	"fmt"
+	"github.com/boltdb/bolt"
+	"github.com/spaolacci/murmur3"
+	"github.com/yuanyangen/trader1024/engine/model"
+	"github.com/yuanyangen/trader1024/engine/utils"
+	"path"
+	"sort"
 )
 
-const storageDataPath = "/home/yuanyangen/HomeData/go/trader1024/data/datas"
+
 //
 //第一层是：数据的来源，包括： main, eastMoney等，
 //第二层是具体的DB文件，分成128个文件，文件名字是通过marketID hash得到的。
@@ -22,57 +22,65 @@ const storageDataPath = "/home/yuanyangen/HomeData/go/trader1024/data/datas"
 // 每一个文件de key的
 
 type KVStorage struct {
-
-    dbs []*bolt.DB
+	dbSplitCount int
+	dbs          []*bolt.DB
 }
 
-var allStorage = map[string]*KVStorage{}
-func init() {
-    InitStorage("eastmoney")
-    InitStorage("main")
+func TestStorage() *KVStorage {
+	return allStorage["test"]
 }
-
 func EastMoneyStorage() *KVStorage {
-    return allStorage["eastmoney"]
+	return allStorage["eastmoney"]
 }
 
 func MainStorage() *KVStorage {
-    return allStorage["main"]
+	return allStorage["main"]
 }
 
-const dbSplitCount =128
-func InitStorage(name string) *KVStorage {
-    cs := &KVStorage{}
-    dbs := make([]*bolt.DB, dbSplitCount)
+var allStorage = map[string]*KVStorage{}
 
-    for i:=0;i < dbSplitCount; i++ {
-        dbPath := path.Join(storageDataPath, name)
-        utils.CreateDirIfNotExist(dbPath)
+func InitAllStorage(dirPath string) {
+	var dbSplitCount = 128
 
-        filePath := path.Join(dbPath, fmt.Sprintf("%v_.db", i))
-        db, err := bolt.Open(filePath, 0755, nil)
-        if err != nil {
-            panic("open  db error")
-        }
-        dbs[i]= db
-    }
-    cs.dbs  = dbs
-    allStorage[name] = cs
+    InitStorage(dirPath, "eastmoney", dbSplitCount)
+    InitStorage(dirPath, "main", dbSplitCount)
+    InitStorage(dirPath, "test", 1)
+}
+
+func InitStorage(dirPath string, name string, count int) *KVStorage {
+	cs := &KVStorage{
+		dbSplitCount: count,
+	}
+	dbs := make([]*bolt.DB, count)
+
+	for i := 0; i < count; i++ {
+        dbPath := path.Join(dirPath, name)
+		utils.CreateDirIfNotExist(dbPath)
+
+		filePath := path.Join(dbPath, fmt.Sprintf("%v_.db", i))
+		db, err := bolt.Open(filePath, 0755, nil)
+		if err != nil {
+			panic("open  db error")
+		}
+		dbs[i] = db
+	}
+	cs.dbs = dbs
+	allStorage[name] = cs
 	return cs
 }
 
 func (cs *KVStorage) getDbBycketName(marketId string) *bolt.DB {
-    idx := murmur3.Sum32([]byte(marketId)) % dbSplitCount
-    return cs.dbs[idx]
+	idx := murmur3.Sum32([]byte(marketId)) % uint32(cs.dbSplitCount)
+	return cs.dbs[idx]
 }
 
 func (cs *KVStorage) getBycketName(tx *bolt.Tx, marketId string, t model.LineType) *bolt.Bucket {
-    bucketName := fmt.Sprintf("%v_%v", marketId, t)
-    bucket := tx.Bucket([]byte(bucketName))
-    if bucket != nil {
-        return bucket
-    }
-    var err error
+	bucketName := fmt.Sprintf("%v_%v", marketId, t)
+	bucket := tx.Bucket([]byte(bucketName))
+	if bucket != nil {
+		return bucket
+	}
+	var err error
 	bucket, err = tx.CreateBucketIfNotExists([]byte(bucketName))
 	if err != nil {
 		panic(err)
@@ -82,7 +90,7 @@ func (cs *KVStorage) getBycketName(tx *bolt.Tx, marketId string, t model.LineTyp
 }
 
 func (cs *KVStorage) SaveData(marketId string, t model.LineType, kdatas []*model.KNode) {
-    db := cs.getDbBycketName(marketId)
+	db := cs.getDbBycketName(marketId)
 	db.Update(func(tx *bolt.Tx) error {
 		bucket := cs.getBycketName(tx, marketId, t)
 		for _, knode := range kdatas {
@@ -102,7 +110,7 @@ func (cs *KVStorage) SaveData(marketId string, t model.LineType, kdatas []*model
 
 func (cs *KVStorage) GetAllData(marketId string, t model.LineType) []*model.KNode {
 	allData := []*model.KNode{}
-    db := cs.getDbBycketName(marketId)
+	db := cs.getDbBycketName(marketId)
 
 	db.View(func(tx *bolt.Tx) error {
 		bucket := cs.getBycketName(tx, marketId, t)
@@ -121,7 +129,7 @@ func (cs *KVStorage) GetAllData(marketId string, t model.LineType) []*model.KNod
 
 func (cs *KVStorage) GetDataByTs(marketId string, t model.LineType, ts int64) *model.KNode {
 	var res *model.KNode
-    db := cs.getDbBycketName(marketId)
+	db := cs.getDbBycketName(marketId)
 
 	db.View(func(tx *bolt.Tx) error {
 		bucket := cs.getBycketName(tx, marketId, t)

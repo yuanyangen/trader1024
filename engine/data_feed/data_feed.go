@@ -5,7 +5,7 @@ import (
 	"github.com/yuanyangen/trader1024/engine/model"
 )
 
-type DataType int64
+type    DataType int64
 
 const DataTypeKLine DataType = 1
 
