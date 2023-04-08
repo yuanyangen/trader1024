@@ -8,13 +8,13 @@ import (
 )
 
 type SingleSMAStrategy struct {
-	sma *indicator.SimpleMovingAverageIndicator
-	//fastSMA *indicator.SimpleMovingAverageIndicator
+	sma *indicator.SMAIndicator
+	//sma5 *indicator.SMAIndicator
 	//crossover  *indicator.CrossOverIndicator
 	//crossunder *indicator.CrossUnderIndicator
 }
 
-func NewSingleSMAStrategy() *SingleSMAStrategy {
+func NewSingleSMAStrategy() Strategy {
 	return &SingleSMAStrategy{}
 }
 
@@ -35,10 +35,16 @@ func (es *SingleSMAStrategy) OnBar(ctx *MarketStrategyContext, ts int64) []*mode
 	if !ok {
 		return nil
 	}
-	if sma > currentKValue.Close && account.GetAccount().GetPositionByMarket(ctx.Market.MarketId) == nil {
+	if sma > currentKValue.Close && account.GetAccount().GetPositionByMarket(ctx.Market.MarketId).IsEmpty() {
 		return []*model.StrategyResult{
 			NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(currentKValue.Close)),
 			NewStrategyResult(model.StrategyCmdBuy, decimal.NewFromFloat(currentKValue.Close)),
+		}
+	}
+	if sma < currentKValue.Close && account.GetAccount().GetPositionByMarket(ctx.Market.MarketId).IsEmpty() {
+		return []*model.StrategyResult{
+			NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(currentKValue.Close)),
+			NewStrategyResult(model.StrategyCmdSell, decimal.NewFromFloat(currentKValue.Close)),
 		}
 	}
 	//if under {

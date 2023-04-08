@@ -21,7 +21,7 @@ func (ps *WatcherBackend) httpHandler(w http.ResponseWriter, _ *http.Request) {
 	p := charts.NewPage()
 	account.GetAccount().DoPlot(p)
 	for _, m := range ps.Engine.Markets {
-		m.BackTestClearALl()
+		//m.BackTestClearALl()
 		m.DoPlot(p)
 	}
 

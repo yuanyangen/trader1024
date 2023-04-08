@@ -12,32 +12,39 @@ type ExecutionAction struct {
 	Cmd        model.StrategyCmd
 	Count      decimal.Decimal
 	Price      decimal.Decimal
+	Reason     string
+	Ts         int64
 }
 
 func Execute(actions ...*ExecutionAction) {
 	broker := account.GetBackTestBroker()
 	for _, action := range actions {
+		var err error
 		switch action.Cmd {
 		case model.StrategyCmdClean:
 			{
 				position := broker.GetCurrentLivePositions(action.MarketId)
-				zero := decimal.NewFromInt(0)
-				if !position.Count.Equal(zero) {
-					if position.Count.GreaterThan(zero) {
-						broker.AddOrder(action.MarketId, account.OrderTypeSell, action.Count, action.Price)
+				if !position.Count.Equal(decimal.Zero) {
+					if position.Count.GreaterThan(decimal.Zero) {
+						err = broker.AddOrder(action.MarketId, account.OrderTypeSell, action.Count, action.Price, action.Reason, action.Ts)
+
 					} else {
-						broker.AddOrder(action.MarketId, account.OrderTypeBuy, action.Count, action.Price)
+						err = broker.AddOrder(action.MarketId, account.OrderTypeBuy, action.Count, action.Price, action.Reason, action.Ts)
 					}
 				}
 			}
 		case model.StrategyCmdBuy:
 			{
-				broker.AddOrder(action.MarketId, account.OrderTypeBuy, action.Count, action.Price)
+				err = broker.AddOrder(action.MarketId, account.OrderTypeBuy, action.Count, action.Price, action.Reason, action.Ts)
 			}
 		case model.StrategyCmdSell:
 			{
-				broker.AddOrder(action.MarketId, account.OrderTypeSell, action.Count, action.Price)
+				err = broker.AddOrder(action.MarketId, account.OrderTypeSell, action.Count, action.Price, action.Reason, action.Ts)
 			}
+		default:
+			panic("should not reach here")
+		}
+		if err != nil {
 
 		}
 	}

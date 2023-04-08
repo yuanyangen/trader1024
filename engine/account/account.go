@@ -10,7 +10,7 @@ import (
 
 type Account struct {
 	Total       decimal.Decimal // 单位是分
-	Positions   map[string]*Position
+	Positions   map[string]*MarketPosition
 	GlobalEvent chan *event.EventMsg
 	indicator   *CashIndicator
 	mu          sync.Mutex
@@ -20,12 +20,14 @@ func NewAccount(start int64) *Account {
 	return &Account{
 		Total:       decimal.NewFromInt(start),
 		GlobalEvent: make(chan *event.EventMsg, 1024),
-		Positions:   map[string]*Position{},
+		Positions:   map[string]*MarketPosition{},
 		indicator:   NewCashIndicator(),
 	}
 }
 
 func (a *Account) DoPlot(p *charts.Page) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	a.indicator.DoPlot(p)
 	a.showFinalNum()
 }
@@ -40,28 +42,31 @@ func (a *Account) EventTrigger(ts int64) {
 }
 
 func (a *Account) ChangeValue(count decimal.Decimal) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	a.Total = a.Total.Add(count)
 }
 
-func (a *Account) AddPosition(marketId string, count decimal.Decimal) {
+//func (a *Account) AddPosition(marketId string, count decimal.Decimal) {
+//	a.mu.Lock()
+//	defer a.mu.Unlock()
+//	position, ok := a.Positions[marketId]
+//	if !ok {
+//		position = &MarketPosition{MarketId: marketId, Count: decimal.NewFromInt(0)}
+//	}
+//	position.Count = position.Count.Add(count)
+//	a.Positions[marketId] = position
+//}
+
+func (a *Account) GetPositionByMarket(marketId string) *MarketPosition {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	position, ok := a.Positions[marketId]
 	if !ok {
-		position = &Position{Count: decimal.NewFromInt(0)}
+		position = &MarketPosition{MarketId: marketId, Count: decimal.NewFromInt(0)}
+		a.Positions[marketId] = position
 	}
-	position.Count = position.Count.Add(count)
-	a.Positions[marketId] = position
-}
-
-func (a *Account) GetPositionByMarket(marketId string) *Position {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	position, ok := a.Positions[marketId]
-	if ok && position != nil && !position.IsEmpty() {
-		return position
-	}
-	return nil
+	return position
 }
 
 var defaultAccount *Account

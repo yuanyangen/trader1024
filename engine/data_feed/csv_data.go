@@ -10,7 +10,7 @@ import (
 type CsvKLineDataFeed struct {
 	*BaseDataFeed
 	marketId string
-	storage  *storage.KVStorage
+	storage  *storage.HttpStorage
 }
 
 func NewCsvKLineDataFeed(marketId string) *CsvKLineDataFeed {
@@ -20,7 +20,7 @@ func NewCsvKLineDataFeed(marketId string) *CsvKLineDataFeed {
 			Source:           SourceType_CSV,
 		},
 		marketId: marketId,
-		storage:  storage.EastMoneyStorage(),
+        storage:  storage.EastMoneyHttpStorage(),
 	}
 	cdf.startEventReceiver()
 

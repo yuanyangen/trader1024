@@ -12,4 +12,5 @@ type Market struct {
 	Code     string
 	SecId    string
 	Exchange string
+	Count    int64
 }

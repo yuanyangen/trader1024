@@ -8,7 +8,7 @@ import (
 
 func Portfolio(req *model.MarketPortfolioReq) error {
 
-	count := decimal.NewFromInt(10)
+	count := decimal.NewFromInt(100)
 	for _, st := range req.Strategies {
 		for _, cmd := range st.Cmds {
 			action := &execution.ExecutionAction{
@@ -17,7 +17,10 @@ func Portfolio(req *model.MarketPortfolioReq) error {
 				Cmd:        cmd.Cmd,
 				Count:      count,
 				Price:      cmd.Price,
+				Reason:     st.Reason,
+				Ts:         st.Ts,
 			}
+
 			execution.Execute(action)
 		}
 	}

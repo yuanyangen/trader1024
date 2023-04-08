@@ -47,6 +47,9 @@ func (m *MarketEngine) Start() {
 }
 
 func (m *MarketEngine) DoPlot(p *charts.Page) {
+	position := account.GetBackTestBroker().GetCurrentLivePositions(m.Market.MarketId)
+	position.Report()
+
 	kline := m.plotKline()
 	if m.DailyIndicators != nil && m.DailyIndicators.Kline != nil {
 		for _, w := range m.DailyIndicators.Kline.Indicators {
@@ -86,6 +89,8 @@ func (m *MarketEngine) eventHandler(data *data_feed.Data) {
 			str := &model.StrategyReq{
 				StrategyName: st.Name(),
 				Cmds:         stResult,
+				Reason:       st.Name(),
+				Ts:           data.KData.TimeStamp,
 			}
 			req.Strategies = append(req.Strategies, str)
 		}

@@ -8,14 +8,14 @@ import (
 	"github.com/yuanyangen/trader1024/engine/utils"
 )
 
-type SimpleMovingAverageIndicator struct {
+type SMAIndicator struct {
 	kline   *KLineIndicator
 	SMALine *indicator_base.Line
 	period  int64
 }
 
-func NewSMAIndicator(kline *KLineIndicator, period int64) *SimpleMovingAverageIndicator {
-	sma := &SimpleMovingAverageIndicator{
+func NewSMAIndicator(kline *KLineIndicator, period int64) *SMAIndicator {
+	sma := &SMAIndicator{
 		period:  period,
 		SMALine: indicator_base.NewLine(kline.Type, fmt.Sprintf("sma_%v", period)),
 		kline:   kline,
@@ -24,11 +24,11 @@ func NewSMAIndicator(kline *KLineIndicator, period int64) *SimpleMovingAverageIn
 	return sma
 }
 
-func (sma *SimpleMovingAverageIndicator) Name() string {
+func (sma *SMAIndicator) Name() string {
 	return fmt.Sprintf("SimpleMovingAverage_%v", sma.period)
 }
 
-func (sma *SimpleMovingAverageIndicator) AddData(ts int64, node any) {
+func (sma *SMAIndicator) AddData(ts int64, node any) {
 	data, err := sma.kline.GetByTsAndCount(ts, sma.period)
 	if err != nil {
 		sma.SMALine.AddData(ts, 0)
@@ -36,22 +36,22 @@ func (sma *SimpleMovingAverageIndicator) AddData(ts int64, node any) {
 	}
 	in := make([]float64, len(data))
 	for i, v := range data {
-		in[i] = v.Close
+		in[i] = (v.Close + v.Open) / 2
 	}
 	out := talib.Sma(in, int(sma.period))
 	avg := out[len(out)-1]
 	sma.SMALine.AddData(ts, avg)
 }
-func (sma *SimpleMovingAverageIndicator) GetAllSortedData() []any {
+func (sma *SMAIndicator) GetAllSortedData() []any {
 	return nil
 }
 
-func (sma *SimpleMovingAverageIndicator) GetCurrentValue(ts int64) any {
+func (sma *SMAIndicator) GetCurrentValue(ts int64) any {
 	if sma.SMALine == nil {
 		panic("SMALine error")
 	}
 	if sma.period == 0 {
-		panic("period empty")
+		panic("erPeriod empty")
 	}
 	data, err := sma.SMALine.GetByTs(ts)
 	if err != nil {
@@ -61,7 +61,13 @@ func (sma *SimpleMovingAverageIndicator) GetCurrentValue(ts int64) any {
 	}
 }
 
-func (sma *SimpleMovingAverageIndicator) DoPlot(kline *charts.Kline) {
+func (sma *SMAIndicator) GetCurrentFloat(ts int64) float64 {
+	v := sma.GetCurrentValue(ts)
+	f, _ := v.(float64)
+	return f
+}
+
+func (sma *SMAIndicator) DoPlot(kline *charts.Kline) {
 	allData := sma.SMALine.GetAllSortedData()
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))

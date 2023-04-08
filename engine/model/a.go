@@ -7,4 +7,6 @@ type MarketPortfolioReq struct {
 type StrategyReq struct {
 	StrategyName string
 	Cmds         []*StrategyResult
+	Reason       string
+	Ts           int64
 }
