@@ -4,23 +4,26 @@ import (
 	"fmt"
 	"github.com/go-echarts/go-echarts/charts"
 	"github.com/markcheno/go-talib"
-	"github.com/yuanyangen/trader1024/engine/indicator/indicator_base"
+	"github.com/yuanyangen/trader1024/engine/indicator_base"
+	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/utils"
 )
 
 type SMAIndicator struct {
-	kline   *KLineIndicator
+	*indicator_base.IndicatorCommon
+	kline   model.MarketIndicator
 	SMALine *indicator_base.Line
 	period  int64
 }
 
-func NewSMAIndicator(kline *KLineIndicator, period int64) *SMAIndicator {
+func NewSMAIndicator(kline model.MarketIndicator, period int64) *SMAIndicator {
 	sma := &SMAIndicator{
-		period:  period,
-		SMALine: indicator_base.NewLine(kline.Type, fmt.Sprintf("sma_%v", period)),
-		kline:   kline,
+		IndicatorCommon: indicator_base.NewIndicatorCommon(),
+		period:          period,
+		SMALine:         indicator_base.NewLine(model.LineType_Day, fmt.Sprintf("sma_%v", period)),
+		kline:           kline,
 	}
-	kline.AddIndicatorLine(sma)
+	kline.AddChildrenIndicator(sma)
 	return sma
 }
 
@@ -29,11 +32,13 @@ func (sma *SMAIndicator) Name() string {
 }
 
 func (sma *SMAIndicator) AddData(ts int64, node any) {
-	data, err := sma.kline.GetByTsAndCount(ts, sma.period)
+	dataI, err := sma.kline.GetByTsAndCount(ts, sma.period)
 	if err != nil {
 		sma.SMALine.AddData(ts, 0)
 		return
 	}
+	data := model.NewKnodesFromAny(dataI)
+
 	in := make([]float64, len(data))
 	for i, v := range data {
 		in[i] = (v.Close + v.Open) / 2
@@ -46,7 +51,7 @@ func (sma *SMAIndicator) GetAllSortedData() []any {
 	return nil
 }
 
-func (sma *SMAIndicator) GetCurrentValue(ts int64) any {
+func (sma *SMAIndicator) GetByTs(ts int64) any {
 	if sma.SMALine == nil {
 		panic("SMALine error")
 	}
@@ -60,14 +65,11 @@ func (sma *SMAIndicator) GetCurrentValue(ts int64) any {
 		return data.Value
 	}
 }
-
-func (sma *SMAIndicator) GetCurrentFloat(ts int64) float64 {
-	v := sma.GetCurrentValue(ts)
-	f, _ := v.(float64)
-	return f
+func (sma *SMAIndicator) GetByTsAndCount(ts, period int64) ([]any, error) {
+	return nil, nil
 }
 
-func (sma *SMAIndicator) DoPlot(kline *charts.Kline) {
+func (sma *SMAIndicator) DoPlot(p *charts.Page, kline *charts.Kline) {
 	allData := sma.SMALine.GetAllSortedData()
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))

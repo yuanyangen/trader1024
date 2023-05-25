@@ -86,7 +86,7 @@ func (bl *BaseLine) AddData(ts int64, node any) {
 	}
 }
 
-func (bl *BaseLine) GetAllSortedData() []any {
+func (bl *BaseLine) GetAllData() []any {
 	if bl == nil {
 		return nil
 	}

@@ -5,8 +5,9 @@ package strategy
 
 import (
 	"github.com/shopspring/decimal"
-	"github.com/yuanyangen/trader1024/engine/indicator"
 	"github.com/yuanyangen/trader1024/engine/model"
+	"github.com/yuanyangen/trader1024/engine/utils"
+	"github.com/yuanyangen/trader1024/strategy/indicator"
 )
 
 type DualKAMAStrategy struct {
@@ -17,7 +18,7 @@ type DualKAMAStrategy struct {
 	loaded     bool // 只有
 }
 
-func NewDualKAMAStrategyFactory() Strategy {
+func NewDualKAMAStrategyFactory() model.Strategy {
 	return &DualKAMAStrategy{}
 }
 
@@ -25,30 +26,30 @@ func (es *DualKAMAStrategy) Name() string {
 	return "DualKAMAStrategy"
 }
 
-func (es *DualKAMAStrategy) Init(ec *MarketStrategyContext) {
+func (es *DualKAMAStrategy) Init(ec *model.MarketStrategyContext) {
 	es.kama10 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 10, 2, 30)
 	es.kama2 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 2, 2, 30)
 	es.crossover = indicator.NewCrossOverIndicator(ec.DailyData.Kline, es.kama2.KAMALine, es.kama10.KAMALine)
 	es.crossunder = indicator.NewCrossUnderIndicator(ec.DailyData.Kline, es.kama2.KAMALine, es.kama10.KAMALine)
 }
 
-func (es *DualKAMAStrategy) OnBar(ctx *MarketStrategyContext, ts int64) []*model.StrategyResult {
-	over := es.crossover.GetCurrentValue(ts)
-	under := es.crossunder.GetCurrentValue(ts)
-	currentKValue, err := ctx.DailyData.Kline.GetKnodeByTs(ts)
-	if err != nil {
+func (es *DualKAMAStrategy) OnBar(ctx *model.MarketStrategyContext, ts int64) []*model.StrategyResult {
+	over := es.crossover.GetByTs(ts)
+	under := es.crossunder.GetByTs(ts)
+	currentKValue := model.NewKnodeFromAny(ctx.DailyData.Kline.GetByTs(ts))
+	if currentKValue == nil {
 		return nil
 	}
-	if over {
+	if utils.AnyToBool(over) {
 		return []*model.StrategyResult{
-			NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(currentKValue.Close)),
-			NewStrategyResult(model.StrategyCmdBuy, decimal.NewFromFloat(currentKValue.Close)),
+			model.NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(currentKValue.Close)),
+			model.NewStrategyResult(model.StrategyCmdBuy, decimal.NewFromFloat(currentKValue.Close)),
 		}
 	}
-	if under {
+	if utils.AnyToBool(under) {
 		return []*model.StrategyResult{
-			NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(currentKValue.Close)),
-			NewStrategyResult(model.StrategyCmdSell, decimal.NewFromFloat(currentKValue.Close)),
+			model.NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(currentKValue.Close)),
+			model.NewStrategyResult(model.StrategyCmdSell, decimal.NewFromFloat(currentKValue.Close)),
 		}
 	}
 	return nil

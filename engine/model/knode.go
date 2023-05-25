@@ -1,8 +1,8 @@
 package model
 
 import (
-    "encoding/json"
-    "fmt"
+	"encoding/json"
+	"fmt"
 )
 
 type LineType int64
@@ -27,11 +27,35 @@ type KNode struct {
 	TimeStamp     int64
 }
 
-func NewFromJson(val []byte) *KNode {
-    knode := &KNode{}
-    err :=json.Unmarshal(val, &knode)
-    if err != nil {
-        panic(fmt.Sprintf("data in db unmarshal error %v", err))
-    }
-    return knode
+func NewKnodeFromAny(val any) *KNode {
+	if val == nil {
+		return nil
+	}
+	r, _ := val.(*KNode)
+	return r
+}
+
+func NewKnodesFromAny(val []any) []*KNode {
+	if val == nil {
+		return nil
+	}
+	res := make([]*KNode, len(val))
+	for i, v := range val {
+		r, _ := v.(*KNode)
+		if r == nil {
+			panic("knod nil")
+		}
+		res[i] = r
+
+	}
+	return res
+}
+
+func NewKnodeFromJson(val []byte) *KNode {
+	knode := &KNode{}
+	err := json.Unmarshal(val, &knode)
+	if err != nil {
+		panic(fmt.Sprintf("data in db unmarshal error %v", err))
+	}
+	return knode
 }

@@ -6,8 +6,8 @@ package strategy
 import (
 	"github.com/shopspring/decimal"
 	"github.com/yuanyangen/trader1024/engine/account"
-	"github.com/yuanyangen/trader1024/engine/indicator"
 	"github.com/yuanyangen/trader1024/engine/model"
+	"github.com/yuanyangen/trader1024/strategy/indicator"
 )
 
 type CustomSMAStrategy struct {
@@ -20,7 +20,7 @@ type CustomSMAStrategy struct {
 	loaded bool // 只有
 }
 
-func NewCustomSMAStrategyFactory() Strategy {
+func NewCustomSMAStrategyFactory() model.Strategy {
 	return &CustomSMAStrategy{}
 }
 
@@ -28,7 +28,7 @@ func (es *CustomSMAStrategy) Name() string {
 	return "CustomSMAStrategy"
 }
 
-func (es *CustomSMAStrategy) Init(ec *MarketStrategyContext) {
+func (es *CustomSMAStrategy) Init(ec *model.MarketStrategyContext) {
 	es.sma10 = indicator.NewSMAIndicator(ec.DailyData.Kline, 10)
 	es.sma5 = indicator.NewSMAIndicator(ec.DailyData.Kline, 3)
 	es.sma2 = indicator.NewSMAIndicator(ec.DailyData.Kline, 1)
@@ -37,9 +37,9 @@ func (es *CustomSMAStrategy) Init(ec *MarketStrategyContext) {
 	es.kama2 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 2, 2, 30)
 }
 
-func (es *CustomSMAStrategy) OnBar(ctx *MarketStrategyContext, ts int64) []*model.StrategyResult {
-	currentKValue, err := ctx.DailyData.Kline.GetKnodeByTs(ts)
-	if err != nil {
+func (es *CustomSMAStrategy) OnBar(ctx *model.MarketStrategyContext, ts int64) []*model.StrategyResult {
+	currentKValue := model.NewKnodeFromAny(ctx.DailyData.Kline.GetByTs(ts))
+	if currentKValue == nil {
 		return nil
 	}
 	if es.kama2.GetCurrentFloat(ts) == 0 || es.kama5.GetCurrentFloat(ts) == 0 || es.kama10.GetCurrentFloat(ts) == 0 {
@@ -50,20 +50,20 @@ func (es *CustomSMAStrategy) OnBar(ctx *MarketStrategyContext, ts int64) []*mode
 	if long(es.kama2.GetCurrentFloat(ts), es.kama5.GetCurrentFloat(ts), es.kama10.GetCurrentFloat(ts)) {
 		if position.IsEmpty() && es.loaded {
 			return []*model.StrategyResult{
-				NewStrategyResult(model.StrategyCmdBuy, decimal.NewFromFloat(curPrice)),
+				model.NewStrategyResult(model.StrategyCmdBuy, decimal.NewFromFloat(curPrice)),
 			}
 		}
 	} else if short(es.kama2.GetCurrentFloat(ts), es.kama5.GetCurrentFloat(ts), es.kama10.GetCurrentFloat(ts)) {
 		if position.IsEmpty() && es.loaded {
 			return []*model.StrategyResult{
-				NewStrategyResult(model.StrategyCmdSell, decimal.NewFromFloat(curPrice)),
+				model.NewStrategyResult(model.StrategyCmdSell, decimal.NewFromFloat(curPrice)),
 			}
 		}
 	} else {
 		es.loaded = true
 		if !position.IsEmpty() {
 			return []*model.StrategyResult{
-				NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(curPrice)),
+				model.NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(curPrice)),
 			}
 		}
 	}

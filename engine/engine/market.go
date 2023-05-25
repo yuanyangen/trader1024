@@ -4,24 +4,22 @@ import (
 	"github.com/go-echarts/go-echarts/charts"
 	"github.com/yuanyangen/trader1024/data/markets"
 	"github.com/yuanyangen/trader1024/engine/account"
-	"github.com/yuanyangen/trader1024/engine/data_feed"
-	"github.com/yuanyangen/trader1024/engine/indicator"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/portfolio"
 	"github.com/yuanyangen/trader1024/engine/utils"
-	"github.com/yuanyangen/trader1024/strategy"
+	"github.com/yuanyangen/trader1024/strategy/indicator"
 )
 
 type MarketEngine struct {
 	Market          *model.Market
-	DataFeed        data_feed.DataFeed
-	DailyIndicators *indicator.DailyIndicators
-	DataFeedChannel chan *data_feed.Data
+	DataFeed        model.DataFeed
+	DailyIndicators *model.DailyIndicators
+	DataFeedChannel chan *model.Data
 
-	Strategies []strategy.Strategy
+	Strategies []model.Strategy
 }
 
-func NewMarket(id string, df data_feed.DataFeed, strategy []strategy.Strategy) *MarketEngine {
+func NewMarket(id string, df model.DataFeed, strategy []model.Strategy) *MarketEngine {
 	market := markets.GetMarketById(id)
 	if market == nil {
 		panic("market not define")
@@ -29,10 +27,10 @@ func NewMarket(id string, df data_feed.DataFeed, strategy []strategy.Strategy) *
 	ed := &MarketEngine{
 		Market:          market,
 		DataFeed:        df,
-		DataFeedChannel: make(chan *data_feed.Data, 1024),
-		DailyIndicators: &indicator.DailyIndicators{
+		DataFeedChannel: make(chan *model.Data, 1024),
+		DailyIndicators: &model.DailyIndicators{
 			Kline:          indicator.NewKLine(market.Name, model.LineType_Day),
-			ReceiveChannel: make(chan *data_feed.Data, 1024),
+			ReceiveChannel: make(chan *model.Data, 1024),
 		},
 		Strategies: strategy,
 	}
@@ -49,17 +47,11 @@ func (m *MarketEngine) Start() {
 func (m *MarketEngine) DoPlot(p *charts.Page) {
 	position := account.GetBackTestBroker().GetCurrentLivePositions(m.Market.MarketId)
 	position.Report()
-
-	kline := m.plotKline()
-	if m.DailyIndicators != nil && m.DailyIndicators.Kline != nil {
-		for _, w := range m.DailyIndicators.Kline.Indicators {
-			w.DoPlot(kline)
-		}
-	}
-	p.Add(kline)
+	kline := charts.NewKLine()
+	m.DailyIndicators.Kline.DoPlot(p, kline)
 }
 
-func (m *MarketEngine) getKline() *indicator.KLineIndicator {
+func (m *MarketEngine) getKline() model.MarketIndicator {
 	return m.DailyIndicators.Kline
 }
 
@@ -71,10 +63,10 @@ func (m *MarketEngine) startOnBarLoop() {
 	})
 }
 
-func (m *MarketEngine) eventHandler(data *data_feed.Data) {
+func (m *MarketEngine) eventHandler(data *model.Data) {
 	m.refreshIndicators(data)
 
-	ctx := &strategy.MarketStrategyContext{
+	ctx := &model.MarketStrategyContext{
 		DailyData: m.DailyIndicators,
 		Market:    m.Market,
 	}
@@ -112,7 +104,7 @@ func (m *MarketEngine) BackTestClearALl() {
 	portfolio.Portfolio(req)
 }
 
-func (m *MarketEngine) refreshIndicators(data *data_feed.Data) {
+func (m *MarketEngine) refreshIndicators(data *model.Data) {
 	kline := m.getKline()
 	kline.AddData(data.KData.TimeStamp, data.KData)
 }
@@ -126,14 +118,14 @@ func (m *MarketEngine) startDataFeed() {
 func (m *MarketEngine) initStrategy() {
 	if m.Strategies != nil {
 		for _, stra := range m.Strategies {
-			ctx := &strategy.MarketStrategyContext{DailyData: m.DailyIndicators}
+			ctx := &model.MarketStrategyContext{DailyData: m.DailyIndicators}
 			stra.Init(ctx)
 		}
 	}
 }
 
-func (m *MarketEngine) startOneDataFeed(df data_feed.DataFeed) {
-	ch := make(chan *data_feed.Data, 1024)
+func (m *MarketEngine) startOneDataFeed(df model.DataFeed) {
+	ch := make(chan *model.Data, 1024)
 	df.RegisterChan(ch)
 	utils.AsyncRun(func() {
 		for v := range ch {
@@ -146,30 +138,6 @@ func (m *MarketEngine) startOneDataFeed(df data_feed.DataFeed) {
 
 func (m *MarketEngine) plotKline() *charts.Kline {
 	kline := charts.NewKLine()
-	kline.SetGlobalOptions(
-		charts.TitleOpts{Title: m.Market.MarketId},
-		charts.XAxisOpts{SplitNumber: 20},
-		charts.YAxisOpts{Scale: true},
-		charts.DataZoomOpts{Type: "inside", XAxisIndex: []int{0}, Start: 50, End: 100},
-		charts.DataZoomOpts{Type: "slider", XAxisIndex: []int{0}, Start: 50, End: 100},
-	)
-	x, y := m.convertData(m.DailyIndicators.Kline)
-	kline.AddXAxis(x).AddYAxis("日K", y)
-	return kline
-}
 
-func (m *MarketEngine) convertData(kline *indicator.KLineIndicator) ([]string, [][4]float32) {
-	kDatas := kline.GetAllSortedData()
-	x := make([]string, len(kDatas))
-	y := make([][4]float32, len(kDatas))
-	for i, kn := range kDatas {
-		x[i] = kn.Date
-		y[i] = [4]float32{
-			float32(kn.Open),
-			float32(kn.Close),
-			float32(kn.Low),
-			float32(kn.High),
-		}
-	}
-	return x, y
+	return kline
 }

@@ -1,23 +1,19 @@
 package event
 
 import (
+	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/utils"
 	"time"
 )
 
-type EventTrigger interface {
-	Start()
-	RegisterEventReceiver(chan *EventMsg)
-}
-
 type baseEventTrigger struct {
-	eventReceiver []chan *EventMsg
+	eventReceiver []chan *model.EventMsg
 }
 
-func (bet *baseEventTrigger) RegisterEventReceiver(ch chan *EventMsg) {
+func (bet *baseEventTrigger) RegisterEventReceiver(ch chan *model.EventMsg) {
 	bet.eventReceiver = append(bet.eventReceiver, ch)
 }
-func (bet *baseEventTrigger) sendEvent(msg *EventMsg) {
+func (bet *baseEventTrigger) sendEvent(msg *model.EventMsg) {
 	for _, ch := range bet.eventReceiver {
 		ch <- msg
 	}
@@ -36,7 +32,7 @@ func NewDailyEventTrigger() *DailyEventTrigger {
 func (det *DailyEventTrigger) Start() {
 	utils.AsyncRun(func() {
 		for {
-			msg := &EventMsg{
+			msg := &model.EventMsg{
 				TimeStamp: time.Now().Unix(),
 			}
 			det.baseEventTrigger.sendEvent(msg)
@@ -51,7 +47,7 @@ type BackTestDailyEventTrigger struct {
 	*baseEventTrigger
 }
 
-func NewBackTestDailyEventTrigger(startTs, endTs int64) EventTrigger {
+func NewBackTestDailyEventTrigger(startTs, endTs int64) model.EventTrigger {
 	if startTs >= endTs {
 		panic("ts error")
 	}
@@ -65,7 +61,7 @@ func NewBackTestDailyEventTrigger(startTs, endTs int64) EventTrigger {
 func (det *BackTestDailyEventTrigger) Start() {
 	utils.AsyncRun(func() {
 		for ts := det.StartTimeStamp; ts <= det.EndTimeStamp; {
-			msg := &EventMsg{
+			msg := &model.EventMsg{
 				TimeStamp: utils.UnityDailyTimeStamp(ts),
 			}
 			det.baseEventTrigger.sendEvent(msg)

@@ -1,17 +1,12 @@
-package data_feed
+package model
 
-import (
-	"github.com/yuanyangen/trader1024/engine/event"
-	"github.com/yuanyangen/trader1024/engine/model"
-)
-
-type    DataType int64
+type DataType int64
 
 const DataTypeKLine DataType = 1
 
 type Data struct {
 	DataType DataType
-	KData    *model.KNode
+	KData    *KNode
 }
 
 type SourceType int64
@@ -24,5 +19,5 @@ type DataMeta struct {
 
 type DataFeed interface {
 	RegisterChan(out chan *Data)
-	SetEventTrigger(event.EventTrigger)
+	SetEventTrigger(EventTrigger)
 }

@@ -6,8 +6,9 @@ package strategy
 import (
 	"github.com/shopspring/decimal"
 	"github.com/yuanyangen/trader1024/engine/account"
-	"github.com/yuanyangen/trader1024/engine/indicator"
 	"github.com/yuanyangen/trader1024/engine/model"
+	"github.com/yuanyangen/trader1024/engine/utils"
+	"github.com/yuanyangen/trader1024/strategy/indicator"
 )
 
 type CustomKAMAStrategy2 struct {
@@ -19,7 +20,7 @@ type CustomKAMAStrategy2 struct {
 	loaded     bool // 只有
 }
 
-func NewCustomLAMAStrategy2Factory() Strategy {
+func NewCustomLAMAStrategy2Factory() model.Strategy {
 	return &CustomKAMAStrategy2{}
 }
 
@@ -27,7 +28,7 @@ func (es *CustomKAMAStrategy2) Name() string {
 	return "CustomKAMAStrategy2"
 }
 
-func (es *CustomKAMAStrategy2) Init(ec *MarketStrategyContext) {
+func (es *CustomKAMAStrategy2) Init(ec *model.MarketStrategyContext) {
 	es.kama10 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 8, 2, 30)
 	//es.kama5 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 5, 2, 30)
 	es.kama2 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 2, 2, 30)
@@ -35,9 +36,9 @@ func (es *CustomKAMAStrategy2) Init(ec *MarketStrategyContext) {
 	es.crossunder = indicator.NewCrossUnderIndicator(ec.DailyData.Kline, es.kama2.KAMALine, es.kama10.KAMALine)
 }
 
-func (es *CustomKAMAStrategy2) OnBar(ctx *MarketStrategyContext, ts int64) []*model.StrategyResult {
-	currentKValue, err := ctx.DailyData.Kline.GetKnodeByTs(ts)
-	if err != nil {
+func (es *CustomKAMAStrategy2) OnBar(ctx *model.MarketStrategyContext, ts int64) []*model.StrategyResult {
+	currentKValue := model.NewKnodeFromAny(ctx.DailyData.Kline.GetByTs(ts))
+	if currentKValue == nil {
 		return nil
 	}
 	if es.kama2.GetCurrentFloat(ts) == 0 || es.kama10.GetCurrentFloat(ts) == 0 {
@@ -47,18 +48,18 @@ func (es *CustomKAMAStrategy2) OnBar(ctx *MarketStrategyContext, ts int64) []*mo
 	curPrice := (currentKValue.Open + currentKValue.Close) / 2
 	cmd := []*model.StrategyResult{}
 
-	if es.crossover.GetCurrentValue(ts) || es.crossunder.GetCurrentValue(ts) {
+	if utils.AnyToBool(es.crossover.GetByTs(ts)) || utils.AnyToBool(es.crossunder.GetByTs(ts)) {
 		es.loaded = true
-		cmd = append(cmd, NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(curPrice)))
+		cmd = append(cmd, model.NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(curPrice)))
 	}
 
 	if es.long(es.kama2.GetCurrentFloat(ts), es.kama10.GetCurrentFloat(ts)) {
 		if position.IsEmpty() && es.loaded {
-			cmd = append(cmd, NewStrategyResult(model.StrategyCmdBuy, decimal.NewFromFloat(curPrice)))
+			cmd = append(cmd, model.NewStrategyResult(model.StrategyCmdBuy, decimal.NewFromFloat(curPrice)))
 		}
 	} else if es.short(es.kama2.GetCurrentFloat(ts), es.kama10.GetCurrentFloat(ts)) {
 		if position.IsEmpty() && es.loaded {
-			cmd = append(cmd, NewStrategyResult(model.StrategyCmdSell, decimal.NewFromFloat(curPrice)))
+			cmd = append(cmd, model.NewStrategyResult(model.StrategyCmdSell, decimal.NewFromFloat(curPrice)))
 		}
 	}
 

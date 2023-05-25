@@ -11,7 +11,6 @@ import (
 	"sort"
 )
 
-
 //
 //第一层是：数据的来源，包括： main, eastMoney等，
 //第二层是具体的DB文件，分成128个文件，文件名字是通过marketID hash得到的。
@@ -42,9 +41,9 @@ var allStorage = map[string]*KVStorage{}
 func InitAllStorage(dirPath string) {
 	var dbSplitCount = 128
 
-    InitStorage(dirPath, "eastmoney", dbSplitCount)
-    InitStorage(dirPath, "main", dbSplitCount)
-    InitStorage(dirPath, "test", 1)
+	InitStorage(dirPath, "eastmoney", dbSplitCount)
+	InitStorage(dirPath, "main", dbSplitCount)
+	InitStorage(dirPath, "test", 1)
 }
 
 func InitStorage(dirPath string, name string, count int) *KVStorage {
@@ -54,7 +53,7 @@ func InitStorage(dirPath string, name string, count int) *KVStorage {
 	dbs := make([]*bolt.DB, count)
 
 	for i := 0; i < count; i++ {
-        dbPath := path.Join(dirPath, name)
+		dbPath := path.Join(dirPath, name)
 		utils.CreateDirIfNotExist(dbPath)
 
 		filePath := path.Join(dbPath, fmt.Sprintf("%v_.db", i))
@@ -115,7 +114,7 @@ func (cs *KVStorage) GetAllData(marketId string, t model.LineType) []*model.KNod
 	db.View(func(tx *bolt.Tx) error {
 		bucket := cs.getBycketName(tx, marketId, t)
 		bucket.ForEach(func(k, v []byte) error {
-			knode := model.NewFromJson(v)
+			knode := model.NewKnodeFromJson(v)
 			allData = append(allData, knode)
 			return nil
 		})
@@ -135,7 +134,7 @@ func (cs *KVStorage) GetDataByTs(marketId string, t model.LineType, ts int64) *m
 		bucket := cs.getBycketName(tx, marketId, t)
 		key := fmt.Sprint(ts)
 		val := bucket.Get([]byte(key))
-		res = model.NewFromJson(val)
+		res = model.NewKnodeFromJson(val)
 		return nil
 	})
 	return res

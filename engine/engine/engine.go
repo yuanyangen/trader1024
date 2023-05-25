@@ -3,14 +3,13 @@ package engine
 import (
 	"fmt"
 	"github.com/yuanyangen/trader1024/engine/data_feed"
-	"github.com/yuanyangen/trader1024/engine/event"
-	"github.com/yuanyangen/trader1024/strategy"
+	"github.com/yuanyangen/trader1024/engine/model"
 )
 
 type Engine struct {
 	Markets        map[string]*MarketEngine
-	EventTrigger   event.EventTrigger
-	strategies     []func() strategy.Strategy
+	EventTrigger   model.EventTrigger
+	strategies     []func() model.Strategy
 	watcherBackend *WatcherBackend
 }
 
@@ -22,7 +21,7 @@ func NewEngine() *Engine {
 	return e
 }
 
-func (ec *Engine) RegisterEventTrigger(e event.EventTrigger) {
+func (ec *Engine) RegisterEventTrigger(e model.EventTrigger) {
 	ec.EventTrigger = e
 }
 
@@ -30,16 +29,16 @@ func (ec *Engine) RegisterMarket(name string) {
 	if len(ec.strategies) == 0 {
 		panic("should register strategy first")
 	}
-	strategies := make([]strategy.Strategy, len(ec.strategies))
+	strategies := make([]model.Strategy, len(ec.strategies))
 	for i, stFactory := range ec.strategies {
 		strategies[i] = stFactory()
 	}
-    df := data_feed.NewCsvKLineDataFeed(name)
+	df := data_feed.NewCsvKLineDataFeed(name)
 
 	m := NewMarket(name, df, strategies)
 	ec.Markets[name] = m
 }
-func (ec *Engine) RegisterStrategy(stFactory func() strategy.Strategy) {
+func (ec *Engine) RegisterStrategy(stFactory func() model.Strategy) {
 	ec.strategies = append(ec.strategies, stFactory)
 }
 func (ec *Engine) Start() error {

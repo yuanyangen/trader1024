@@ -3,29 +3,32 @@ package indicator
 import (
 	"fmt"
 	"github.com/go-echarts/go-echarts/charts"
-	"github.com/yuanyangen/trader1024/engine/indicator/indicator_base"
+	"github.com/yuanyangen/trader1024/engine/indicator_base"
+	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/talib"
 	"github.com/yuanyangen/trader1024/engine/utils"
 	"math"
 )
 
 type KAMAIndicator struct {
-	kline       *KLineIndicator
+	*indicator_base.IndicatorCommon
+	kline       model.MarketIndicator
 	KAMALine    *indicator_base.Line
 	erPeriod    int64
 	shortPeriod int64
 	longPeriod  int64
 }
 
-func NewKAMAIndicator(kline *KLineIndicator, period, shortPeriod, longPeriod int64) *KAMAIndicator {
+func NewKAMAIndicator(kline model.MarketIndicator, period, shortPeriod, longPeriod int64) *KAMAIndicator {
 	kama := &KAMAIndicator{
-		erPeriod:    period,
-		shortPeriod: shortPeriod,
-		longPeriod:  longPeriod,
-		KAMALine:    indicator_base.NewLine(kline.Type, fmt.Sprintf("kama_%v", period)),
-		kline:       kline,
+		IndicatorCommon: indicator_base.NewIndicatorCommon(),
+		erPeriod:        period,
+		shortPeriod:     shortPeriod,
+		longPeriod:      longPeriod,
+		KAMALine:        indicator_base.NewLine(model.LineType_Day, fmt.Sprintf("kama_%v", period)),
+		kline:           kline,
 	}
-	kline.AddIndicatorLine(kama)
+	kline.AddChildrenIndicator(kama)
 	return kama
 }
 
@@ -34,14 +37,15 @@ func (kama *KAMAIndicator) Name() string {
 }
 
 func (kama *KAMAIndicator) AddData(ts int64, node any) {
-	data, err := kama.kline.GetByTsAndCount(ts, kama.erPeriod+1)
+	dataI, err := kama.kline.GetByTsAndCount(ts, kama.erPeriod+1)
 	if err != nil {
 		kama.KAMALine.AddData(ts, 0)
 		return
 	}
+	data := model.NewKnodesFromAny(dataI)
 	in := make([]float64, len(data))
-	for i, v := range data {
-		in[i] = (v.Close + v.Open) / 2
+	for i, knode := range data {
+		in[i] = (knode.Close + knode.Open) / 2
 	}
 	out := talib.CustomKama(in, int(kama.erPeriod), int(kama.shortPeriod), int(kama.longPeriod), kama.GetCurrentFloat(data[len(data)-2].TimeStamp))
 	avg := out[len(out)-1]
@@ -71,8 +75,13 @@ func (kama *KAMAIndicator) GetCurrentFloat(ts int64) float64 {
 	f, _ := v.(float64)
 	return f
 }
-
-func (kama *KAMAIndicator) DoPlot(kline *charts.Kline) {
+func (kama *KAMAIndicator) GetByTsAndCount(ts int64, period int64) ([]any, error) {
+	return nil, nil
+}
+func (kama *KAMAIndicator) GetByTs(ts int64) any {
+	return nil
+}
+func (kama *KAMAIndicator) DoPlot(p *charts.Page, kline *charts.Kline) {
 	allData := kama.KAMALine.GetAllSortedData()
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))

@@ -5,55 +5,55 @@ import (
 	"sort"
 )
 
-type Line struct {
+type Scatter struct {
 	*BaseLine
 }
 
-type LineNode struct {
+type ScatterNode struct {
 	Value     float64
 	TimeStamp int64
 }
 
-func NewLine(t model.LineType, name string) *Line {
-	return &Line{
+func NewScatter(t model.LineType, name string) *Scatter {
+	return &Scatter{
 		BaseLine: NewBaseLine(name, t),
 	}
 }
 
-func (k *Line) GetByTs(ts int64) (*LineNode, error) {
+func (k *Scatter) GetByTs(ts int64) (*ScatterNode, error) {
 	res, err := k.BaseLine.GetByTs(ts)
 	if err != nil {
 		return nil, err
 	}
-	vv := res.(*LineNode)
+	vv := res.(*ScatterNode)
 	return vv, nil
 }
 
-func (k *Line) GetByTsAndCount(ts int64, count int64) ([]*LineNode, error) {
+func (k *Scatter) GetByTsAndCount(ts int64, count int64) ([]*ScatterNode, error) {
 	res, err := k.BaseLine.GetByTsAndCount(ts, count)
 	if err != nil {
 		return nil, err
 	}
-	newRes := make([]*LineNode, len(res))
+	newRes := make([]*ScatterNode, len(res))
 	for i, v := range res {
-		newRes[i] = v.(*LineNode)
+		newRes[i] = v.(*ScatterNode)
 	}
 
 	return newRes, nil
 }
 
-func (k *Line) AddData(ts int64, value float64) {
-	node := &LineNode{
+func (k *Scatter) AddData(ts int64, value float64) {
+	node := &ScatterNode{
 		TimeStamp: ts, Value: value,
 	}
 	k.BaseLine.AddData(ts, node)
 }
 
-func (k *Line) GetAllSortedData() []*LineNode {
-	res := k.BaseLine.GetAllSortedData()
-	newRes := make([]*LineNode, len(res))
+func (k *Scatter) GetAllSortedData() []*ScatterNode {
+	res := k.BaseLine.GetAllData()
+	newRes := make([]*ScatterNode, len(res))
 	for i, v := range res {
-		newRes[i] = v.(*LineNode)
+		newRes[i] = v.(*ScatterNode)
 	}
 
 	sort.Slice(newRes, func(i, j int) bool {

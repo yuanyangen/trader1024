@@ -3,28 +3,32 @@ package indicator
 import (
 	"fmt"
 	"github.com/go-echarts/go-echarts/charts"
-	"github.com/yuanyangen/trader1024/engine/indicator/indicator_base"
+	"github.com/yuanyangen/trader1024/engine/indicator_base"
+	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/talib"
 	"github.com/yuanyangen/trader1024/engine/utils"
 )
 
 type BBANDIndicator struct {
-	kline          *KLineIndicator
+	*indicator_base.BaseLine
+	*indicator_base.IndicatorCommon
+	kline          model.MarketIndicator
 	BBANDUpperLine *indicator_base.Line
 	BBANDMidLine   *indicator_base.Line
 	BBANDDownLine  *indicator_base.Line
 	erPeriod       int64
 }
 
-func NewBBANDIndicator(kline *KLineIndicator, period int64) *BBANDIndicator {
+func NewBBANDIndicator(kline model.MarketIndicator, period int64) *BBANDIndicator {
 	bband := &BBANDIndicator{
-		erPeriod:       period,
-		BBANDUpperLine: indicator_base.NewLine(kline.Type, fmt.Sprintf("bband_uper_%v", period)),
-		BBANDMidLine:   indicator_base.NewLine(kline.Type, fmt.Sprintf("bband_mid_%v", period)),
-		BBANDDownLine:  indicator_base.NewLine(kline.Type, fmt.Sprintf("bband_low_%v", period)),
-		kline:          kline,
+		IndicatorCommon: indicator_base.NewIndicatorCommon(),
+		erPeriod:        period,
+		BBANDUpperLine:  indicator_base.NewLine(model.LineType_Day, fmt.Sprintf("bband_uper_%v", period)),
+		BBANDMidLine:    indicator_base.NewLine(model.LineType_Day, fmt.Sprintf("bband_mid_%v", period)),
+		BBANDDownLine:   indicator_base.NewLine(model.LineType_Day, fmt.Sprintf("bband_low_%v", period)),
+		kline:           kline,
 	}
-	kline.AddIndicatorLine(bband)
+	kline.AddChildrenIndicator(bband)
 	return bband
 }
 
@@ -42,18 +46,20 @@ func (bband *BBANDIndicator) AddData(ts int64, node any) {
 	}
 	in := make([]float64, len(data))
 	for i, v := range data {
-		in[i] = (v.Close + v.Open) / 2
+		kNode := v.(*model.KNode)
+		in[i] = (kNode.Close + kNode.Open) / 2
 	}
 	up, mid, low := talib.BBands(in, int(bband.erPeriod), 1, 1, 0)
 	bband.BBANDUpperLine.AddData(ts, up[len(up)-1])
 	bband.BBANDMidLine.AddData(ts, mid[len(mid)-1])
 	bband.BBANDDownLine.AddData(ts, low[len(low)-1])
+	bband.TriggerChildren(ts, node)
 }
 func (bband *BBANDIndicator) GetAllSortedData() []any {
 	return nil
 }
 
-func (bband *BBANDIndicator) GetCurrentValue(ts int64) any {
+func (bband *BBANDIndicator) GetByTs(ts int64) any {
 	if bband.BBANDUpperLine == nil {
 		panic("BBANDLine error")
 	}
@@ -100,7 +106,7 @@ func (bband *BBANDIndicator) doGetValue(ts int64, l *indicator_base.Line) any {
 	}
 }
 
-func (bband *BBANDIndicator) DoPlot(kline *charts.Kline) {
+func (bband *BBANDIndicator) DoPlot(p *charts.Page, kline *charts.Kline) {
 	bband.doPlotOneLine(kline, bband.BBANDUpperLine)
 	bband.doPlotOneLine(kline, bband.BBANDMidLine)
 	bband.doPlotOneLine(kline, bband.BBANDDownLine)

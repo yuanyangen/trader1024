@@ -2,7 +2,6 @@ package data_feed
 
 import (
 	"github.com/yuanyangen/trader1024/data/storage"
-	"github.com/yuanyangen/trader1024/engine/event"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/utils"
 )
@@ -16,19 +15,19 @@ type CsvKLineDataFeed struct {
 func NewCsvKLineDataFeed(marketId string) *CsvKLineDataFeed {
 	cdf := &CsvKLineDataFeed{
 		BaseDataFeed: &BaseDataFeed{
-			eventTriggerChan: make(chan *event.EventMsg, 1024),
-			Source:           SourceType_CSV,
+			eventTriggerChan: make(chan *model.EventMsg, 1024),
+			Source:           model.SourceType_CSV,
 		},
 		marketId: marketId,
-        storage:  storage.EastMoneyHttpStorage(),
+		storage:  storage.EastMoneyHttpStorage(),
 	}
 	cdf.startEventReceiver()
 
 	return cdf
 }
 
-func (ckdf *CsvKLineDataFeed) startEventReceiver() chan *Data {
-	respChan := make(chan *Data, 1024)
+func (ckdf *CsvKLineDataFeed) startEventReceiver() chan *model.Data {
+	respChan := make(chan *model.Data, 1024)
 	if ckdf.eventTriggerChan == nil {
 		panic("event chan error")
 	}
@@ -37,8 +36,8 @@ func (ckdf *CsvKLineDataFeed) startEventReceiver() chan *Data {
 			ts := event.TimeStamp
 			data := ckdf.storage.GetDataByTs(ckdf.marketId, model.LineType_Day, ts)
 			if data != nil {
-				node := &Data{
-					DataType: DataTypeKLine,
+				node := &model.Data{
+					DataType: model.DataTypeKLine,
 					KData:    data,
 				}
 				ckdf.SendData(node)

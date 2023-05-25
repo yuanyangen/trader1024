@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"github.com/go-echarts/go-echarts/charts"
 	"github.com/shopspring/decimal"
-	"github.com/yuanyangen/trader1024/engine/event"
+	"github.com/yuanyangen/trader1024/engine/model"
 	"sync"
 )
 
 type Account struct {
 	Total       decimal.Decimal // 单位是分
 	Positions   map[string]*MarketPosition
-	GlobalEvent chan *event.EventMsg
+	GlobalEvent chan *model.EventMsg
 	indicator   *CashIndicator
 	mu          sync.Mutex
 }
@@ -19,7 +19,7 @@ type Account struct {
 func NewAccount(start int64) *Account {
 	return &Account{
 		Total:       decimal.NewFromInt(start),
-		GlobalEvent: make(chan *event.EventMsg, 1024),
+		GlobalEvent: make(chan *model.EventMsg, 1024),
 		Positions:   map[string]*MarketPosition{},
 		indicator:   NewCashIndicator(),
 	}

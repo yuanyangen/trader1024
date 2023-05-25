@@ -4,7 +4,7 @@ import (
 	"github.com/yuanyangen/trader1024/engine/account"
 	"github.com/yuanyangen/trader1024/engine/data_feed"
 	"github.com/yuanyangen/trader1024/engine/event"
-	"github.com/yuanyangen/trader1024/strategy"
+	"github.com/yuanyangen/trader1024/strategy/strategy"
 	"testing"
 )
 

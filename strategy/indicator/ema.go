@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"github.com/go-echarts/go-echarts/charts"
 	"github.com/markcheno/go-talib"
-	"github.com/yuanyangen/trader1024/engine/indicator/indicator_base"
+	"github.com/yuanyangen/trader1024/engine/indicator_base"
+	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/utils"
 )
 
 type EMAIndicator struct {
+	*indicator_base.IndicatorCommon
 	kline   *KLineIndicator
 	EMALine *indicator_base.Line
 	period  int64
@@ -16,11 +18,12 @@ type EMAIndicator struct {
 
 func NewEMAIndicator(kline *KLineIndicator, period int64) *EMAIndicator {
 	ema := &EMAIndicator{
-		period:  period,
-		EMALine: indicator_base.NewLine(kline.Type, fmt.Sprintf("ema_%v", period)),
-		kline:   kline,
+		IndicatorCommon: indicator_base.NewIndicatorCommon(),
+		period:          period,
+		EMALine:         indicator_base.NewLine(kline.Type, fmt.Sprintf("ema_%v", period)),
+		kline:           kline,
 	}
-	kline.AddIndicatorLine(ema)
+	kline.AddChildrenIndicator(ema)
 	return ema
 }
 
@@ -36,7 +39,12 @@ func (ema *EMAIndicator) AddData(ts int64, node any) {
 	}
 	in := make([]float64, len(data))
 	for i, v := range data {
-		in[i] = (v.Close + v.Open) / 2
+		knode := model.NewKnodeFromAny(v)
+		if knode != nil {
+			in[i] = (knode.Close + knode.Open) / 2
+		} else {
+			panic("knode nil")
+		}
 	}
 	out := talib.Ema(in, int(ema.period))
 	avg := out[len(out)-1]
@@ -45,8 +53,11 @@ func (ema *EMAIndicator) AddData(ts int64, node any) {
 func (ema *EMAIndicator) GetAllSortedData() []any {
 	return nil
 }
+func (ema *EMAIndicator) GetByTsAndCount(ts int64, period int64) ([]any, error) {
+	return nil, nil
+}
 
-func (ema *EMAIndicator) GetCurrentValue(ts int64) any {
+func (ema *EMAIndicator) GetByTs(ts int64) any {
 	if ema.EMALine == nil {
 		panic("EMALine error")
 	}
@@ -62,12 +73,12 @@ func (ema *EMAIndicator) GetCurrentValue(ts int64) any {
 }
 
 func (ema *EMAIndicator) GetCurrentFloat(ts int64) float64 {
-	v := ema.GetCurrentValue(ts)
+	v := ema.GetByTs(ts)
 	f, _ := v.(float64)
 	return f
 }
 
-func (ema *EMAIndicator) DoPlot(kline *charts.Kline) {
+func (ema *EMAIndicator) DoPlot(p *charts.Page, kline *charts.Kline) {
 	allData := ema.EMALine.GetAllSortedData()
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
