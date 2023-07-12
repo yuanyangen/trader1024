@@ -77,7 +77,7 @@ func (k *KLineIndicator) GetAllSortedData() []any {
 	return r
 }
 
-func (k *KLineIndicator) DoPlot(p *charts.Page, kline *charts.Kline) {
+func (k *KLineIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	kline.SetGlobalOptions(
 		charts.TitleOpts{Title: k.IndicatorCommon.Name()},
 		charts.XAxisOpts{SplitNumber: 20},
@@ -87,8 +87,7 @@ func (k *KLineIndicator) DoPlot(p *charts.Page, kline *charts.Kline) {
 	)
 	x, y := k.convertData()
 	kline.AddXAxis(x).AddYAxis("日K", y)
-	p.Add(kline)
-	k.PlotChildren(p, kline)
+	k.PlotChildren(kline, ratioLine)
 }
 
 func (k *KLineIndicator) convertData() ([]string, [][4]float32) {

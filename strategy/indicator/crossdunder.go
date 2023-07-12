@@ -87,7 +87,7 @@ func (cou *CrossUnderIndicator) GetByTsAndCount(ts int64, period int64) ([]any, 
 	return nil, nil
 }
 
-func (cou *CrossUnderIndicator) DoPlot(p *charts.Page, kline *charts.Kline) {
+func (cou *CrossUnderIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	allData := cou.crossunderScatter.GetAllSortedData()
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))

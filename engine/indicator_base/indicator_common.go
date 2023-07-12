@@ -25,12 +25,13 @@ func (bl *IndicatorCommon) AddChildrenIndicator(i model.MarketIndicator) {
 func (bl *IndicatorCommon) TriggerChildren(ts int64, node any) {
 	for _, i := range bl.Children {
 		i.AddData(ts, node)
+		i.TriggerChildren(ts, node)
 	}
 }
 
-func (bl *IndicatorCommon) PlotChildren(p *charts.Page, page *charts.Kline) {
+func (bl *IndicatorCommon) PlotChildren(kline *charts.Kline, ratioLine *charts.Line) {
 	for _, i := range bl.Children {
-		i.DoPlot(p, page)
-		i.PlotChildren(p, page)
+		i.DoPlot(kline, ratioLine)
+		i.PlotChildren(kline, ratioLine)
 	}
 }

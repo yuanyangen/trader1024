@@ -106,7 +106,7 @@ func (bband *BBANDIndicator) doGetValue(ts int64, l *indicator_base.Line) any {
 	}
 }
 
-func (bband *BBANDIndicator) DoPlot(p *charts.Page, kline *charts.Kline) {
+func (bband *BBANDIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	bband.doPlotOneLine(kline, bband.BBANDUpperLine)
 	bband.doPlotOneLine(kline, bband.BBANDMidLine)
 	bband.doPlotOneLine(kline, bband.BBANDDownLine)

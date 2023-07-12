@@ -76,12 +76,38 @@ func (kama *KAMAIndicator) GetCurrentFloat(ts int64) float64 {
 	return f
 }
 func (kama *KAMAIndicator) GetByTsAndCount(ts int64, period int64) ([]any, error) {
-	return nil, nil
+	if kama.KAMALine == nil {
+		panic("KAMALine error")
+	}
+	if kama.erPeriod == 0 {
+		panic("erPeriod empty")
+	}
+	dataI, err := kama.KAMALine.GetByTsAndCount(ts, period)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]any, len(dataI))
+	for i, v := range dataI {
+		res[i] = v.Value
+	}
+
+	return res, nil
 }
 func (kama *KAMAIndicator) GetByTs(ts int64) any {
-	return nil
+	if kama.KAMALine == nil {
+		panic("KAMALine error")
+	}
+	if kama.erPeriod == 0 {
+		panic("erPeriod empty")
+	}
+	data, err := kama.KAMALine.GetByTs(ts)
+	if err != nil {
+		return 0.0
+	} else {
+		return data.Value
+	}
 }
-func (kama *KAMAIndicator) DoPlot(p *charts.Page, kline *charts.Kline) {
+func (kama *KAMAIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	allData := kama.KAMALine.GetAllSortedData()
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))

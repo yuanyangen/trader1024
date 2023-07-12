@@ -78,7 +78,7 @@ func (ema *EMAIndicator) GetCurrentFloat(ts int64) float64 {
 	return f
 }
 
-func (ema *EMAIndicator) DoPlot(p *charts.Page, kline *charts.Kline) {
+func (ema *EMAIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	allData := ema.EMALine.GetAllSortedData()
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))

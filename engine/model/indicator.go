@@ -12,8 +12,9 @@ type MarketIndicator interface {
 	GetAllSortedData() []any
 	GetByTsAndCount(ts int64, period int64) ([]any, error)
 	GetByTs(ts int64) any
-	DoPlot(p *charts.Page, page *charts.Kline)
+	DoPlot(page *charts.Kline, ratioLine *charts.Line)
 	// common
-	PlotChildren(p *charts.Page, page *charts.Kline)
+	PlotChildren(kline *charts.Kline, ratioLine *charts.Line)
 	AddChildrenIndicator(i MarketIndicator)
+	TriggerChildren(ts int64, node any)
 }

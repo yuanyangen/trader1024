@@ -87,7 +87,7 @@ func (coi *CrossOverIndicator) GetByTsAndCount(ts int64, period int64) ([]any, e
 	return nil, nil
 }
 
-func (coi *CrossOverIndicator) DoPlot(p *charts.Page, kline *charts.Kline) {
+func (coi *CrossOverIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	allData := coi.crossoverScatter.GetAllSortedData()
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))

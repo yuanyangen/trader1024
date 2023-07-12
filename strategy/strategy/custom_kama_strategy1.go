@@ -14,10 +14,11 @@ type CustomKAMAStrategy struct {
 	kama10 *indicator.KAMAIndicator
 	kama5  *indicator.KAMAIndicator
 	kama2  *indicator.KAMAIndicator
+	slop   model.MarketIndicator
 	loaded bool // 只有
 }
 
-func NewCustomLAMAStrategyFactory() model.Strategy {
+func NewCustomKAMAStrategyFactory() model.Strategy {
 	return &CustomKAMAStrategy{}
 }
 
@@ -29,6 +30,7 @@ func (es *CustomKAMAStrategy) Init(ec *model.MarketStrategyContext) {
 	es.kama10 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 10, 2, 30)
 	es.kama5 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 5, 2, 30)
 	es.kama2 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 2, 2, 30)
+	es.slop = indicator.NewSlopIndicator(es.kama2, 2)
 }
 
 func (es *CustomKAMAStrategy) OnBar(ctx *model.MarketStrategyContext, ts int64) []*model.StrategyResult {

@@ -9,32 +9,32 @@ import (
 	"github.com/yuanyangen/trader1024/engine/utils"
 )
 
-type SMAIndicator struct {
+type RSIIndicator struct {
 	*indicator_base.IndicatorCommon
 	kline   model.MarketIndicator
 	SMALine *indicator_base.Line
 	period  int64
 }
 
-func NewSMAIndicator(kline model.MarketIndicator, period int64) *SMAIndicator {
-	sma := &SMAIndicator{
+func NewRSIIndicator(kline model.MarketIndicator, period int64) *RSIIndicator {
+	sma := &RSIIndicator{
 		IndicatorCommon: indicator_base.NewIndicatorCommon(),
 		period:          period,
-		SMALine:         indicator_base.NewLine(model.LineType_Day, fmt.Sprintf("sma_%v", period)),
+		SMALine:         indicator_base.NewLine(model.LineType_Day, fmt.Sprintf("rsi_%v", period)),
 		kline:           kline,
 	}
 	kline.AddChildrenIndicator(sma)
 	return sma
 }
 
-func (sma *SMAIndicator) Name() string {
-	return fmt.Sprintf("SimpleMovingAverage_%v", sma.period)
+func (ri *RSIIndicator) Name() string {
+	return fmt.Sprintf("RSI_%v", ri.period)
 }
 
-func (sma *SMAIndicator) AddData(ts int64, node any) {
-	dataI, err := sma.kline.GetByTsAndCount(ts, sma.period)
+func (ri *RSIIndicator) AddData(ts int64, node any) {
+	dataI, err := ri.kline.GetByTsAndCount(ts, ri.period+1)
 	if err != nil {
-		sma.SMALine.AddData(ts, 0)
+		ri.SMALine.AddData(ts, 0)
 		return
 	}
 	data := model.NewKnodesFromAny(dataI)
@@ -43,34 +43,34 @@ func (sma *SMAIndicator) AddData(ts int64, node any) {
 	for i, v := range data {
 		in[i] = (v.Close + v.Open) / 2
 	}
-	out := talib.Sma(in, int(sma.period))
+	out := talib.Rsi(in, int(ri.period))
 	avg := out[len(out)-1]
-	sma.SMALine.AddData(ts, avg)
+	ri.SMALine.AddData(ts, avg)
 }
-func (sma *SMAIndicator) GetAllSortedData() []any {
+func (ri *RSIIndicator) GetAllSortedData() []any {
 	return nil
 }
 
-func (sma *SMAIndicator) GetByTs(ts int64) any {
-	if sma.SMALine == nil {
+func (ri *RSIIndicator) GetByTs(ts int64) any {
+	if ri.SMALine == nil {
 		panic("SMALine error")
 	}
-	if sma.period == 0 {
+	if ri.period == 0 {
 		panic("erPeriod empty")
 	}
-	data, err := sma.SMALine.GetByTs(ts)
+	data, err := ri.SMALine.GetByTs(ts)
 	if err != nil {
 		return 0
 	} else {
 		return data.Value
 	}
 }
-func (sma *SMAIndicator) GetByTsAndCount(ts, period int64) ([]any, error) {
+func (ri *RSIIndicator) GetByTsAndCount(ts, period int64) ([]any, error) {
 	return nil, nil
 }
 
-func (sma *SMAIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
-	allData := sma.SMALine.GetAllSortedData()
+func (ri *RSIIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
+	allData := ri.SMALine.GetAllSortedData()
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
@@ -78,7 +78,7 @@ func (sma *SMAIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 		y[i] = v.Value
 	}
 	line := charts.NewLine()
-	line.SetGlobalOptions(charts.TitleOpts{Title: sma.Name()})
-	line.AddXAxis(x).AddYAxis(sma.Name(), y, charts.LineOpts{ConnectNulls: false})
-	kline.Overlap(line)
+	line.SetGlobalOptions(charts.TitleOpts{Title: ri.Name()})
+	line.AddXAxis(x).AddYAxis(ri.Name(), y, charts.LineOpts{ConnectNulls: false})
+	ratioLine.Overlap(line)
 }

@@ -11,7 +11,7 @@ func main() {
 	e := engine.NewEngine()
 	//e.RegisterStrategy(strategy.NewDualSMAStrategyFactory)
 	//e.RegisterStrategy(strategy.NewSingleSMAStrategy)
-	e.RegisterStrategy(strategy.NewCustomLAMAStrategyFactory)
+	e.RegisterStrategy(strategy.NewCustomLAMASlopStrategyFactory)
 	e.RegisterEventTrigger(event.NewBackTestDailyEventTrigger(1430494445, 1675697645))
 	e.RegisterMarket("sp2305")
 	//e.RegisterMarket("fu2304")

@@ -48,7 +48,11 @@ func (m *MarketEngine) DoPlot(p *charts.Page) {
 	position := account.GetBackTestBroker().GetCurrentLivePositions(m.Market.MarketId)
 	position.Report()
 	kline := charts.NewKLine()
-	m.DailyIndicators.Kline.DoPlot(p, kline)
+	line := charts.NewLine()
+
+	m.DailyIndicators.Kline.DoPlot(kline, line)
+	p.Add(kline)
+	p.Add(line)
 }
 
 func (m *MarketEngine) getKline() model.MarketIndicator {
