@@ -2,14 +2,13 @@ package model
 
 import "github.com/shopspring/decimal"
 
-type StrategyCmd int64
+type StrategyOut int64
 
-const StrategyCmdNothing StrategyCmd = 1
-const StrategyCmdBuy StrategyCmd = 2
-const StrategyCmdClean StrategyCmd = 3 // 平仓， 可以为平多仓， 也可以为平空仓
-const StrategyCmdSell StrategyCmd = 4
+const StrategyOutLong StrategyOut = 1
+const StrategyOutShort StrategyOut = 2
 
 type StrategyResult struct {
-	Cmd   StrategyCmd
-	Price decimal.Decimal
+	DecisionDesc string
+	Cmd          StrategyOut
+	Price        decimal.Decimal
 }

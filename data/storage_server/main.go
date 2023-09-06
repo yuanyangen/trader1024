@@ -5,17 +5,11 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	model2 "github.com/yuanyangen/trader1024/data/model"
-	"github.com/yuanyangen/trader1024/data/storage"
 )
 
 func main() {
 	Init()
 	startDataServer()
-}
-
-func Init() {
-    const storageDataPath = "/home/yuanyangen/HomeData/go/trader1024/data/datas"
-    storage.InitAllStorage(storageDataPath)
 }
 
 func startDataServer() {

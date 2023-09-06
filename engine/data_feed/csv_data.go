@@ -1,7 +1,7 @@
 package data_feed
 
 import (
-	"github.com/yuanyangen/trader1024/data/storage"
+	"github.com/yuanyangen/trader1024/data/storage_client"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/utils"
 )
@@ -9,7 +9,7 @@ import (
 type CsvKLineDataFeed struct {
 	*BaseDataFeed
 	marketId string
-	storage  *storage.HttpStorage
+	storage  *storage_client.HttpStorageClient
 }
 
 func NewCsvKLineDataFeed(marketId string) *CsvKLineDataFeed {
@@ -19,7 +19,7 @@ func NewCsvKLineDataFeed(marketId string) *CsvKLineDataFeed {
 			Source:           model.SourceType_CSV,
 		},
 		marketId: marketId,
-		storage:  storage.EastMoneyHttpStorage(),
+		storage:  storage_client.EastMoneyHttpStorage(),
 	}
 	cdf.startEventReceiver()
 

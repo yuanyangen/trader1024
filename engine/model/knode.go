@@ -11,6 +11,7 @@ const LineType_Day LineType = 1
 const LineType_Minite LineType = 2
 const LineType_5Minite LineType = 3
 const LineType_Hour LineType = 4
+const LineType_Week LineType = 5
 
 type KNode struct {
 	Date          string
@@ -25,6 +26,11 @@ type KNode struct {
 	IncreaseMount float64 // 涨跌额 ??
 	TurnoverRate  float64 //换手率
 	TimeStamp     int64
+}
+
+// 获取knode的当前价格
+func (k *KNode) GetValue() float64 {
+	return (k.Open + k.Close) / 2
 }
 
 func NewKnodeFromAny(val any) *KNode {

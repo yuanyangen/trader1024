@@ -35,7 +35,7 @@ func (kama *LineSmaIndicator) Name() string {
 }
 
 func (kama *LineSmaIndicator) AddData(ts int64, node any) {
-	dataI, err := kama.inline.GetByTsAndCount(ts, kama.erPeriod)
+	dataI, err := kama.inline.GetLastByTsAndCount(ts, kama.erPeriod)
 	if err != nil {
 		kama.KAMALine.AddData(ts, 0)
 		return
@@ -74,14 +74,14 @@ func (kama *LineSmaIndicator) GetCurrentFloat(ts int64) float64 {
 	f, _ := v.(float64)
 	return f
 }
-func (kama *LineSmaIndicator) GetByTsAndCount(ts int64, period int64) ([]any, error) {
+func (kama *LineSmaIndicator) GetLastByTsAndCount(ts int64, period int64) ([]any, error) {
 	if kama.KAMALine == nil {
 		panic("KAMALine error")
 	}
 	if kama.erPeriod == 0 {
 		panic("erPeriod empty")
 	}
-	dataI, err := kama.KAMALine.GetByTsAndCount(ts, period)
+	dataI, err := kama.KAMALine.GetLastByTsAndCount(ts, period)
 	if err != nil {
 		return nil, err
 	}

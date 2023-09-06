@@ -1,56 +1,51 @@
-package engine
+package train
 
 import (
 	"github.com/go-echarts/go-echarts/charts"
 	"github.com/yuanyangen/trader1024/data/markets"
 	"github.com/yuanyangen/trader1024/engine/account"
 	"github.com/yuanyangen/trader1024/engine/model"
-	"github.com/yuanyangen/trader1024/engine/portfolio"
 	"github.com/yuanyangen/trader1024/engine/utils"
 	"github.com/yuanyangen/trader1024/strategy/indicator"
 )
 
-type EngineMode int
-
-const EngineModeTrain EngineMode = 2
-const EngineModelive EngineMode = 1
-
-type MarketEngine struct {
-	mode            EngineMode
+type TrainMarketEngine struct {
 	Market          *model.Market
 	DataFeed        model.DataFeed
 	DailyIndicators *model.DailyIndicators
 	DataFeedChannel chan *model.Data
-
-	Strategies []model.Strategy
+	Strategies      []model.Strategy
+	Train           *Train
 }
 
-func NewMarket(id string, df model.DataFeed, strategy []model.Strategy) *MarketEngine {
+func NewMarket(id string, df model.DataFeed, strategy []model.Strategy) *TrainMarketEngine {
 	market := markets.GetMarketById(id)
 	if market == nil {
 		panic("market not define")
 	}
-	ed := &MarketEngine{
+	kline := indicator.NewKLine(market.Name, model.LineType_Day)
+	ed := &TrainMarketEngine{
 		Market:          market,
 		DataFeed:        df,
 		DataFeedChannel: make(chan *model.Data, 1024),
 		DailyIndicators: &model.DailyIndicators{
-			Kline:          indicator.NewKLine(market.Name, model.LineType_Day),
+			Kline:          kline,
 			ReceiveChannel: make(chan *model.Data, 1024),
 		},
 		Strategies: strategy,
+		Train:      NewTrain(market, kline),
 	}
 	df.RegisterChan(ed.DataFeedChannel)
 	return ed
 }
 
-func (m *MarketEngine) Start() {
+func (m *TrainMarketEngine) Start() {
 	m.startDataFeed()
 	m.initStrategy()
 	m.startOnBarLoop()
 }
 
-func (m *MarketEngine) DoPlot(p *charts.Page) {
+func (m *TrainMarketEngine) DoPlot(p *charts.Page) {
 	position := account.GetBackTestBroker().GetCurrentLivePositions(m.Market.MarketId)
 	position.Report()
 	kline := charts.NewKLine()
@@ -61,11 +56,7 @@ func (m *MarketEngine) DoPlot(p *charts.Page) {
 	p.Add(line)
 }
 
-func (m *MarketEngine) getKline() model.MarketIndicator {
-	return m.DailyIndicators.Kline
-}
-
-func (m *MarketEngine) startOnBarLoop() {
+func (m *TrainMarketEngine) startOnBarLoop() {
 	utils.AsyncRun(func() {
 		for v := range m.DataFeedChannel {
 			m.eventHandler(v)
@@ -73,7 +64,7 @@ func (m *MarketEngine) startOnBarLoop() {
 	})
 }
 
-func (m *MarketEngine) eventHandler(data *model.Data) {
+func (m *TrainMarketEngine) eventHandler(data *model.Data) {
 	m.refreshIndicators(data)
 
 	ctx := &model.MarketStrategyContext{
@@ -82,40 +73,34 @@ func (m *MarketEngine) eventHandler(data *model.Data) {
 	}
 	req := &model.MarketPortfolioReq{
 		Market: m.Market,
+		Ts:     data.KData.TimeStamp,
 	}
 
 	for _, st := range m.Strategies {
 		stResult := st.OnBar(ctx, data.KData.TimeStamp)
 		if stResult != nil {
-			str := &model.StrategyReq{
+			req.Strategies = append(req.Strategies, &model.StrategyReq{
 				StrategyName: st.Name(),
 				Cmd:          stResult,
 				Reason:       st.Name(),
-				Ts:           data.KData.TimeStamp,
-			}
-			req.Strategies = append(req.Strategies, str)
+			})
 		}
 	}
-	if m.mode == EngineModelive {
-		portfolio.Portfolio(req)
-		account.GetAccount().EventTrigger(data.KData.TimeStamp)
-	} else if m.mode == EngineModeTrain {
-
-	}
+	m.Train.TrainReq(req)
 }
 
-func (m *MarketEngine) refreshIndicators(data *model.Data) {
-	kline := m.getKline()
+func (m *TrainMarketEngine) refreshIndicators(data *model.Data) {
+	kline := m.DailyIndicators.Kline
 	kline.AddData(data.KData.TimeStamp, data.KData)
 }
 
-func (m *MarketEngine) startDataFeed() {
+func (m *TrainMarketEngine) startDataFeed() {
 	if m.DataFeed != nil {
 		m.startOneDataFeed(m.DataFeed)
 	}
 }
 
-func (m *MarketEngine) initStrategy() {
+func (m *TrainMarketEngine) initStrategy() {
 	if m.Strategies != nil {
 		for _, stra := range m.Strategies {
 			ctx := &model.MarketStrategyContext{DailyData: m.DailyIndicators}
@@ -124,7 +109,7 @@ func (m *MarketEngine) initStrategy() {
 	}
 }
 
-func (m *MarketEngine) startOneDataFeed(df model.DataFeed) {
+func (m *TrainMarketEngine) startOneDataFeed(df model.DataFeed) {
 	ch := make(chan *model.Data, 1024)
 	df.RegisterChan(ch)
 	utils.AsyncRun(func() {
@@ -133,11 +118,9 @@ func (m *MarketEngine) startOneDataFeed(df model.DataFeed) {
 			m.DailyIndicators.ReceiveChannel <- v
 		}
 	})
-
 }
 
-func (m *MarketEngine) plotKline() *charts.Kline {
+func (m *TrainMarketEngine) plotKline() *charts.Kline {
 	kline := charts.NewKLine()
-
 	return kline
 }

@@ -59,7 +59,7 @@ func (coi *CrossOverIndicator) AddData(ts int64, node any) {
 }
 
 func (coi *CrossOverIndicator) getLast3Data(ts int64, line *indicator_base2.Line) []float64 {
-	dataA, err := line.GetByTsAndCount(ts, 3)
+	dataA, err := line.GetLastByTsAndCount(ts, 3)
 	if err != nil || len(dataA) != 3 {
 		return nil
 	}
@@ -83,7 +83,7 @@ func (coi *CrossOverIndicator) GetByTs(ts int64) any {
 	}
 	return r.Value != 0
 }
-func (coi *CrossOverIndicator) GetByTsAndCount(ts int64, period int64) ([]any, error) {
+func (coi *CrossOverIndicator) GetLastByTsAndCount(ts int64, period int64) ([]any, error) {
 	return nil, nil
 }
 

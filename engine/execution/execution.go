@@ -9,7 +9,7 @@ import (
 type ExecutionAction struct {
 	MarketId   string
 	StrategyId string
-	Cmd        model.StrategyCmd
+	Cmd        model.StrategyOut
 	Count      decimal.Decimal
 	Price      decimal.Decimal
 	Reason     string

@@ -29,8 +29,8 @@ func (k *Scatter) GetByTs(ts int64) (*ScatterNode, error) {
 	return vv, nil
 }
 
-func (k *Scatter) GetByTsAndCount(ts int64, count int64) ([]*ScatterNode, error) {
-	res, err := k.BaseLine.GetByTsAndCount(ts, count)
+func (k *Scatter) GetLastByTsAndCount(ts int64, count int64) ([]*ScatterNode, error) {
+	res, err := k.BaseLine.GetLastByTsAndCount(ts, count)
 	if err != nil {
 		return nil, err
 	}

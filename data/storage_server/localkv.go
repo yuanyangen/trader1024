@@ -1,4 +1,4 @@
-package storage
+package main
 
 import (
 	"encoding/json"
@@ -25,26 +25,11 @@ type KVStorage struct {
 	dbs          []*bolt.DB
 }
 
-func TestStorage() *KVStorage {
-	return allStorage["test"]
-}
-func EastMoneyStorage() *KVStorage {
-	return allStorage["eastmoney"]
-}
-
-func MainStorage() *KVStorage {
-	return allStorage["main"]
+func GetStorageByDbName(db string) *KVStorage {
+	return allStorage[db]
 }
 
 var allStorage = map[string]*KVStorage{}
-
-func InitAllStorage(dirPath string) {
-	var dbSplitCount = 128
-
-	InitStorage(dirPath, "eastmoney", dbSplitCount)
-	InitStorage(dirPath, "main", dbSplitCount)
-	InitStorage(dirPath, "test", 1)
-}
 
 func InitStorage(dirPath string, name string, count int) *KVStorage {
 	cs := &KVStorage{

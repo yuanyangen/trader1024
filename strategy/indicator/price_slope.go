@@ -31,7 +31,7 @@ func (si *SlopIndicator) Name() string {
 }
 
 func (si *SlopIndicator) AddData(ts int64, node any) {
-	dataI, err := si.inLine.GetByTsAndCount(ts, si.period)
+	dataI, err := si.inLine.GetLastByTsAndCount(ts, si.period)
 	if err != nil {
 		si.slopLine.AddData(ts, 0)
 		return
@@ -63,8 +63,8 @@ func (si *SlopIndicator) GetByTs(ts int64) any {
 		return data.Value
 	}
 }
-func (si *SlopIndicator) GetByTsAndCount(ts, period int64) ([]any, error) {
-	rawData, err := si.slopLine.GetByTsAndCount(ts, period)
+func (si *SlopIndicator) GetLastByTsAndCount(ts, period int64) ([]any, error) {
+	rawData, err := si.slopLine.GetLastByTsAndCount(ts, period)
 	if err != nil {
 		return nil, err
 	}

@@ -31,7 +31,7 @@ func (si *ContinousIndicator) Name() string {
 }
 
 func (si *ContinousIndicator) AddData(ts int64, node any) {
-	dataI, err := si.kline.GetByTsAndCount(ts, 2)
+	dataI, err := si.kline.GetLastByTsAndCount(ts, 2)
 	if err != nil {
 		si.continousLine.AddData(ts, 0)
 		return
@@ -63,8 +63,8 @@ func (si *ContinousIndicator) GetByTs(ts int64) any {
 		return data.Value
 	}
 }
-func (si *ContinousIndicator) GetByTsAndCount(ts, period int64) ([]any, error) {
-	rawData, err := si.continousLine.GetByTsAndCount(ts, period)
+func (si *ContinousIndicator) GetLastByTsAndCount(ts, period int64) ([]any, error) {
+	rawData, err := si.continousLine.GetLastByTsAndCount(ts, period)
 	if err != nil {
 		return nil, err
 	}

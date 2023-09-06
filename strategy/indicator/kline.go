@@ -22,8 +22,21 @@ func NewKLine(name string, t model.LineType) model.MarketIndicator {
 func (k *KLineIndicator) Name() string {
 	return k.IndicatorCommon.Name()
 }
-func (k *KLineIndicator) GetByTsAndCount(ts int64, count int64) ([]any, error) {
-	res, err := k.BaseLine.GetByTsAndCount(ts, count)
+func (k *KLineIndicator) GetLastByTsAndCount(ts int64, count int64) ([]any, error) {
+	res, err := k.BaseLine.GetLastByTsAndCount(ts, count)
+	if err != nil {
+		return nil, err
+	}
+	newRes := make([]any, len(res))
+	for i, v := range res {
+		newRes[i] = v.(*model.KNode)
+	}
+
+	return newRes, nil
+}
+
+func (k *KLineIndicator) GetForwardByTsAndCount(ts int64, count int64) ([]any, error) {
+	res, err := k.BaseLine.GetForwardByTsAndCount(ts, count)
 	if err != nil {
 		return nil, err
 	}

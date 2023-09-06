@@ -29,8 +29,8 @@ func (k *Line) GetByTs(ts int64) (*LineNode, error) {
 	return vv, nil
 }
 
-func (k *Line) GetByTsAndCount(ts int64, count int64) ([]*LineNode, error) {
-	res, err := k.BaseLine.GetByTsAndCount(ts, count)
+func (k *Line) GetLastByTsAndCount(ts int64, count int64) ([]*LineNode, error) {
+	res, err := k.BaseLine.GetLastByTsAndCount(ts, count)
 	if err != nil {
 		return nil, err
 	}

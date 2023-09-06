@@ -32,7 +32,7 @@ func (si *VolumnSlopIndicator) Name() string {
 }
 
 func (si *VolumnSlopIndicator) AddData(ts int64, node any) {
-	dataI, err := si.inLine.GetByTsAndCount(ts, si.period)
+	dataI, err := si.inLine.GetLastByTsAndCount(ts, si.period)
 	if err != nil {
 		si.slopLine.AddData(ts, 0)
 		return
@@ -64,8 +64,8 @@ func (si *VolumnSlopIndicator) GetByTs(ts int64) any {
 		return data.Value
 	}
 }
-func (si *VolumnSlopIndicator) GetByTsAndCount(ts, period int64) ([]any, error) {
-	rawData, err := si.slopLine.GetByTsAndCount(ts, period)
+func (si *VolumnSlopIndicator) GetLastByTsAndCount(ts, period int64) ([]any, error) {
+	rawData, err := si.slopLine.GetLastByTsAndCount(ts, period)
 	if err != nil {
 		return nil, err
 	}

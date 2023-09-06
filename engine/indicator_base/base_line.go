@@ -51,7 +51,7 @@ func (bl *BaseLine) GetByTs(ts int64) (any, error) {
 	}
 }
 
-func (bl *BaseLine) GetByTsAndCount(ts int64, count int64) ([]any, error) {
+func (bl *BaseLine) GetLastByTsAndCount(ts int64, count int64) ([]any, error) {
 	offset := bl.offset()
 	ts = bl.UnityTimeStamp(ts)
 	resp := make([]any, count)
@@ -67,6 +67,28 @@ func (bl *BaseLine) GetByTsAndCount(ts int64, count int64) ([]any, error) {
 		node, ok := bl.data[timeK]
 		if ok {
 			resp[count-found-1] = node
+			found++
+		}
+	}
+	return resp, nil
+}
+
+func (bl *BaseLine) GetForwardByTsAndCount(ts int64, count int64) ([]any, error) {
+	offset := bl.offset()
+	ts = bl.UnityTimeStamp(ts)
+	resp := make([]any, count)
+	bl.Mu.Lock()
+	defer bl.Mu.Unlock()
+	found := int64(0)
+	for i := int64(0); found < count; i++ {
+		timeK := ts + i*offset
+		if timeK > bl.EndTs {
+			return nil, fmt.Errorf("no enough data for %v", timeK)
+		}
+
+		node, ok := bl.data[timeK]
+		if ok {
+			resp[found] = node
 			found++
 		}
 	}

@@ -10,7 +10,7 @@ type MarketIndicator interface {
 	Name() string
 	AddData(ts int64, node any)
 	GetAllSortedData() []any
-	GetByTsAndCount(ts int64, period int64) ([]any, error)
+	GetLastByTsAndCount(ts int64, period int64) ([]any, error)
 	GetByTs(ts int64) any
 	DoPlot(page *charts.Kline, ratioLine *charts.Line)
 	// common

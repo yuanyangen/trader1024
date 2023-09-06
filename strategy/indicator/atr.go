@@ -32,7 +32,7 @@ func (sma *ATRIndicator) Name() string {
 }
 
 func (sma *ATRIndicator) AddData(ts int64, node any) {
-	dataI, err := sma.kline.GetByTsAndCount(ts, sma.period)
+	dataI, err := sma.kline.GetLastByTsAndCount(ts, sma.period)
 	if err != nil {
 		sma.SMALine.AddData(ts, 0)
 		return
@@ -70,7 +70,7 @@ func (sma *ATRIndicator) GetByTs(ts int64) any {
 		return data.Value
 	}
 }
-func (sma *ATRIndicator) GetByTsAndCount(ts, period int64) ([]any, error) {
+func (sma *ATRIndicator) GetLastByTsAndCount(ts, period int64) ([]any, error) {
 	return nil, nil
 }
 

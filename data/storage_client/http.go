@@ -1,4 +1,4 @@
-package storage
+package storage_client
 
 import (
 	"bytes"
@@ -21,34 +21,29 @@ const httpAddr = "http://192.168.1.106:8888"
 //表示 存放 某Market的某个类型的在某个时间范围范围内的量
 // 每一个文件de key的
 
-type HttpStorage struct {
+type HttpStorageClient struct {
 	Name string
 }
 
-var allHppStorage = map[string]*HttpStorage{}
-
-func init() {
-	InitHttpStorage("eastmoney")
-	InitHttpStorage("main")
-}
-
-func EastMoneyHttpStorage() *HttpStorage {
-	return allHppStorage["eastmoney"]
-}
-
-func MainHttpStorage() *HttpStorage {
-	return allHppStorage["main"]
-}
-
-func InitHttpStorage(name string) *HttpStorage {
-	cs := &HttpStorage{
-		Name: name,
+func SinaHttpStorage() *HttpStorageClient {
+	return &HttpStorageClient{
+		Name: "sina",
 	}
-	allHppStorage[name] = cs
-	return cs
 }
 
-func (cs *HttpStorage) SaveData(marketId string, t model.LineType, kdatas []*model.KNode) error {
+func EastMoneyHttpStorage() *HttpStorageClient {
+	return &HttpStorageClient{
+		Name: "eastmoney",
+	}
+}
+
+func MainHttpStorage() *HttpStorageClient {
+	return &HttpStorageClient{
+		Name: "main",
+	}
+}
+
+func (cs *HttpStorageClient) SaveData(marketId string, t model.LineType, kdatas []*model.KNode) error {
 	param := model2.SaveDataReq{
 		MarketId: marketId,
 		LineType: int(t),
@@ -60,7 +55,7 @@ func (cs *HttpStorage) SaveData(marketId string, t model.LineType, kdatas []*mod
 	return err
 }
 
-func (cs *HttpStorage) GetAllData(marketId string, t model.LineType) []*model.KNode {
+func (cs *HttpStorageClient) GetAllData(marketId string, t model.LineType) []*model.KNode {
 	param := model2.GetDataByTsReq{
 		MarketId: marketId,
 		LineType: int(t),
@@ -74,7 +69,7 @@ func (cs *HttpStorage) GetAllData(marketId string, t model.LineType) []*model.KN
 	return resp.Data
 }
 
-func (cs *HttpStorage) GetDataByTs(marketId string, t model.LineType, ts int64) *model.KNode {
+func (cs *HttpStorageClient) GetDataByTs(marketId string, t model.LineType, ts int64) *model.KNode {
 	param := model2.GetDataByTsReq{
 		MarketId: marketId,
 		LineType: int(t),
@@ -90,7 +85,7 @@ func (cs *HttpStorage) GetDataByTs(marketId string, t model.LineType, ts int64) 
 	return resp.Data
 }
 
-func (cs *HttpStorage) httpPost(uri string, param any) (string, error) {
+func (cs *HttpStorageClient) httpPost(uri string, param any) (string, error) {
 	url := httpAddr + uri
 	body, _ := json.Marshal(param)
 	resp, err := http.Post(url, "", bytes.NewBuffer(body))

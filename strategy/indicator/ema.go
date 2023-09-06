@@ -32,7 +32,7 @@ func (ema *EMAIndicator) Name() string {
 }
 
 func (ema *EMAIndicator) AddData(ts int64, node any) {
-	data, err := ema.kline.GetByTsAndCount(ts, ema.period)
+	data, err := ema.kline.GetLastByTsAndCount(ts, ema.period)
 	if err != nil {
 		ema.EMALine.AddData(ts, 0)
 		return
@@ -53,7 +53,7 @@ func (ema *EMAIndicator) AddData(ts int64, node any) {
 func (ema *EMAIndicator) GetAllSortedData() []any {
 	return nil
 }
-func (ema *EMAIndicator) GetByTsAndCount(ts int64, period int64) ([]any, error) {
+func (ema *EMAIndicator) GetLastByTsAndCount(ts int64, period int64) ([]any, error) {
 	return nil, nil
 }
 

@@ -32,7 +32,7 @@ func (ri *RSIIndicator) Name() string {
 }
 
 func (ri *RSIIndicator) AddData(ts int64, node any) {
-	dataI, err := ri.kline.GetByTsAndCount(ts, ri.period+1)
+	dataI, err := ri.kline.GetLastByTsAndCount(ts, ri.period+1)
 	if err != nil {
 		ri.SMALine.AddData(ts, 0)
 		return
@@ -65,7 +65,7 @@ func (ri *RSIIndicator) GetByTs(ts int64) any {
 		return data.Value
 	}
 }
-func (ri *RSIIndicator) GetByTsAndCount(ts, period int64) ([]any, error) {
+func (ri *RSIIndicator) GetLastByTsAndCount(ts, period int64) ([]any, error) {
 	return nil, nil
 }
 

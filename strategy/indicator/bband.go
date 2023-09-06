@@ -37,7 +37,7 @@ func (bband *BBANDIndicator) Name() string {
 }
 
 func (bband *BBANDIndicator) AddData(ts int64, node any) {
-	data, err := bband.kline.GetByTsAndCount(ts, bband.erPeriod+1)
+	data, err := bband.kline.GetLastByTsAndCount(ts, bband.erPeriod+1)
 	if err != nil {
 		bband.BBANDUpperLine.AddData(ts, 0)
 		bband.BBANDMidLine.AddData(ts, 0)

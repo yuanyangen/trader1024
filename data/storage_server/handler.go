@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	model2 "github.com/yuanyangen/trader1024/data/model"
-	storage2 "github.com/yuanyangen/trader1024/data/storage"
 	"github.com/yuanyangen/trader1024/engine/model"
 )
 
@@ -42,17 +41,11 @@ func SaveData(body string) (any, error) {
 	return nil, nil
 }
 
-func getDb(dbName string) (*storage2.KVStorage, error) {
-	var storage *storage2.KVStorage
+func getDb(dbName string) (*KVStorage, error) {
 	var err error
-	if dbName == "main" {
-		storage = storage2.MainStorage()
-	} else if dbName == "eastmoney" {
-		storage = storage2.EastMoneyStorage()
-	} else if dbName == "test" {
-		storage = storage2.TestStorage()
-	} else {
+	db := GetStorageByDbName(dbName)
+	if db == nil {
 		err = fmt.Errorf("db %v not support", dbName)
 	}
-	return storage, err
+	return db, err
 }

@@ -1,9 +1,10 @@
-package plugins
+package eastmoney
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/yuanyangen/trader1024/data/markets"
+	"github.com/yuanyangen/trader1024/data/storage_client"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"io"
 	"net/http"
@@ -18,26 +19,41 @@ import (
 type EastMoney struct {
 }
 
-var EastmoneyParamsMap = map[string]string{
-	"f51": "Date",
-	"f52": "Open",
-	"f53": "Close",
-	"f54": "High",
-	"f55": "Low",
-	"f56": "Volume",
-	"f57": "成交额",
-	"f58": "振幅",
-	"f59": "涨跌幅",
-	"f60": "涨跌额",
-	"f61": "换手率",
+//var EastmoneyParamsMap = map[string]string{
+//	"f51": "Date",
+//	"f52": "Open",
+//	"f53": "Close",
+//	"f54": "High",
+//	"f55": "Low",
+//	"f56": "Volume",
+//	"f57": "成交额",
+//	"f58": "振幅",
+//	"f59": "涨跌幅",
+//	"f60": "涨跌额",
+//	"f61": "换手率",
+//}
+
+func (em *EastMoney) StorageClient() *storage_client.HttpStorageClient {
+	return storage_client.EastMoneyHttpStorage()
 }
 
-func (em *EastMoney) CrawlAllMarket() []*model.Market {
-	v, _ := em.doCrawlAllMarket()
-	return v
+func (em *EastMoney) CrawlAllMainMarket() []*model.Market {
+	allSubject := markets.GetAllFutureSubjects()
+	out := []*model.Market{}
+	for _, v := range allSubject {
+		out = append(out, GetMarketByCnName(v.Name, ""))
+	}
+	return out
 }
 
-func (em *EastMoney) CrawlDaily(secId string, startDate string, endDate string) ([]*model.KNode, error) {
+func (em *EastMoney) CrawlAllAvailableMainMarket() []*model.Market {
+
+	return nil
+}
+
+func (em *EastMoney) CrawlDaily(market *model.Market, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
+	startDate := startTime.Format("20060102")
+	endDate := endTime.Format("20060102")
 	req := &EastMoneyReq{
 		Fields1:    "f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13",
 		Fields2:    "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
@@ -46,17 +62,16 @@ func (em *EastMoney) CrawlDaily(secId string, startDate string, endDate string) 
 		KlineType:  101,
 		ReturnType: 6,
 		FuQuanType: 2,
-		secId:      secId,
+		secId:      market.VendorId,
 	}
 	return em.doCrawlHistoryData(req, "2006-01-02")
 }
 
-func (em *EastMoney) CrawlMinute(marketId string) ([]*model.KNode, error) {
-	market := markets.GetMarketById(marketId)
-	if market == nil {
-		return nil, fmt.Errorf("no market")
-	}
+func (em *EastMoney) CrawlWeekly(market *model.Market, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
+	return nil, nil
+}
 
+func (em *EastMoney) CrawlMinute(market *model.Market, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
 	var res []*model.KNode
 	endTs := time.Now()
 	for {
@@ -69,7 +84,7 @@ func (em *EastMoney) CrawlMinute(marketId string) ([]*model.KNode, error) {
 			KlineType:  1,
 			ReturnType: 6,
 			FuQuanType: 2,
-			secId:      market.SecId,
+			secId:      market.VendorId,
 			Lmt:        1200,
 		}
 
@@ -110,54 +125,6 @@ var codeToE = map[int]string{
 	114: "大商所",
 	115: "郑商所",
 	8:   "中金所",
-}
-
-func (em *EastMoney) doCrawlAllMarket() ([]*model.Market, error) {
-	params := url.Values{}
-	params.Set("np", "1")
-	params.Set("fltt", "2")
-	params.Set("invt", "2")
-	params.Set("fields", "f1,f2,f3,f4,f12,f13,f14")
-	params.Set("pn", "1")
-	params.Set("pz", "300000")
-	params.Set("fid", "f3")
-	params.Set("po", "1")
-	params.Set("fs", "m:113,m:114,m:115,m:8")
-	params.Set("forcect", "1")
-	eastMoneyUrl, err := url.Parse("https://push2.eastmoney.com/api/qt/clist/get")
-	if err != nil {
-		return nil, err
-	}
-	eastMoneyUrl.RawQuery = params.Encode()
-
-	httpReq, _ := http.NewRequest("GET", eastMoneyUrl.String(), nil)
-	for k, v := range eastmoneyHeaders {
-		httpReq.Header.Add(k, v)
-	}
-
-	resp, err := http.DefaultClient.Do(httpReq)
-	if err != nil {
-		return nil, err
-	}
-	bodyB, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	res := &EasyMoneyAllMarketResp{}
-	err = json.Unmarshal(bodyB, &res)
-	marketResp := []*model.Market{}
-
-	if err != nil {
-		return nil, err
-	}
-	if res == nil || len(res.Data.Diff) == 0 {
-		return marketResp, nil
-	}
-	for _, v := range res.Data.Diff {
-		marketResp = append(marketResp, v.ToMarket())
-	}
-
-	return marketResp, nil
 }
 
 func (em *EastMoney) doCrawlHistoryData(req *EastMoneyReq, dateformat string) ([]*model.KNode, error) {
@@ -279,16 +246,4 @@ type OneMarket struct {
 type EasyMoneyAllMarket struct {
 	Total int         `json:"total"`
 	Diff  []OneMarket `json:"diff"`
-}
-
-func (m *OneMarket) ToMarket() *model.Market {
-	exchange := codeToE[m.ExchangeId]
-	return &model.Market{
-		Type:     model.MarKetType_FUTURE,
-		Name:     m.Name,
-		MarketId: m.Code,
-		SecId:    fmt.Sprint(m.ExchangeId) + "." + m.Code,
-		Exchange: exchange,
-		Code:     m.Code,
-	}
 }

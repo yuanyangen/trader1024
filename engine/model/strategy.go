@@ -9,7 +9,7 @@ type MarketStrategyContext struct {
 	DailyData *DailyIndicators
 }
 
-func NewStrategyResult(Cmd StrategyCmd, price decimal.Decimal) *StrategyResult {
+func NewStrategyResult(Cmd StrategyOut, price decimal.Decimal) *StrategyResult {
 	return &StrategyResult{
 		Cmd:   Cmd,
 		Price: price,
@@ -18,6 +18,6 @@ func NewStrategyResult(Cmd StrategyCmd, price decimal.Decimal) *StrategyResult {
 
 type Strategy interface {
 	Init(ctx *MarketStrategyContext)
-	OnBar(ctx *MarketStrategyContext, ts int64) []*StrategyResult
+	OnBar(ctx *MarketStrategyContext, ts int64) *StrategyResult
 	Name() string
 }
