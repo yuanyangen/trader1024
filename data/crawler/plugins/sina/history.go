@@ -14,78 +14,6 @@ import (
 	"time"
 )
 
-var allVendorPrefix = map[string]string{
-	"不锈钢": "SS",
-	"橡胶":  "RU",
-	"沥青":  "BU",
-	"沪金":  "AU",
-	"沪铅":  "PB",
-	"沪铜":  "CU",
-	"沪铝":  "AL",
-	"沪银":  "AG",
-	"沪锌":  "ZN",
-	"沪锡":  "SN",
-	"沪镍":  "NI",
-	"热卷":  "HC",
-	"燃油":  "FU",
-	"纸浆":  "SP",
-	"线材":  "WR",
-	"螺纹钢": "RB",
-
-	"IC合约": "IC",
-	"IF合约": "IF",
-	"IH合约": "IH",
-	"IM合约": "IM",
-	"TF合约": "TF",
-	"TS合约": "TS",
-	"T合约":  "T",
-
-	"LPG": "PG",
-	"PVC": "V",
-	"乙二醇": "EG",
-	"塑料":  "L",
-	"棕榈油": "P",
-	"淀粉":  "CS",
-	"焦炭":  "J",
-	"焦煤":  "JM",
-	"玉米":  "C",
-	"生猪":  "LH",
-	"粳米":  "RR",
-	"纤维板": "FB",
-	"聚丙烯": "PP",
-	"胶合板": "BB",
-	"苯乙烯": "EB",
-	"豆一":  "A",
-	"豆二":  "B",
-	"豆油":  "Y",
-	"豆粕":  "M",
-	"铁矿石": "I",
-	"鸡蛋":  "JD",
-
-	"PTA": "TA",
-	"动力煤": "ZC",
-	"尿素":  "UR",
-	"强麦":  "WH",
-	"晚籼稻": "LR",
-	"普麦":  "", // 没了
-	"棉纱":  "CY",
-	"棉花":  "CF",
-	"玻璃":  "FG",
-	"甲醇":  "MA",
-	"白糖":  "SR",
-	"短纤":  "PF",
-	"硅铁":  "SF",
-	"粳稻":  "JR",
-	"红枣":  "CJ",
-	"纯碱":  "SA",
-	"花生":  "PK",
-	"苹果":  "AP",
-	"菜油":  "OI",
-	"菜籽":  "RS",
-	"菜粕":  "RM",
-	"锰硅":  "SM",
-}
-
 type Sina struct {
 }
 
@@ -93,29 +21,29 @@ func (em *Sina) StorageClient() *storage_client.HttpStorageClient {
 	return storage_client.SinaHttpStorage()
 }
 
-func (em *Sina) CrawlAllMainMarket() []*model.Market {
+func (em *Sina) CrawlAllMainMarket() []*model.Contract {
 	allSubject := markets.GetAllFutureSubjects()
-	allMarkets := make([]*model.Market, len(allSubject))
+	allMarkets := make([]*model.Contract, len(allSubject))
 	for i, v := range allSubject {
-		allMarkets[i] = &model.Market{
-			Subject:  v,
-			VendorId: buildVendorIdByDate(allVendorPrefix[v.Name], ""),
+		allMarkets[i] = &model.Contract{
+			Subject:    v,
+			ContractId: v.CNName + "",
 		}
 	}
 	sort.Slice(allMarkets, func(i, j int) bool {
-		return allMarkets[i].Exchange+allMarkets[i].VendorId < allMarkets[j].Exchange+allMarkets[j].VendorId
+		return allMarkets[i].Exchange+allMarkets[i].ContractId < allMarkets[j].Exchange+allMarkets[j].ContractId
 	})
 	return allMarkets
 }
 
-func (em *Sina) CrawlAllAvailableMainMarket() []*model.Market {
+func (em *Sina) CrawlAllAvailableMainMarket() []*model.Contract {
 	allSubject := markets.GetAllFutureSubjects()
-	allMarkets := make([]*model.Market, len(allSubject))
+	allMarkets := make([]*model.Contract, len(allSubject))
 	for i, v := range allSubject {
 		for _, d := range getCurrentAvailable() {
-			allMarkets[i] = &model.Market{
-				Subject:  v,
-				VendorId: buildVendorIdByDate(allVendorPrefix[v.Name], d),
+			allMarkets[i] = &model.Contract{
+				Subject:    v,
+				ContractId: v.CNName + d,
 			}
 		}
 	}
@@ -125,29 +53,16 @@ func getCurrentAvailable() []string {
 	return nil
 }
 
-// date
-func buildVendorIdByDate(vendorIdPrefix, date string) string {
-	if date == "" {
-		return vendorIdPrefix + "0"
-	}
-	t, err := time.Parse(date, "2006-01-02")
-	if err != nil {
-		panic(err)
-	}
-	return vendorIdPrefix + t.Format("0102")
-
-}
-
-func (em *Sina) CrawlWeekly(market *model.Market, startDate, endDate time.Time) ([]*model.KNode, error) {
+func (em *Sina) CrawlWeekly(market *model.Contract, startDate, endDate time.Time) ([]*model.KNode, error) {
 	return nil, nil
 }
-func (em *Sina) CrawlMinute(market *model.Market, startDate, endDate time.Time) ([]*model.KNode, error) {
+func (em *Sina) CrawlMinute(market *model.Contract, startDate, endDate time.Time) ([]*model.KNode, error) {
 	return nil, nil
 }
 
-func (em *Sina) CrawlDaily(market *model.Market, startDate, endDate time.Time) ([]*model.KNode, error) {
+func (em *Sina) CrawlDaily(market *model.Contract, startDate, endDate time.Time) ([]*model.KNode, error) {
 	crawlDateStr := time.Now().Format("2006_1_2")
-	reqUrl := fmt.Sprintf(`https://stock2.finance.sina.com.cn/futures/api/jsonp.php/var%%20_%v%v=/InnerFuturesNewService.getDailyKLine?symbol=%v&_=%v`, market.VendorId, crawlDateStr, market.VendorId, crawlDateStr)
+	reqUrl := fmt.Sprintf(`https://stock2.finance.sina.com.cn/futures/api/jsonp.php/var%%20_%v%v=/InnerFuturesNewService.getDailyKLine?symbol=%v&_=%v`, market.ContractId, crawlDateStr, market.ContractId, crawlDateStr)
 	req, err := http.NewRequest("GET", reqUrl, nil)
 	if err != nil {
 		return nil, err

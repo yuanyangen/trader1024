@@ -105,7 +105,7 @@ func (si *SlopIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	ratioLine.AddXAxis(x).AddYAxis(si.Name(), y)
 	//ratioLine.Overlap(bar)
 	//line := charts.NewLine()
-	//line.SetGlobalOptions(charts.TitleOpts{Title: si.Name()})
-	//line.AddXAxis(x).AddYAxis(si.Name(), y, charts.LineOpts{ConnectNulls: false})
+	//line.SetGlobalOptions(charts.TitleOpts{Title: si.CNName()})
+	//line.AddXAxis(x).AddYAxis(si.CNName(), y, charts.LineOpts{ConnectNulls: false})
 	//p.Add(line)
 }

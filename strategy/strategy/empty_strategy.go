@@ -15,7 +15,7 @@ package strategy
 //	return nil
 //}
 //
-//func (es *EmptyStrategy) Name() string {
+//func (es *EmptyStrategy) CNName() string {
 //	return "EmptyStrategy"
 //}
 //

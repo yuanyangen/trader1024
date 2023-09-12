@@ -4,9 +4,9 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type MarketStrategyContext struct {
-	Market    *Market
-	DailyData *DailyIndicators
+type ContractStrategyContext struct {
+	Contract *Contract
+	Kline    MarketIndicator
 }
 
 func NewStrategyResult(Cmd StrategyOut, price decimal.Decimal) *StrategyResult {
@@ -17,7 +17,7 @@ func NewStrategyResult(Cmd StrategyOut, price decimal.Decimal) *StrategyResult {
 }
 
 type Strategy interface {
-	Init(ctx *MarketStrategyContext)
-	OnBar(ctx *MarketStrategyContext, ts int64) *StrategyResult
+	Init(ctx *ContractStrategyContext)
+	OnBar(ctx *ContractStrategyContext, ts int64) *StrategyResult
 	Name() string
 }

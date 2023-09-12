@@ -19,5 +19,8 @@ type DataMeta struct {
 
 type DataFeed interface {
 	RegisterChan(out chan *Data)
-	SetEventTrigger(EventTrigger)
+}
+
+type DateSource interface {
+	GetDataByTs(marketId string, lineType LineType, ts int64) *KNode
 }

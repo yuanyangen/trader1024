@@ -17,7 +17,7 @@ package strategy
 //	return &BBandStrategy{}
 //}
 //
-//func (es *BBandStrategy) Name() string {
+//func (es *BBandStrategy) CNName() string {
 //	return "BBand"
 //}
 //
@@ -37,7 +37,7 @@ package strategy
 //	if low == 0 || mid == 0 || upper == 0 {
 //		return nil
 //	}
-//	position := account.GetAccount().GetPositionByMarket(ctx.Market.MarketId)
+//	position := account.GetAccount().GetPositionByMarket(ctx.Contract.MarketId)
 //	curPrice := (currentKValue.Open + currentKValue.Close) / 2
 //	if curPrice > upper {
 //		if position.IsEmpty() {

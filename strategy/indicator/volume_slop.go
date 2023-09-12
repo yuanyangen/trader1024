@@ -106,7 +106,7 @@ func (si *VolumnSlopIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Lin
 	slopLine.AddXAxis(x).AddYAxis(si.Name(), y)
 	ratioLine.Overlap(slopLine)
 	//line := charts.NewLine()
-	//line.SetGlobalOptions(charts.TitleOpts{Title: si.Name()})
-	//line.AddXAxis(x).AddYAxis(si.Name(), y, charts.LineOpts{ConnectNulls: false})
+	//line.SetGlobalOptions(charts.TitleOpts{Title: si.CNName()})
+	//line.AddXAxis(x).AddYAxis(si.CNName(), y, charts.LineOpts{ConnectNulls: false})
 	//p.Add(line)
 }

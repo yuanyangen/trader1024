@@ -17,7 +17,7 @@ func TestKvStorage(t *testing.T) {
 	s := &storage_client.HttpStorageClient{
 		Name: "test",
 	}
-	s.SaveData("test1", model.LineType_Day, []*model.KNode{&model.KNode{
+	s.SaveData("测试test1", model.LineType_Day, []*model.KNode{&model.KNode{
 		Open:      231111,
 		Close:     231111,
 		TimeStamp: 13213111,
@@ -26,6 +26,6 @@ func TestKvStorage(t *testing.T) {
 		Close:     23353454341,
 		TimeStamp: 13435324213211,
 	}})
-	res := s.GetAllData("test1", model.LineType_Day)
+	res := s.GetAllData("测试test1", model.LineType_Day)
 	fmt.Println(res)
 }

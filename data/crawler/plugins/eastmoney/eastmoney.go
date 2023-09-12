@@ -37,21 +37,21 @@ func (em *EastMoney) StorageClient() *storage_client.HttpStorageClient {
 	return storage_client.EastMoneyHttpStorage()
 }
 
-func (em *EastMoney) CrawlAllMainMarket() []*model.Market {
+func (em *EastMoney) CrawlAllMainMarket() []*model.Contract {
 	allSubject := markets.GetAllFutureSubjects()
-	out := []*model.Market{}
+	out := []*model.Contract{}
 	for _, v := range allSubject {
-		out = append(out, GetMarketByCnName(v.Name, ""))
+		out = append(out, GetMarketByCnName(v.CNName, ""))
 	}
 	return out
 }
 
-func (em *EastMoney) CrawlAllAvailableMainMarket() []*model.Market {
+func (em *EastMoney) CrawlAllAvailableMainMarket() []*model.Contract {
 
 	return nil
 }
 
-func (em *EastMoney) CrawlDaily(market *model.Market, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
+func (em *EastMoney) CrawlDaily(market *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
 	startDate := startTime.Format("20060102")
 	endDate := endTime.Format("20060102")
 	req := &EastMoneyReq{
@@ -62,16 +62,16 @@ func (em *EastMoney) CrawlDaily(market *model.Market, startTime time.Time, endTi
 		KlineType:  101,
 		ReturnType: 6,
 		FuQuanType: 2,
-		secId:      market.VendorId,
+		secId:      market.ContractId,
 	}
 	return em.doCrawlHistoryData(req, "2006-01-02")
 }
 
-func (em *EastMoney) CrawlWeekly(market *model.Market, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
+func (em *EastMoney) CrawlWeekly(market *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
 	return nil, nil
 }
 
-func (em *EastMoney) CrawlMinute(market *model.Market, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
+func (em *EastMoney) CrawlMinute(market *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
 	var res []*model.KNode
 	endTs := time.Now()
 	for {
@@ -84,7 +84,7 @@ func (em *EastMoney) CrawlMinute(market *model.Market, startTime time.Time, endT
 			KlineType:  1,
 			ReturnType: 6,
 			FuQuanType: 2,
-			secId:      market.VendorId,
+			secId:      market.ContractId,
 			Lmt:        1200,
 		}
 
@@ -214,8 +214,8 @@ type EastMoneyResp struct {
 	//Dlmkts string `json:"dlmkts"`
 	Data struct {
 		//Code       string   `json:"code"`
-		//Market     int      `json:"market"`
-		//Name       string   `json:"name"`
+		//Contract     int      `json:"market"`
+		//CNName       string   `json:"name"`
 		//Decimal    int      `json:"decimal"`
 		//Dktotal    int      `json:"dktotal"`
 		//PreKPrice  int      `json:"preKPrice"`

@@ -25,7 +25,7 @@ package strategy
 //	return &CustomKAMAStrategy2{}
 //}
 //
-//func (es *CustomKAMAStrategy2) Name() string {
+//func (es *CustomKAMAStrategy2) CNName() string {
 //	return "CustomKAMAStrategy2"
 //}
 //
@@ -45,7 +45,7 @@ package strategy
 //	if es.kama2.GetCurrentFloat(ts) == 0 || es.kama10.GetCurrentFloat(ts) == 0 {
 //		return nil
 //	}
-//	position := account.GetAccount().GetPositionByMarket(ctx.Market.MarketId)
+//	position := account.GetAccount().GetPositionByMarket(ctx.Contract.MarketId)
 //	curPrice := (currentKValue.Open + currentKValue.Close) / 2
 //	data := []*model.StrategyResult{}
 //

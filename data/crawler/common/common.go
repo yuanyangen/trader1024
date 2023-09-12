@@ -9,11 +9,11 @@ import (
 
 type Crawler interface {
 	StorageClient() *storage_client.HttpStorageClient
-	CrawlAllMainMarket() []*model.Market
-	CrawlAllAvailableMainMarket() []*model.Market
-	CrawlDaily(market *model.Market, startDate, endDate time.Time) ([]*model.KNode, error)
-	CrawlMinute(market *model.Market, startDate, endDate time.Time) ([]*model.KNode, error)
-	CrawlWeekly(market *model.Market, startDate, endDate time.Time) ([]*model.KNode, error)
+	CrawlAllMainMarket() []*model.Contract
+	CrawlAllAvailableMainMarket() []*model.Contract
+	CrawlDaily(market *model.Contract, startDate, endDate time.Time) ([]*model.KNode, error)
+	CrawlMinute(market *model.Contract, startDate, endDate time.Time) ([]*model.KNode, error)
+	CrawlWeekly(market *model.Contract, startDate, endDate time.Time) ([]*model.KNode, error)
 }
 
 func CrawlMainDailyData(handler Crawler) {
@@ -25,8 +25,8 @@ func CrawlMainDailyData(handler Crawler) {
 		if err != nil {
 			panic("fadsfa")
 		}
-		csvStorage.SaveData(v.VendorId, t, allNodes)
-		fmt.Println("finished " + v.VendorId)
+		csvStorage.SaveData(v.ContractId, t, allNodes)
+		fmt.Println("finished " + v.ContractId)
 
 	}
 }
@@ -41,7 +41,7 @@ func crawlHistoryMinuteData(handler Crawler) {
 			panic("fadsfa")
 		}
 
-		csvStorage.SaveData(market.VendorId, t, allNodes)
+		csvStorage.SaveData(market.ContractId, t, allNodes)
 	}
 }
 func crawlHistoryWeekData(handler Crawler) {
@@ -54,6 +54,6 @@ func crawlHistoryWeekData(handler Crawler) {
 			panic("fadsfa")
 		}
 
-		csvStorage.SaveData(market.VendorId, t, allNodes)
+		csvStorage.SaveData(market.ContractId, t, allNodes)
 	}
 }

@@ -26,7 +26,7 @@ package strategy
 ////	}
 ////}
 //
-//func (es *DualSMAStrategy) Name() string {
+//func (es *DualSMAStrategy) CNName() string {
 //	return "DualSMA"
 //}
 //

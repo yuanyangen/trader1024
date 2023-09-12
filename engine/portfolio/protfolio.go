@@ -10,7 +10,7 @@ func Portfolio(req *model.MarketPortfolioReq) error {
 	//for _, st := range req.Strategies {
 	//	for _, data := range st.Cmd {
 	//		action := &execution.ExecutionAction{
-	//			MarketId:   req.Market.MarketId,
+	//			MarketId:   req.Contract.MarketId,
 	//			StrategyId: st.StrategyName,
 	//			Cmd:        data.Cmd,
 	//			Count:      count,

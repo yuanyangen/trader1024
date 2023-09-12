@@ -116,8 +116,8 @@ func getVendorId4(code string, date string) string {
 }
 
 // date的格式是"230809"
-func GetMarketByCnName(cnName string, date string) *model.Market {
-	m := markets.GetMarketByCnNam(cnName)
+func GetMarketByCnName(cnName string, date string) *model.Contract {
+	m := markets.GetSubjectByCnNam(cnName)
 	if m == nil {
 		panic("markte not support")
 	}
@@ -130,8 +130,8 @@ func GetMarketByCnName(cnName string, date string) *model.Market {
 		panic("markte not support by east money")
 	}
 
-	return &model.Market{
-		Subject:  m,
-		VendorId: v.GetVendorCode(date),
+	return &model.Contract{
+		Subject:    m,
+		ContractId: v.GetVendorCode(date),
 	}
 }

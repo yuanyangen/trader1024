@@ -23,7 +23,7 @@ package strategy
 //	return &CustomKAMAStrategy{}
 //}
 //
-//func (es *CustomKAMAStrategy) Name() string {
+//func (es *CustomKAMAStrategy) CNName() string {
 //	return "CustomKAMAStrategy"
 //}
 //
@@ -42,7 +42,7 @@ package strategy
 //	if es.kama2.GetCurrentFloat(ts) == 0 || es.kama5.GetCurrentFloat(ts) == 0 || es.kama10.GetCurrentFloat(ts) == 0 {
 //		return nil
 //	}
-//	position := account.GetAccount().GetPositionByMarket(ctx.Market.MarketId)
+//	position := account.GetAccount().GetPositionByMarket(ctx.Contract.MarketId)
 //	curPrice := (currentKValue.Open + currentKValue.Close) / 2
 //	if long(es.kama2.GetCurrentFloat(ts), es.kama5.GetCurrentFloat(ts), es.kama10.GetCurrentFloat(ts)) {
 //		if position.IsEmpty() && es.loaded {

@@ -7,9 +7,10 @@ type MarKetType int64
 const MarKetType_STOCK MarKetType = 1
 const MarKetType_FUTURE MarKetType = 2
 
-type Market struct {
+type Contract struct {
 	*Subject
-	VendorId string
+	ContractId   string
+	ContractTime string
 }
 
 type Exchange struct {
@@ -24,7 +25,7 @@ type ExchangeTime struct {
 }
 
 type Subject struct {
-	Name          string //CN name
+	CNName        string //CN name
 	Type          MarKetType
 	Exchange      string
 	OnlineDay     string
@@ -62,7 +63,7 @@ func (s *Subject) AllDates() []string {
 }
 
 type MarketPortfolioReq struct {
-	Market     *Market
+	Contract   *Contract
 	Strategies []*StrategyReq
 	Ts         int64
 }

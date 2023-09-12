@@ -23,7 +23,7 @@ package strategy
 //	return &DualKAMAStrategy{}
 //}
 //
-//func (es *DualKAMAStrategy) Name() string {
+//func (es *DualKAMAStrategy) CNName() string {
 //	return "DualKAMAStrategy"
 //}
 //

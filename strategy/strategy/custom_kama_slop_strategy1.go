@@ -27,7 +27,7 @@ package strategy
 //	return &CustomKAMASlopStrategy{}
 //}
 //
-//func (es *CustomKAMASlopStrategy) Name() string {
+//func (es *CustomKAMASlopStrategy) CNName() string {
 //	return "CustomKAMASlopStrategy"
 //}
 //
@@ -56,7 +56,7 @@ package strategy
 //	if len(slops) == 0 {
 //		return nil
 //	}
-//	position := account.GetAccount().GetPositionByMarket(ctx.Market.MarketId)
+//	position := account.GetAccount().GetPositionByMarket(ctx.Contract.MarketId)
 //	curPrice := (currentKValue.Open + currentKValue.Close) / 2
 //	continous := es.continous.GetByTs(ts)
 //	v, ok := utils.AnyToFloat(continous)

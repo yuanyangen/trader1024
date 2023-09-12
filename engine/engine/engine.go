@@ -2,79 +2,96 @@ package engine
 
 import (
 	"fmt"
-	"github.com/yuanyangen/trader1024/engine/data_feed"
+	"github.com/yuanyangen/trader1024/data/markets"
 	"github.com/yuanyangen/trader1024/engine/model"
 )
 
+// 最外层，处理全部合约
 type Engine struct {
-	Markets        map[string]*MarketEngine
-	EventTrigger   model.EventTrigger
-	strategies     []func() model.Strategy
-	watcherBackend *WatcherBackend
+	Contracts          map[string]*ContractEngine
+	EventTrigger       model.EventTrigger
+	strategies         []func() model.Strategy
+	cmdExecutorFactory CmdExecutorFactory // 决定
+	watcherBackend     *WatcherBackend
 }
 
-func NewEngine() *Engine {
+type CmdExecutorFactory func() func(contract *model.Contract, kline model.MarketIndicator) CmdExecutor
+
+type CmdExecutor interface {
+	ExecuteCmd(req *model.MarketPortfolioReq)
+	Report()
+}
+
+func NewTrainEngine(et model.EventTrigger) *Engine {
 	e := &Engine{
-		Markets: map[string]*MarketEngine{},
+		Contracts: map[string]*ContractEngine{},
+		cmdExecutorFactory: func() func(contract *model.Contract, kline model.MarketIndicator) CmdExecutor {
+			return newTrain
+		},
+		EventTrigger: et,
 	}
 	e.watcherBackend = NewPlotterServers(e)
 	return e
 }
 
-func (ec *Engine) RegisterEventTrigger(e model.EventTrigger) {
-	ec.EventTrigger = e
+func NewExecuteEngine() *Engine {
+	e := &Engine{
+		Contracts: map[string]*ContractEngine{},
+		cmdExecutorFactory: func() func(contract *model.Contract, kline model.MarketIndicator) CmdExecutor {
+			return newLiveCmdExecutor
+		},
+	}
+	e.watcherBackend = NewPlotterServers(e)
+	return e
 }
 
-func (ec *Engine) RegisterMarket(name string) {
+func (ec *Engine) RegisterContract(subjectCnName string, contractTime string, dataSource model.DateSource) {
 	if len(ec.strategies) == 0 {
 		panic("should register strategy first")
 	}
+	market := markets.GetSubjectByCnNam(subjectCnName)
+	if market == nil {
+		panic("market not define")
+	}
+	if ec.cmdExecutorFactory == nil {
+		panic("engine_mode not specify")
+	}
+
+	contract := &model.Contract{Subject: market, ContractTime: contractTime, ContractId: subjectCnName + contractTime}
+
 	strategies := make([]model.Strategy, len(ec.strategies))
 	for i, stFactory := range ec.strategies {
 		strategies[i] = stFactory()
 	}
-	df := data_feed.NewCsvKLineDataFeed(name)
 
-	m := NewMarket(name, df, strategies)
-	ec.Markets[name] = m
+	ce := NewContractEngine(contract, strategies, ec.cmdExecutorFactory, dataSource)
+	ec.EventTrigger.RegisterEventReceiver(ce.EventTriggerChan)
+	ec.Contracts[subjectCnName+contractTime] = ce
 }
+
 func (ec *Engine) RegisterStrategy(stFactory func() model.Strategy) {
 	ec.strategies = append(ec.strategies, stFactory)
 }
+
 func (ec *Engine) Start() error {
 	if err := ec.checkEngine(); err != nil {
 		panic(err)
 	}
 
-	ec.connectComponent()
-	ec.doStart()
+	for _, contract := range ec.Contracts {
+		contract.Start()
+	}
+	ec.EventTrigger.Start()
+	ec.watcherBackend.Start()
 	return nil
 }
 
-func (ec *Engine) doStart() {
-	ec.EventTrigger.Start()
-
-	for _, market := range ec.Markets {
-		market.Start()
-	}
-	ec.watcherBackend.Start()
-}
-
-func (ec *Engine) connectComponent() {
-	for _, v := range ec.Markets {
-		v.DataFeed.SetEventTrigger(ec.EventTrigger)
-	}
-}
-
 func (ec *Engine) checkEngine() error {
-	if len(ec.Markets) == 0 {
+	if len(ec.Contracts) == 0 {
 		return fmt.Errorf("market not configed")
 	}
-	//if ec.Sizer == nil {
-	//	return fmt.Errorf("sizer not configed")
-	//}
-	//if len(ec.Broker) == 0 {
-	//	return fmt.Errorf("broker not configed")
-	//}
+	if len(ec.strategies) == 0 {
+		panic("no strategies")
+	}
 	return nil
 }

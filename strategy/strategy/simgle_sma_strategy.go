@@ -19,7 +19,7 @@ package strategy
 //	return &SingleSMAStrategy{}
 //}
 //
-//func (es *SingleSMAStrategy) Name() string {
+//func (es *SingleSMAStrategy) CNName() string {
 //	return "SingleSMA"
 //}
 //
@@ -36,13 +36,13 @@ package strategy
 //	if !ok {
 //		return nil
 //	}
-//	if sma > currentKValue.Close && account.GetAccount().GetPositionByMarket(ctx.Market.MarketId).IsEmpty() {
+//	if sma > currentKValue.Close && account.GetAccount().GetPositionByMarket(ctx.Contract.MarketId).IsEmpty() {
 //		return []*model.StrategyResult{
 //			model.NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(currentKValue.Close)),
 //			model.NewStrategyResult(model.StrategyCmdBuy, decimal.NewFromFloat(currentKValue.Close)),
 //		}
 //	}
-//	if sma < currentKValue.Close && account.GetAccount().GetPositionByMarket(ctx.Market.MarketId).IsEmpty() {
+//	if sma < currentKValue.Close && account.GetAccount().GetPositionByMarket(ctx.Contract.MarketId).IsEmpty() {
 //		return []*model.StrategyResult{
 //			model.NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(currentKValue.Close)),
 //			model.NewStrategyResult(model.StrategyCmdSell, decimal.NewFromFloat(currentKValue.Close)),

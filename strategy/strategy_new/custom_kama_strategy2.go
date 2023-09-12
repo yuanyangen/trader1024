@@ -27,16 +27,16 @@ func (es *CustomKAMAStrategy2) Name() string {
 	return "CustomKAMAStrategy2"
 }
 
-func (es *CustomKAMAStrategy2) Init(ec *model.MarketStrategyContext) {
-	es.kama10 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 8, 2, 30)
+func (es *CustomKAMAStrategy2) Init(ec *model.ContractStrategyContext) {
+	es.kama10 = indicator.NewKAMAIndicator(ec.Kline, 8, 2, 30)
 	//es.kama5 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 5, 2, 30)
-	es.kama2 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 2, 2, 30)
-	es.crossover = indicator.NewCrossOverIndicator(ec.DailyData.Kline, es.kama2.KAMALine, es.kama10.KAMALine)
-	es.crossunder = indicator.NewCrossUnderIndicator(ec.DailyData.Kline, es.kama2.KAMALine, es.kama10.KAMALine)
+	es.kama2 = indicator.NewKAMAIndicator(ec.Kline, 2, 2, 30)
+	es.crossover = indicator.NewCrossOverIndicator(ec.Kline, es.kama2.KAMALine, es.kama10.KAMALine)
+	es.crossunder = indicator.NewCrossUnderIndicator(ec.Kline, es.kama2.KAMALine, es.kama10.KAMALine)
 }
 
-func (es *CustomKAMAStrategy2) OnBar(ctx *model.MarketStrategyContext, ts int64) *model.StrategyResult {
-	currentKValue := model.NewKnodeFromAny(ctx.DailyData.Kline.GetByTs(ts))
+func (es *CustomKAMAStrategy2) OnBar(ctx *model.ContractStrategyContext, ts int64) *model.StrategyResult {
+	currentKValue := model.NewKnodeFromAny(ctx.Kline.GetByTs(ts))
 	if currentKValue == nil {
 		return nil
 	}

@@ -1,4 +1,4 @@
-package train
+package engine
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 )
 
 type Train struct {
-	Market       *model.Market
+	Contract     *model.Contract
 	kline        model.MarketIndicator
 	trainResults map[int64]*TrainResult
 	allDone      bool
@@ -57,9 +57,9 @@ type TrainResult struct {
 	strategyResult *StrategyResult
 }
 
-func NewTrain(market *model.Market, kline model.MarketIndicator) *Train {
+func newTrain(contract *model.Contract, kline model.MarketIndicator) CmdExecutor {
 	t := &Train{
-		Market:       market,
+		Contract:     contract,
 		kline:        kline,
 		trainResults: map[int64]*TrainResult{},
 	}
@@ -67,10 +67,10 @@ func NewTrain(market *model.Market, kline model.MarketIndicator) *Train {
 	return t
 }
 
-func (t *Train) TrainReq(req *model.MarketPortfolioReq) {
+func (t *Train) ExecuteCmd(req *model.MarketPortfolioReq) {
 	t.trainResults[req.Ts] = &TrainResult{strategyReq: req, strategyResult: &StrategyResult{}}
 	t.calcResult()
-	t.report()
+	t.Report()
 }
 
 func (t *Train) calcResultAndReportDaemon() {
@@ -79,7 +79,7 @@ func (t *Train) calcResultAndReportDaemon() {
 			if !t.allDone {
 				t.calcResult()
 			}
-			t.report()
+			t.Report()
 			time.Sleep(time.Second)
 		}
 	})
@@ -185,7 +185,7 @@ func (t *Train) genReportAll() *Report {
 	return t.genReport(result)
 }
 
-func (t *Train) report() {
+func (t *Train) Report() {
 	report := t.genReportAll()
 	fmt.Printf("=============================================================================================\n")
 	ta := table.NewWriter()
