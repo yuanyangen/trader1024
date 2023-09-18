@@ -23,21 +23,21 @@ func (pt PositionType) String() string {
 	return "unknown"
 }
 
-type MarketPosition struct {
+type ContractPosition struct {
 	mu       sync.Mutex
 	MarketId string
 	Count    decimal.Decimal //使用正表示多头， 使用负 表示空头，
 	Details  []*PositionPair
 }
 
-func (p *MarketPosition) IsEmpty() bool {
+func (p *ContractPosition) IsEmpty() bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	return p.Count.Equal(decimal.Zero)
 }
 
 // 默认直接使用最老的position进行操作
-func (p *MarketPosition) ProcessOrder(order *Order) {
+func (p *ContractPosition) ProcessOrder(order *Order) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
@@ -63,7 +63,7 @@ func (p *MarketPosition) ProcessOrder(order *Order) {
 		p.newPositionPair(lastCount, order)
 	}
 }
-func (p *MarketPosition) processTotalCount(order *Order) {
+func (p *ContractPosition) processTotalCount(order *Order) {
 	if order.OrderType == OrderTypeSell {
 		p.Count = p.Count.Sub(order.Count)
 	} else if order.OrderType == OrderTypeBuy {
@@ -72,7 +72,7 @@ func (p *MarketPosition) processTotalCount(order *Order) {
 		panic("should not reach here")
 	}
 }
-func (p *MarketPosition) newPositionPair(lastCount decimal.Decimal, order *Order) {
+func (p *ContractPosition) newPositionPair(lastCount decimal.Decimal, order *Order) {
 	newP1 := &Position{
 		Count:     lastCount,
 		Price:     order.Price,
@@ -92,7 +92,7 @@ func (p *MarketPosition) newPositionPair(lastCount decimal.Decimal, order *Order
 }
 
 // 从一个确定的paire中，分割一个特定的头寸出来
-func (p *MarketPosition) splitPosition(pp *PositionPair, lastCount decimal.Decimal, order *Order) decimal.Decimal {
+func (p *ContractPosition) splitPosition(pp *PositionPair, lastCount decimal.Decimal, order *Order) decimal.Decimal {
 	var p1 *Position
 	var p2 = &Position{
 		OrderInfo: order,
@@ -143,14 +143,14 @@ func (p *MarketPosition) splitPosition(pp *PositionPair, lastCount decimal.Decim
 	return lastCount
 }
 
-func (p *MarketPosition) addPositionPair(pp *PositionPair) {
+func (p *ContractPosition) addPositionPair(pp *PositionPair) {
 	p.Details = append(p.Details, pp)
 	sort.Slice(p.Details, func(i, j int) bool {
 		return p.Details[i].CreateTimeStamp < p.Details[j].CreateTimeStamp
 	})
 }
 
-func (p *MarketPosition) Report() {
+func (p *ContractPosition) Report() {
 
 	pairs := []*PositionPair{}
 	for _, pp := range p.Details {

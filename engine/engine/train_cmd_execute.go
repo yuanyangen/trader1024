@@ -7,6 +7,7 @@ import (
 	"github.com/yuanyangen/trader1024/engine/utils"
 	"github.com/yuanyangen/trader1024/strategy/indicator"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -14,6 +15,7 @@ type Train struct {
 	Contract     *model.Contract
 	kline        model.MarketIndicator
 	trainResults map[int64]*TrainResult
+	mu           sync.Mutex
 	allDone      bool
 }
 type Report struct {
@@ -53,8 +55,8 @@ type StrategyResult struct {
 }
 
 type TrainResult struct {
-	strategyReq    *model.MarketPortfolioReq
-	strategyResult *StrategyResult
+	strategyReq         *model.ContractPortfolioReq
+	strategyTrainResult *StrategyResult
 }
 
 func newTrain(contract *model.Contract, kline model.MarketIndicator) CmdExecutor {
@@ -67,18 +69,20 @@ func newTrain(contract *model.Contract, kline model.MarketIndicator) CmdExecutor
 	return t
 }
 
-func (t *Train) ExecuteCmd(req *model.MarketPortfolioReq) {
-	t.trainResults[req.Ts] = &TrainResult{strategyReq: req, strategyResult: &StrategyResult{}}
+func (t *Train) ExecuteCmd(req *model.ContractPortfolioReq) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.trainResults[req.Ts] = &TrainResult{strategyReq: req, strategyTrainResult: &StrategyResult{}}
 	t.calcResult()
-	t.Report()
+	//t.Report()
 }
 
 func (t *Train) calcResultAndReportDaemon() {
 	utils.AsyncRun(func() {
 		for {
-			if !t.allDone {
-				t.calcResult()
-			}
+			//if !t.allDone {
+			//	t.calcResult()
+			//}
 			t.Report()
 			time.Sleep(time.Second)
 		}
@@ -86,19 +90,20 @@ func (t *Train) calcResultAndReportDaemon() {
 }
 
 func (t *Train) calcResult() {
+
 	var err1, err5, err20 error
 	var allDone = true
 	for ts, result := range t.trainResults {
-		if result.strategyResult.allDone {
+		if result.strategyTrainResult.allDone {
 			continue
 		}
-		result.strategyResult.RiseFallAfter1Day, err1 = t.calcDayResult(ts, 1)
-		result.strategyResult.RiseFallAfter5Day, err5 = t.calcDayResult(ts, 5)
-		result.strategyResult.RiseFallAfter20Day, err20 = t.calcDayResult(ts, 20)
+		result.strategyTrainResult.RiseFallAfter1Day, err1 = t.calcDayResult(ts, 1)
+		result.strategyTrainResult.RiseFallAfter5Day, err5 = t.calcDayResult(ts, 5)
+		result.strategyTrainResult.RiseFallAfter20Day, err20 = t.calcDayResult(ts, 20)
 		if err1 == nil && err5 == nil && err20 == nil {
-			result.strategyResult.allDone = true
+			result.strategyTrainResult.allDone = true
 		}
-		if result.strategyResult.allDone == false {
+		if result.strategyTrainResult.allDone == false {
 			allDone = false
 		}
 	}
@@ -128,22 +133,25 @@ func (t *Train) genReport(result []*TrainResult) *Report {
 		//MarketName: t,
 	}
 	for _, v := range result {
-		for _, vv := range v.strategyReq.Strategies {
-			r.AllCount++
-			if vv.Cmd.Cmd == model.StrategyOutLong {
-				r.LongCount++
-				t.genOneDayReport(vv.Cmd.Cmd, &r.LongWinCountAfter1Day, v.strategyResult.RiseFallAfter1Day, vv.Cmd.Price.InexactFloat64())
-				t.genOneDayReport(vv.Cmd.Cmd, &r.LongWinCountAfter5Day, v.strategyResult.RiseFallAfter5Day, vv.Cmd.Price.InexactFloat64())
-				t.genOneDayReport(vv.Cmd.Cmd, &r.LongWinCountAfter20Day, v.strategyResult.RiseFallAfter20Day, vv.Cmd.Price.InexactFloat64())
+		r.AllCount++
+		if v.strategyReq == nil || v.strategyReq.StrategyResult == nil {
+			fmt.Println("error")
+			//panic("fasdfas")
+			continue
+		}
+		if v.strategyReq.StrategyResult.Cmd == model.StrategyOutLong {
+			r.LongCount++
+			t.genOneDayReport(v.strategyReq.StrategyResult.Cmd, &r.LongWinCountAfter1Day, v.strategyTrainResult.RiseFallAfter1Day, v.strategyReq.StrategyResult.Price.InexactFloat64())
+			t.genOneDayReport(v.strategyReq.StrategyResult.Cmd, &r.LongWinCountAfter5Day, v.strategyTrainResult.RiseFallAfter5Day, v.strategyReq.StrategyResult.Price.InexactFloat64())
+			t.genOneDayReport(v.strategyReq.StrategyResult.Cmd, &r.LongWinCountAfter20Day, v.strategyTrainResult.RiseFallAfter20Day, v.strategyReq.StrategyResult.Price.InexactFloat64())
 
-			} else if vv.Cmd.Cmd == model.StrategyOutShort {
-				r.ShortCount++
-				t.genOneDayReport(vv.Cmd.Cmd, &r.ShortWinCountAfter1Day, v.strategyResult.RiseFallAfter1Day, vv.Cmd.Price.InexactFloat64())
-				t.genOneDayReport(vv.Cmd.Cmd, &r.ShortWinCountAfter5Day, v.strategyResult.RiseFallAfter5Day, vv.Cmd.Price.InexactFloat64())
-				t.genOneDayReport(vv.Cmd.Cmd, &r.ShortWinCountAfter20Day, v.strategyResult.RiseFallAfter20Day, vv.Cmd.Price.InexactFloat64())
-			} else {
-				panic("should not reach here")
-			}
+		} else if v.strategyReq.StrategyResult.Cmd == model.StrategyOutShort {
+			r.ShortCount++
+			t.genOneDayReport(v.strategyReq.StrategyResult.Cmd, &r.ShortWinCountAfter1Day, v.strategyTrainResult.RiseFallAfter1Day, v.strategyReq.StrategyResult.Price.InexactFloat64())
+			t.genOneDayReport(v.strategyReq.StrategyResult.Cmd, &r.ShortWinCountAfter5Day, v.strategyTrainResult.RiseFallAfter5Day, v.strategyReq.StrategyResult.Price.InexactFloat64())
+			t.genOneDayReport(v.strategyReq.StrategyResult.Cmd, &r.ShortWinCountAfter20Day, v.strategyTrainResult.RiseFallAfter20Day, v.strategyReq.StrategyResult.Price.InexactFloat64())
+		} else {
+			panic("should not reach here")
 		}
 	}
 	return r
@@ -186,6 +194,8 @@ func (t *Train) genReportAll() *Report {
 }
 
 func (t *Train) Report() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	report := t.genReportAll()
 	fmt.Printf("=============================================================================================\n")
 	ta := table.NewWriter()

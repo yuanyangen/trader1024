@@ -25,35 +25,35 @@ func CrawlMainDailyData(handler Crawler) {
 		if err != nil {
 			panic("fadsfa")
 		}
-		csvStorage.SaveData(v.ContractId, t, allNodes)
-		fmt.Println("finished " + v.ContractId)
+		csvStorage.SaveData(v.Id(), t, allNodes)
+		fmt.Println("finished " + v.Id())
 
 	}
 }
 
 func crawlHistoryMinuteData(handler Crawler) {
 	csvStorage := handler.StorageClient()
-	allMarkets := handler.CrawlAllMainMarket()
-	for _, market := range allMarkets {
+	allContracts := handler.CrawlAllMainMarket()
+	for _, contract := range allContracts {
 		t := model.LineType_Minite
-		allNodes, err := handler.CrawlMinute(market, time.Unix(0, 0), time.Now())
+		allNodes, err := handler.CrawlMinute(contract, time.Unix(0, 0), time.Now())
 		if err != nil {
 			panic("fadsfa")
 		}
 
-		csvStorage.SaveData(market.ContractId, t, allNodes)
+		csvStorage.SaveData(contract.Id(), t, allNodes)
 	}
 }
 func crawlHistoryWeekData(handler Crawler) {
-	allMarkets := handler.CrawlAllMainMarket()
+	allContracts := handler.CrawlAllMainMarket()
 	csvStorage := handler.StorageClient()
-	for _, market := range allMarkets {
+	for _, contract := range allContracts {
 		t := model.LineType_Week
-		allNodes, err := handler.CrawlMinute(market, time.Unix(0, 0), time.Now())
+		allNodes, err := handler.CrawlMinute(contract, time.Unix(0, 0), time.Now())
 		if err != nil {
 			panic("fadsfa")
 		}
 
-		csvStorage.SaveData(market.ContractId, t, allNodes)
+		csvStorage.SaveData(contract.Id(), t, allNodes)
 	}
 }

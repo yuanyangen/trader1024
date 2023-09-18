@@ -56,7 +56,7 @@ package strategy
 //	if len(slops) == 0 {
 //		return nil
 //	}
-//	position := account.GetAccount().GetPositionByMarket(ctx.Contract.MarketId)
+//	position := account.GetAccount().GetPositionByMarket(ctx.Contract.ContractId)
 //	curPrice := (currentKValue.Open + currentKValue.Close) / 2
 //	continous := es.continous.GetByTs(ts)
 //	v, ok := utils.AnyToFloat(continous)

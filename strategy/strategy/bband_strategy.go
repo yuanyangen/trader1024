@@ -37,7 +37,7 @@ package strategy
 //	if low == 0 || mid == 0 || upper == 0 {
 //		return nil
 //	}
-//	position := account.GetAccount().GetPositionByMarket(ctx.Contract.MarketId)
+//	position := account.GetAccount().GetPositionByMarket(ctx.Contract.ContractId)
 //	curPrice := (currentKValue.Open + currentKValue.Close) / 2
 //	if curPrice > upper {
 //		if position.IsEmpty() {

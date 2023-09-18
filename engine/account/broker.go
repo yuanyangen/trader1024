@@ -6,30 +6,30 @@ import (
 )
 
 type Broker interface {
-	GetCurrentLivePositions(marketId string) *MarketPosition
+	GetCurrentLivePositions(contractId string) *ContractPosition
 	AddOrder(marketId string, t OrderType, count decimal.Decimal, price decimal.Decimal, reason string, ts int64) error
 }
 
 type BackTestBroker struct {
 	mu        sync.Mutex
 	orders    []*Order
-	positions map[string]*MarketPosition // marketId
+	positions map[string]*ContractPosition // marketId
 }
 
 var defaultBackTestBroker = &BackTestBroker{
-	positions: map[string]*MarketPosition{},
+	positions: map[string]*ContractPosition{},
 }
 
 func GetBackTestBroker() Broker {
 	return defaultBackTestBroker
 }
 
-func (btb *BackTestBroker) GetCurrentLivePositions(marketId string) *MarketPosition {
+func (btb *BackTestBroker) GetCurrentLivePositions(marketId string) *ContractPosition {
 	btb.mu.Lock()
 	defer btb.mu.Unlock()
 	position, _ := btb.positions[marketId]
 	if position == nil {
-		position = &MarketPosition{MarketId: marketId, Count: decimal.NewFromInt(0)}
+		position = &ContractPosition{MarketId: marketId, Count: decimal.NewFromInt(0)}
 	}
 	btb.positions[marketId] = position
 	return position

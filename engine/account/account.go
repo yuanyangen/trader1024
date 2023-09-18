@@ -10,7 +10,7 @@ import (
 
 type Account struct {
 	Total       decimal.Decimal // 单位是分
-	Positions   map[string]*MarketPosition
+	Positions   map[string]*ContractPosition
 	GlobalEvent chan *model.EventMsg
 	indicator   *CashIndicator
 	mu          sync.Mutex
@@ -20,7 +20,7 @@ func NewAccount(start int64) *Account {
 	return &Account{
 		Total:       decimal.NewFromInt(start),
 		GlobalEvent: make(chan *model.EventMsg, 1024),
-		Positions:   map[string]*MarketPosition{},
+		Positions:   map[string]*ContractPosition{},
 		indicator:   NewCashIndicator(),
 	}
 }
@@ -52,18 +52,18 @@ func (a *Account) ChangeValue(count decimal.Decimal) {
 //	defer a.mu.Unlock()
 //	position, ok := a.Positions[marketId]
 //	if !ok {
-//		position = &MarketPosition{MarketId: marketId, Count: decimal.NewFromInt(0)}
+//		position = &ContractPosition{ContractId: marketId, Count: decimal.NewFromInt(0)}
 //	}
 //	position.Count = position.Count.Add(count)
 //	a.Positions[marketId] = position
 //}
 
-func (a *Account) GetPositionByMarket(marketId string) *MarketPosition {
+func (a *Account) GetPositionByMarket(marketId string) *ContractPosition {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	position, ok := a.Positions[marketId]
 	if !ok {
-		position = &MarketPosition{MarketId: marketId, Count: decimal.NewFromInt(0)}
+		position = &ContractPosition{MarketId: marketId, Count: decimal.NewFromInt(0)}
 		a.Positions[marketId] = position
 	}
 	return position

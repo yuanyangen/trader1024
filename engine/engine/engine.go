@@ -18,7 +18,7 @@ type Engine struct {
 type CmdExecutorFactory func() func(contract *model.Contract, kline model.MarketIndicator) CmdExecutor
 
 type CmdExecutor interface {
-	ExecuteCmd(req *model.MarketPortfolioReq)
+	ExecuteCmd(req *model.ContractPortfolioReq)
 	Report()
 }
 
@@ -34,12 +34,13 @@ func NewTrainEngine(et model.EventTrigger) *Engine {
 	return e
 }
 
-func NewExecuteEngine() *Engine {
+func NewLiveExecuteEngine(et model.EventTrigger) *Engine {
 	e := &Engine{
 		Contracts: map[string]*ContractEngine{},
 		cmdExecutorFactory: func() func(contract *model.Contract, kline model.MarketIndicator) CmdExecutor {
 			return newLiveCmdExecutor
 		},
+		EventTrigger: et,
 	}
 	e.watcherBackend = NewPlotterServers(e)
 	return e
@@ -49,15 +50,15 @@ func (ec *Engine) RegisterContract(subjectCnName string, contractTime string, da
 	if len(ec.strategies) == 0 {
 		panic("should register strategy first")
 	}
-	market := markets.GetSubjectByCnNam(subjectCnName)
-	if market == nil {
-		panic("market not define")
+	subject := markets.GetSubjectByCnNam(subjectCnName)
+	if subject == nil {
+		panic("subject not define")
 	}
 	if ec.cmdExecutorFactory == nil {
 		panic("engine_mode not specify")
 	}
 
-	contract := &model.Contract{Subject: market, ContractTime: contractTime, ContractId: subjectCnName + contractTime}
+	contract := &model.Contract{Subject: subject, ContractTime: contractTime}
 
 	strategies := make([]model.Strategy, len(ec.strategies))
 	for i, stFactory := range ec.strategies {

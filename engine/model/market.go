@@ -9,8 +9,11 @@ const MarKetType_FUTURE MarKetType = 2
 
 type Contract struct {
 	*Subject
-	ContractId   string
 	ContractTime string
+}
+
+func (c *Contract) Id() string {
+	return c.CNName + c.ContractTime
 }
 
 type Exchange struct {
@@ -55,20 +58,15 @@ func (s *Subject) AllDates() []string {
 	if end.Unix() == 0 {
 		end = time.Now().Add(8 * 30 * 24 * time.Hour)
 	}
-	out := []string{}
+	var out []string
 	for st := s.OnlineTime; st.Before(end); st.Add(time.Hour * 24) {
 		out = append(out, st.Format("060102"))
 	}
 	return out
 }
 
-type MarketPortfolioReq struct {
-	Contract   *Contract
-	Strategies []*StrategyReq
-	Ts         int64
-}
-type StrategyReq struct {
-	StrategyName string
-	Cmd          *StrategyResult
-	Reason       string
+type ContractPortfolioReq struct {
+	Contract       *Contract
+	StrategyResult *StrategyResult
+	Ts             int64
 }

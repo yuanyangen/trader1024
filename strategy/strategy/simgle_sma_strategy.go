@@ -36,13 +36,13 @@ package strategy
 //	if !ok {
 //		return nil
 //	}
-//	if sma > currentKValue.Close && account.GetAccount().GetPositionByMarket(ctx.Contract.MarketId).IsEmpty() {
+//	if sma > currentKValue.Close && account.GetAccount().GetPositionByMarket(ctx.Contract.ContractId).IsEmpty() {
 //		return []*model.StrategyResult{
 //			model.NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(currentKValue.Close)),
 //			model.NewStrategyResult(model.StrategyCmdBuy, decimal.NewFromFloat(currentKValue.Close)),
 //		}
 //	}
-//	if sma < currentKValue.Close && account.GetAccount().GetPositionByMarket(ctx.Contract.MarketId).IsEmpty() {
+//	if sma < currentKValue.Close && account.GetAccount().GetPositionByMarket(ctx.Contract.ContractId).IsEmpty() {
 //		return []*model.StrategyResult{
 //			model.NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(currentKValue.Close)),
 //			model.NewStrategyResult(model.StrategyCmdSell, decimal.NewFromFloat(currentKValue.Close)),

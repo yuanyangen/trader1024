@@ -9,7 +9,7 @@ import (
 
 func TestHttpStorage(t *testing.T) {
 	s := storage_client.SinaHttpStorage()
-	res := s.GetAllData("ZC0", model.LineType_Day)
+	res := s.GetAllData("玉米", model.LineType_Day)
 	fmt.Println(res)
 }
 

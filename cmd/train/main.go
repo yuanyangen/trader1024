@@ -14,9 +14,7 @@ func main() {
 	//e.RegisterStrategy(strategy.NewDualSMAStrategyFactory)
 	//e.RegisterStrategy(strategy.NewSingleSMAStrategy)
 	e.RegisterStrategy(strategy_new.NewCustomLAMAStrategy2Factory)
-
 	e.RegisterContract("玉米", "", storage_client.SinaHttpStorage())
-
 	account.RegisterAccount(account.NewAccount(10000000))
 	e.Start()
 	time.Sleep(time.Hour)

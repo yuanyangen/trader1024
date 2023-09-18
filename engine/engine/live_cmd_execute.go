@@ -19,7 +19,7 @@ func newLiveCmdExecutor(contract *model.Contract, kline model.MarketIndicator) C
 	return t
 }
 
-func (t *LiveCmdExecutor) ExecuteCmd(req *model.MarketPortfolioReq) {
+func (t *LiveCmdExecutor) ExecuteCmd(req *model.ContractPortfolioReq) {
 	portfolio.Portfolio(req)
 	account.GetAccount().EventTrigger(req.Ts)
 }

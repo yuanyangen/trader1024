@@ -45,19 +45,15 @@ func (m *ContractEngine) Start() {
 
 func (m *ContractEngine) dealEvent(event *model.EventMsg) {
 	ts := event.TimeStamp
-	kData := m.dataSource.GetDataByTs(m.Contract.ContractId, model.LineType_Day, ts)
+	kData := m.dataSource.GetDataByTs(m.Contract.Id(), model.LineType_Day, ts)
 	if kData != nil {
-		data := &model.Data{
-			DataType: model.DataTypeKLine,
-			KData:    kData,
-		}
-		m.Kline.AddData(ts, data)
-		m.eventHandler(data)
+		m.Kline.AddData(ts, kData)
+		m.eventHandler(kData)
 	}
 }
 
 func (m *ContractEngine) DoPlot(p *charts.Page) {
-	position := account.GetBackTestBroker().GetCurrentLivePositions(m.Contract.ContractId) //????
+	position := account.GetBackTestBroker().GetCurrentLivePositions(m.Contract.Id()) //????
 	position.Report()
 	kline := charts.NewKLine()
 	line := charts.NewLine()
@@ -67,26 +63,24 @@ func (m *ContractEngine) DoPlot(p *charts.Page) {
 	p.Add(line)
 }
 
-func (m *ContractEngine) eventHandler(data *model.Data) {
+func (m *ContractEngine) eventHandler(data *model.KNode) {
 	ctx := &model.ContractStrategyContext{
 		Contract: m.Contract,
-	}
-	req := &model.MarketPortfolioReq{
-		Contract: m.Contract,
-		Ts:       data.KData.TimeStamp,
+		Kline:    m.Kline,
 	}
 
 	for _, st := range m.Strategies {
-		stResult := st.OnBar(ctx, data.KData.TimeStamp)
-		if stResult != nil {
-			req.Strategies = append(req.Strategies, &model.StrategyReq{
-				StrategyName: st.Name(),
-				Cmd:          stResult,
-				Reason:       st.Name(),
-			})
+		stResult := st.OnBar(ctx, data.TimeStamp)
+		if stResult == nil {
+			continue
 		}
+		req := &model.ContractPortfolioReq{
+			Contract:       m.Contract,
+			Ts:             data.TimeStamp,
+			StrategyResult: stResult,
+		}
+		m.CmdExecutor.ExecuteCmd(req)
 	}
-	m.CmdExecutor.ExecuteCmd(req)
 }
 
 func (m *ContractEngine) initStrategy() {

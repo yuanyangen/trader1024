@@ -41,7 +41,7 @@ func (em *EastMoney) CrawlAllMainMarket() []*model.Contract {
 	allSubject := markets.GetAllFutureSubjects()
 	out := []*model.Contract{}
 	for _, v := range allSubject {
-		out = append(out, GetMarketByCnName(v.CNName, ""))
+		out = append(out, GetContractByCnName(v.CNName, ""))
 	}
 	return out
 }
@@ -51,7 +51,7 @@ func (em *EastMoney) CrawlAllAvailableMainMarket() []*model.Contract {
 	return nil
 }
 
-func (em *EastMoney) CrawlDaily(market *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
+func (em *EastMoney) CrawlDaily(contract *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
 	startDate := startTime.Format("20060102")
 	endDate := endTime.Format("20060102")
 	req := &EastMoneyReq{
@@ -62,7 +62,7 @@ func (em *EastMoney) CrawlDaily(market *model.Contract, startTime time.Time, end
 		KlineType:  101,
 		ReturnType: 6,
 		FuQuanType: 2,
-		secId:      market.ContractId,
+		secId:      GetVendorCode(contract.CNName, contract.ContractTime),
 	}
 	return em.doCrawlHistoryData(req, "2006-01-02")
 }
@@ -71,7 +71,7 @@ func (em *EastMoney) CrawlWeekly(market *model.Contract, startTime time.Time, en
 	return nil, nil
 }
 
-func (em *EastMoney) CrawlMinute(market *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
+func (em *EastMoney) CrawlMinute(contract *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
 	var res []*model.KNode
 	endTs := time.Now()
 	for {
@@ -84,7 +84,7 @@ func (em *EastMoney) CrawlMinute(market *model.Contract, startTime time.Time, en
 			KlineType:  1,
 			ReturnType: 6,
 			FuQuanType: 2,
-			secId:      market.ContractId,
+			secId:      GetVendorCode(contract.CNName, contract.ContractTime),
 			Lmt:        1200,
 		}
 
