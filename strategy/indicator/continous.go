@@ -30,7 +30,7 @@ func (si *ContinousIndicator) Name() string {
 	return fmt.Sprintf("continus")
 }
 
-func (si *ContinousIndicator) AddData(ts int64, node any) {
+func (si *ContinousIndicator) AddData(ts int64, node model.DataNode) {
 	dataI, err := si.kline.GetLastByTsAndCount(ts, 2)
 	if err != nil {
 		si.continousLine.AddData(ts, 0)
@@ -45,40 +45,33 @@ func (si *ContinousIndicator) AddData(ts int64, node any) {
 	out := (knodes[1].Open - knodes[0].Close) / (knodes[1].Open + knodes[0].Close)
 	si.continousLine.AddData(ts, out)
 }
-func (si *ContinousIndicator) GetAllSortedData() []any {
+func (si *ContinousIndicator) GetAllSortedData() []model.DataNode {
 	return nil
 }
 
-func (si *ContinousIndicator) GetByTs(ts int64) any {
+func (si *ContinousIndicator) GetByTs(ts int64) (model.DataNode, error) {
 	if si.continousLine == nil {
 		panic("continous error")
 	}
 	if si.period == 0 {
 		panic("continous empty")
 	}
-	data, err := si.continousLine.GetByTs(ts)
-	if err != nil {
-		return 0.0
-	} else {
-		return data.Value
-	}
+	return si.continousLine.GetByTs(ts)
 }
-func (si *ContinousIndicator) GetLastByTsAndCount(ts, period int64) ([]any, error) {
+func (si *ContinousIndicator) GetLastByTsAndCount(ts, period int64) ([]model.DataNode, error) {
 	rawData, err := si.continousLine.GetLastByTsAndCount(ts, period)
 	if err != nil {
 		return nil, err
 	}
-	res := []any{}
-	for _, v := range rawData {
-		res = append(res, v.Value)
-	}
-	return res, nil
+	return rawData, nil
 }
 
 func (si *ContinousIndicator) GetCurrentFloat(ts int64) float64 {
-	v := si.GetByTs(ts)
-	f, _ := v.(float64)
-	return f
+	v, _ := si.GetByTs(ts)
+	if v == nil {
+		return 0
+	}
+	return v.GetValue()
 }
 
 func (si *ContinousIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
@@ -86,8 +79,8 @@ func (si *ContinousIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.TimeStamp)
-		y[i] = v.Value * 100
+		x[i] = utils.TsToString(v.GetTs())
+		y[i] = v.GetValue() * 100
 	}
 	if len(y) > 3 {
 		y[0] = 0

@@ -36,7 +36,7 @@ func (bband *BBANDIndicator) Name() string {
 	return fmt.Sprintf("BBAND_%v", bband.erPeriod)
 }
 
-func (bband *BBANDIndicator) AddData(ts int64, node any) {
+func (bband *BBANDIndicator) AddData(ts int64, node model.DataNode) {
 	data, err := bband.kline.GetLastByTsAndCount(ts, bband.erPeriod+1)
 	if err != nil {
 		bband.BBANDUpperLine.AddData(ts, 0)
@@ -55,23 +55,18 @@ func (bband *BBANDIndicator) AddData(ts int64, node any) {
 	bband.BBANDDownLine.AddData(ts, low[len(low)-1])
 	bband.TriggerChildren(ts, node)
 }
-func (bband *BBANDIndicator) GetAllSortedData() []any {
+func (bband *BBANDIndicator) GetAllSortedData() []model.DataNode {
 	return nil
 }
 
-func (bband *BBANDIndicator) GetByTs(ts int64) any {
+func (bband *BBANDIndicator) GetByTs(ts int64) (model.DataNode, error) {
 	if bband.BBANDUpperLine == nil {
 		panic("BBANDLine error")
 	}
 	if bband.erPeriod == 0 {
 		panic("erPeriod empty")
 	}
-	data, err := bband.BBANDUpperLine.GetByTs(ts)
-	if err != nil {
-		return 0
-	} else {
-		return data.Value
-	}
+	return bband.BBANDUpperLine.GetByTs(ts)
 }
 
 func (bband *BBANDIndicator) GetUpperFloat(ts int64) float64 {
@@ -102,7 +97,7 @@ func (bband *BBANDIndicator) doGetValue(ts int64, l *indicator_base.Line) any {
 	if err != nil {
 		return 0
 	} else {
-		return data.Value
+		return data.GetValue()
 	}
 }
 
@@ -117,8 +112,8 @@ func (bband *BBANDIndicator) doPlotOneLine(kline *charts.Kline, l *indicator_bas
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.TimeStamp)
-		y[i] = v.Value
+		x[i] = utils.TsToString(v.GetTs())
+		y[i] = v.GetValue()
 	}
 	line := charts.NewLine()
 	line.SetGlobalOptions(charts.TitleOpts{Title: bband.Name()})

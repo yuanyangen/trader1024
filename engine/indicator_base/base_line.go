@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/utils"
+	"sort"
 	"sync"
 )
 
@@ -13,14 +14,14 @@ type BaseLine struct {
 	StartTs int64
 	EndTs   int64
 	Mu      sync.Mutex
-	data    map[int64]any
+	data    map[int64]model.DataNode
 }
 
 func NewBaseLine(name string, t model.LineType) *BaseLine {
 	bl := &BaseLine{
 		Name: name,
 		Type: t,
-		data: map[int64]any{},
+		data: map[int64]model.DataNode{},
 	}
 	return bl
 }
@@ -39,7 +40,7 @@ func (bl *BaseLine) UnityTimeStamp(ts int64) int64 {
 	offset := bl.offset()
 	return utils.UnityTimeStamp(ts, offset)
 }
-func (bl *BaseLine) GetByTs(ts int64) (any, error) {
+func (bl *BaseLine) GetByTs(ts int64) (model.DataNode, error) {
 	ts = bl.UnityTimeStamp(ts)
 	bl.Mu.Lock()
 	defer bl.Mu.Unlock()
@@ -51,10 +52,10 @@ func (bl *BaseLine) GetByTs(ts int64) (any, error) {
 	}
 }
 
-func (bl *BaseLine) GetLastByTsAndCount(ts int64, count int64) ([]any, error) {
+func (bl *BaseLine) GetLastByTsAndCount(ts int64, count int64) ([]model.DataNode, error) {
 	offset := bl.offset()
 	ts = bl.UnityTimeStamp(ts)
-	resp := make([]any, count)
+	resp := make([]model.DataNode, count)
 	bl.Mu.Lock()
 	defer bl.Mu.Unlock()
 	found := int64(0)
@@ -73,10 +74,10 @@ func (bl *BaseLine) GetLastByTsAndCount(ts int64, count int64) ([]any, error) {
 	return resp, nil
 }
 
-func (bl *BaseLine) GetForwardByTsAndCount(ts int64, count int64) ([]any, error) {
+func (bl *BaseLine) GetForwardByTsAndCount(ts int64, count int64) ([]model.DataNode, error) {
 	offset := bl.offset()
 	ts = bl.UnityTimeStamp(ts)
-	resp := make([]any, count)
+	resp := make([]model.DataNode, count)
 	bl.Mu.Lock()
 	defer bl.Mu.Unlock()
 	found := int64(0)
@@ -95,7 +96,7 @@ func (bl *BaseLine) GetForwardByTsAndCount(ts int64, count int64) ([]any, error)
 	return resp, nil
 }
 
-func (bl *BaseLine) AddData(ts int64, node any) {
+func (bl *BaseLine) AddData(ts int64, node model.DataNode) {
 	ts = bl.UnityTimeStamp(ts)
 	bl.Mu.Lock()
 	defer bl.Mu.Unlock()
@@ -108,13 +109,13 @@ func (bl *BaseLine) AddData(ts int64, node any) {
 	}
 }
 
-func (bl *BaseLine) GetAllData() []any {
+func (bl *BaseLine) GetAllData() []model.DataNode {
 	if bl == nil {
 		return nil
 	}
 	bl.Mu.Lock()
 
-	res := make([]any, len(bl.data))
+	res := make([]model.DataNode, len(bl.data))
 	i := 0
 	for _, v := range bl.data {
 		res[i] = v
@@ -122,4 +123,12 @@ func (bl *BaseLine) GetAllData() []any {
 	}
 	bl.Mu.Unlock()
 	return res
+}
+
+func (bl *BaseLine) GetAllSortedData() []model.DataNode {
+	ldRes := bl.GetAllData()
+	sort.Slice(ldRes, func(i, j int) bool {
+		return ldRes[i].GetTs() < ldRes[j].GetTs()
+	})
+	return ldRes
 }

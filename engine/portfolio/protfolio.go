@@ -12,25 +12,33 @@ func Portfolio(req *model.ContractPortfolioReq) {
 	broker := account.GetBackTestBroker()
 	count := decimal.NewFromInt(100)
 	var err error
+	position := broker.GetCurrentLivePositions(req.Contract.Id())
+	if req.StrategyResult == nil {
+		return
+	}
 	switch req.StrategyResult.Cmd {
 	case model.StrategyOutVolatility:
 		{
-			position := broker.GetCurrentLivePositions(req.Contract.Id())
 			if !position.Count.Equal(decimal.Zero) {
 				if position.Count.GreaterThan(decimal.Zero) {
-					err = broker.AddOrder(req.Contract.Id(), account.OrderTypeSell, position.Count, req.StrategyResult.Price, req.StrategyResult.Reason, req.Ts)
+					err = broker.AddOrder(req.Contract.Id(), account.OrderTypeSell, position.Count.Abs(), req.StrategyResult.Price, req.StrategyResult.Reason, req.Ts)
 				} else {
-					err = broker.AddOrder(req.Contract.Id(), account.OrderTypeBuy, position.Count, req.StrategyResult.Price, req.StrategyResult.Reason, req.Ts)
+					err = broker.AddOrder(req.Contract.Id(), account.OrderTypeBuy, position.Count.Abs(), req.StrategyResult.Price, req.StrategyResult.Reason, req.Ts)
 				}
 			}
 		}
 	case model.StrategyOutLong:
 		{
-			err = broker.AddOrder(req.Contract.Id(), account.OrderTypeBuy, count, req.StrategyResult.Price, req.StrategyResult.Reason, req.Ts)
+			if position.IsEmpty() {
+				err = broker.AddOrder(req.Contract.Id(), account.OrderTypeBuy, count, req.StrategyResult.Price, req.StrategyResult.Reason, req.Ts)
+			}
 		}
+
 	case model.StrategyOutShort:
 		{
-			err = broker.AddOrder(req.Contract.Id(), account.OrderTypeSell, count, req.StrategyResult.Price, req.StrategyResult.Reason, req.Ts)
+			if position.IsEmpty() {
+				err = broker.AddOrder(req.Contract.Id(), account.OrderTypeSell, count, req.StrategyResult.Price, req.StrategyResult.Reason, req.Ts)
+			}
 		}
 	default:
 		panic("should not reach here")

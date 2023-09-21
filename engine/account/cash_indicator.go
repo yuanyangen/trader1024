@@ -23,8 +23,8 @@ func (cw *CashIndicator) DoPlot(p *charts.Page) {
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.TimeStamp)
-		y[i] = v.Value
+		x[i] = utils.TsToString(v.GetTs())
+		y[i] = v.GetValue()
 	}
 	line.SetGlobalOptions(charts.TitleOpts{Title: "现金"}, charts.YAxisOpts{Scale: true})
 	line.AddXAxis(x).AddYAxis("现金", y, charts.LineOpts{Step: false})

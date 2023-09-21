@@ -4,7 +4,6 @@ import (
 	"github.com/go-echarts/go-echarts/charts"
 	"github.com/yuanyangen/trader1024/engine/indicator_base"
 	"github.com/yuanyangen/trader1024/engine/model"
-	"sort"
 )
 
 type KLineIndicator struct {
@@ -22,73 +21,53 @@ func NewKLine(name string, t model.LineType) model.MarketIndicator {
 func (k *KLineIndicator) Name() string {
 	return k.IndicatorCommon.Name()
 }
-func (k *KLineIndicator) GetLastByTsAndCount(ts int64, count int64) ([]any, error) {
-	res, err := k.BaseLine.GetLastByTsAndCount(ts, count)
-	if err != nil {
-		return nil, err
-	}
-	newRes := make([]any, len(res))
-	for i, v := range res {
-		newRes[i] = v.(*model.KNode)
-	}
 
-	return newRes, nil
+//func (k *KLineIndicator) GetLastByTsAndCount(ts int64, count int64) ([]model.DataNode, error) {
+//	return k.BaseLine.GetLastByTsAndCount(ts, count)
+//}
+
+//func (k *KLineIndicator) GetForwardByTsAndCount(ts int64, count int64) ([]model.DataNode, error) {
+//	res, err := k.BaseLine.GetForwardByTsAndCount(ts, count)
+//	if err != nil {
+//		return nil, err
+//	}
+//	newRes := make([]any, len(res))
+//	for i, v := range res {
+//		newRes[i] = k.nodeToFloat(v.(*model.KNode))
+//	}
+//
+//	return newRes, nil
+//}
+
+func (k *KLineIndicator) AddData(ts int64, in model.DataNode) {
+	k.BaseLine.AddData(ts, in)
+	k.IndicatorCommon.TriggerChildren(ts, in)
 }
 
-func (k *KLineIndicator) GetForwardByTsAndCount(ts int64, count int64) ([]any, error) {
-	res, err := k.BaseLine.GetForwardByTsAndCount(ts, count)
-	if err != nil {
-		return nil, err
-	}
-	newRes := make([]any, len(res))
-	for i, v := range res {
-		newRes[i] = v.(*model.KNode)
-	}
+//	func (k *KLineIndicator) GetKnodeByTs(ts int64) (*model.KNode, error) {
+//		vI, err := k.BaseLine.GetByTs(ts)
+//		if err != nil || vI == nil {
+//			return nil, err
+//		}
+//		node, ok := vI.(*model.KNode)
+//		if !ok {
+//			panic("should not reach here")
+//		}
+//		return node, nil
+//	}
 
-	return newRes, nil
-}
-
-func (k *KLineIndicator) AddData(ts int64, in any) {
-	node := in.(*model.KNode)
-	k.BaseLine.AddData(ts, node)
-	k.IndicatorCommon.TriggerChildren(ts, node)
-}
-
-func (k *KLineIndicator) GetKnodeByTs(ts int64) (*model.KNode, error) {
-	vI, err := k.BaseLine.GetByTs(ts)
-	if err != nil || vI == nil {
-		return nil, err
-	}
-	node, ok := vI.(*model.KNode)
-	if !ok {
-		panic("should not reach here")
-	}
-	return node, nil
-}
-func (k *KLineIndicator) GetByTs(ts int64) any {
-	vI, err := k.BaseLine.GetByTs(ts)
-	if err != nil || vI == nil {
-		return nil
-	}
-	node, ok := vI.(*model.KNode)
-	if !ok {
-		panic("should not reach here")
-	}
-	return node
-}
-
-func (k *KLineIndicator) GetAllSortedData() []any {
-	oldRes := k.BaseLine.GetAllData()
-	res := model.NewKnodesFromAny(oldRes)
-	sort.Slice(res, func(i, j int) bool {
-		return res[i].TimeStamp < res[j].TimeStamp
-	})
-	r := make([]any, len(res))
-	for i, v := range res {
-		r[i] = v
-	}
-	return r
-}
+//func (k *KLineIndicator) GetAllSortedData() []model.DataNode {
+//	oldRes := k.BaseLine.GetAllData()
+//	res := model.NewKnodesFromAny(oldRes)
+//	sort.Slice(res, func(i, j int) bool {
+//		return res[i].TimeStamp < res[j].TimeStamp
+//	})
+//	r := make([]any, len(res))
+//	for i, v := range res {
+//		r[i] = k.nodeToFloat(v)
+//	}
+//	return r
+//}
 
 func (k *KLineIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	kline.SetGlobalOptions(

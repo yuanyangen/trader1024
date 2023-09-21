@@ -22,7 +22,7 @@ func (bl *IndicatorCommon) AddChildrenIndicator(i model.MarketIndicator) {
 	bl.Children = append(bl.Children, i)
 }
 
-func (bl *IndicatorCommon) TriggerChildren(ts int64, node any) {
+func (bl *IndicatorCommon) TriggerChildren(ts int64, node model.DataNode) {
 	for _, i := range bl.Children {
 		i.AddData(ts, node)
 		i.TriggerChildren(ts, node)

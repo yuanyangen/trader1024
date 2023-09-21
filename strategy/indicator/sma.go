@@ -31,7 +31,7 @@ func (sma *SMAIndicator) Name() string {
 	return fmt.Sprintf("SimpleMovingAverage_%v", sma.period)
 }
 
-func (sma *SMAIndicator) AddData(ts int64, node any) {
+func (sma *SMAIndicator) AddData(ts int64, node model.DataNode) {
 	dataI, err := sma.kline.GetLastByTsAndCount(ts, sma.period)
 	if err != nil {
 		sma.SMALine.AddData(ts, 0)
@@ -47,25 +47,20 @@ func (sma *SMAIndicator) AddData(ts int64, node any) {
 	avg := out[len(out)-1]
 	sma.SMALine.AddData(ts, avg)
 }
-func (sma *SMAIndicator) GetAllSortedData() []any {
+func (sma *SMAIndicator) GetAllSortedData() []model.DataNode {
 	return nil
 }
 
-func (sma *SMAIndicator) GetByTs(ts int64) any {
+func (sma *SMAIndicator) GetByTs(ts int64) (model.DataNode, error) {
 	if sma.SMALine == nil {
 		panic("SMALine error")
 	}
 	if sma.period == 0 {
 		panic("erPeriod empty")
 	}
-	data, err := sma.SMALine.GetByTs(ts)
-	if err != nil {
-		return 0
-	} else {
-		return data.Value
-	}
+	return sma.SMALine.GetByTs(ts)
 }
-func (sma *SMAIndicator) GetLastByTsAndCount(ts, period int64) ([]any, error) {
+func (sma *SMAIndicator) GetLastByTsAndCount(ts, period int64) ([]model.DataNode, error) {
 	return nil, nil
 }
 
@@ -74,8 +69,8 @@ func (sma *SMAIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.TimeStamp)
-		y[i] = v.Value
+		x[i] = utils.TsToString(v.GetTs())
+		y[i] = v.GetValue()
 	}
 	line := charts.NewLine()
 	line.SetGlobalOptions(charts.TitleOpts{Title: sma.Name()})

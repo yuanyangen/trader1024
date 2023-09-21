@@ -1,5 +1,7 @@
 package utils
 
+import "github.com/yuanyangen/trader1024/engine/model"
+
 func AnyToBool(in any) bool {
 	if in == nil {
 		return false
@@ -29,6 +31,19 @@ func AnySliceToFloat(in []any) []float64 {
 		if !ok {
 			panic("should not reach here")
 		}
+		res[i] = r
+	}
+
+	return res
+}
+
+func DataNodeSliceToFloat(in []model.DataNode) []float64 {
+	if in == nil {
+		return nil
+	}
+	res := make([]float64, len(in))
+	for i, v := range in {
+		r := v.GetValue()
 		res[i] = r
 	}
 

@@ -33,7 +33,7 @@ func (cou *CrossUnderIndicator) Name() string {
 	return fmt.Sprintf("CrossUnder")
 }
 
-func (cou *CrossUnderIndicator) AddData(ts int64, node any) {
+func (cou *CrossUnderIndicator) AddData(ts int64, node model.DataNode) {
 	dataA := cou.getLast3Data(ts, cou.lineA)
 	dataB := cou.getLast3Data(ts, cou.lineB)
 	v := 0.0
@@ -49,11 +49,11 @@ func (cou *CrossUnderIndicator) AddData(ts int64, node any) {
 
 	out := talib.Crossunder(dataA, dataB)
 	if out {
-		knode := model.NewKnodeFromAny(cou.kline.GetByTs(ts))
+		knode, _ := cou.kline.GetByTs(ts)
 		if knode == nil {
 			panic("should not reach here")
 		}
-		v = knode.Close + 1000
+		v = knode.GetValue() + 1000
 	}
 	cou.crossunderScatter.AddData(ts, v)
 }
@@ -65,25 +65,21 @@ func (cou *CrossUnderIndicator) getLast3Data(ts int64, line *indicator_base2.Lin
 	}
 	in := make([]float64, len(dataA))
 	for i, v := range dataA {
-		in[i] = v.Value
+		in[i] = v.GetValue()
 	}
 	return in
 }
-func (cou *CrossUnderIndicator) GetAllSortedData() []any {
+func (cou *CrossUnderIndicator) GetAllSortedData() []model.DataNode {
 	return nil
 }
 
-func (cou *CrossUnderIndicator) GetByTs(ts int64) any {
+func (cou *CrossUnderIndicator) GetByTs(ts int64) (model.DataNode, error) {
 	if cou.crossunderScatter == nil {
 		panic("crossunderScatter error")
 	}
-	r, err := cou.crossunderScatter.GetByTs(ts)
-	if err != nil || r == nil {
-		panic("should not reach herer")
-	}
-	return r.Value != 0
+	return cou.crossunderScatter.GetByTs(ts)
 }
-func (cou *CrossUnderIndicator) GetLastByTsAndCount(ts int64, period int64) ([]any, error) {
+func (cou *CrossUnderIndicator) GetLastByTsAndCount(ts int64, period int64) ([]model.DataNode, error) {
 	return nil, nil
 }
 
@@ -92,8 +88,8 @@ func (cou *CrossUnderIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Li
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.TimeStamp)
-		y[i] = v.Value
+		x[i] = utils.TsToString(v.GetTs())
+		y[i] = v.GetValue()
 	}
 	scatter := charts.NewScatter()
 	scatter.SetGlobalOptions(charts.TitleOpts{Title: cou.Name()}, charts.YAxisOpts{Scale: true}, charts.TooltipOpts{

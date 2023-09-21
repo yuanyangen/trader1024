@@ -31,7 +31,7 @@ func (ri *RSIIndicator) Name() string {
 	return fmt.Sprintf("RSI_%v", ri.period)
 }
 
-func (ri *RSIIndicator) AddData(ts int64, node any) {
+func (ri *RSIIndicator) AddData(ts int64, node model.DataNode) {
 	dataI, err := ri.kline.GetLastByTsAndCount(ts, ri.period+1)
 	if err != nil {
 		ri.SMALine.AddData(ts, 0)
@@ -47,25 +47,20 @@ func (ri *RSIIndicator) AddData(ts int64, node any) {
 	avg := out[len(out)-1]
 	ri.SMALine.AddData(ts, avg)
 }
-func (ri *RSIIndicator) GetAllSortedData() []any {
+func (ri *RSIIndicator) GetAllSortedData() []model.DataNode {
 	return nil
 }
 
-func (ri *RSIIndicator) GetByTs(ts int64) any {
+func (ri *RSIIndicator) GetByTs(ts int64) (model.DataNode, error) {
 	if ri.SMALine == nil {
 		panic("SMALine error")
 	}
 	if ri.period == 0 {
 		panic("erPeriod empty")
 	}
-	data, err := ri.SMALine.GetByTs(ts)
-	if err != nil {
-		return 0
-	} else {
-		return data.Value
-	}
+	return ri.SMALine.GetByTs(ts)
 }
-func (ri *RSIIndicator) GetLastByTsAndCount(ts, period int64) ([]any, error) {
+func (ri *RSIIndicator) GetLastByTsAndCount(ts, period int64) ([]model.DataNode, error) {
 	return nil, nil
 }
 
@@ -74,8 +69,8 @@ func (ri *RSIIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.TimeStamp)
-		y[i] = v.Value
+		x[i] = utils.TsToString(v.GetTs())
+		y[i] = v.GetValue()
 	}
 	line := charts.NewLine()
 	line.SetGlobalOptions(charts.TitleOpts{Title: ri.Name()})

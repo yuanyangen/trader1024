@@ -5,6 +5,11 @@ import (
 	"fmt"
 )
 
+type DataNode interface {
+	GetValue() float64
+	GetTs() int64
+}
+
 type LineType int64
 
 const LineType_Day LineType = 1
@@ -33,6 +38,10 @@ func (k *KNode) GetValue() float64 {
 	return (k.Open + k.Close) / 2
 }
 
+func (k *KNode) GetTs() int64 {
+	return k.TimeStamp
+}
+
 func NewKnodeFromAny(val any) *KNode {
 	if val == nil {
 		return nil
@@ -41,7 +50,7 @@ func NewKnodeFromAny(val any) *KNode {
 	return r
 }
 
-func NewKnodesFromAny(val []any) []*KNode {
+func NewKnodesFromAny(val []DataNode) []*KNode {
 	if val == nil {
 		return nil
 	}

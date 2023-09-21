@@ -34,13 +34,13 @@ func (kama *LineSmaIndicator) Name() string {
 	return fmt.Sprintf("%v_sma_%v", kama.inline.Name(), kama.erPeriod)
 }
 
-func (kama *LineSmaIndicator) AddData(ts int64, node any) {
+func (kama *LineSmaIndicator) AddData(ts int64, node model.DataNode) {
 	dataI, err := kama.inline.GetLastByTsAndCount(ts, kama.erPeriod)
 	if err != nil {
 		kama.KAMALine.AddData(ts, 0)
 		return
 	}
-	data := utils.AnySliceToFloat(dataI)
+	data := utils.DataNodeSliceToFloat(dataI)
 	if len(data) == 0 {
 		kama.KAMALine.AddData(ts, 0)
 		return
@@ -50,69 +50,53 @@ func (kama *LineSmaIndicator) AddData(ts int64, node any) {
 	avg := out[len(out)-1]
 	kama.KAMALine.AddData(ts, avg)
 }
-func (kama *LineSmaIndicator) GetAllSortedData() []any {
+func (kama *LineSmaIndicator) GetAllSortedData() []model.DataNode {
 	return nil
 }
 
-func (kama *LineSmaIndicator) GetCurrentValue(ts int64) any {
+func (kama *LineSmaIndicator) GetCurrentValue(ts int64) model.DataNode {
 	if kama.KAMALine == nil {
 		panic("KAMALine error")
 	}
 	if kama.erPeriod == 0 {
 		panic("erPeriod empty")
 	}
-	data, err := kama.KAMALine.GetByTs(ts)
-	if err != nil {
-		return 0
-	} else {
-		return data.Value
-	}
+	data, _ := kama.KAMALine.GetByTs(ts)
+	return data
 }
 
 func (kama *LineSmaIndicator) GetCurrentFloat(ts int64) float64 {
 	v := kama.GetCurrentValue(ts)
-	f, _ := v.(float64)
-	return f
+	if v == nil {
+		return 0
+	}
+	return v.GetValue()
 }
-func (kama *LineSmaIndicator) GetLastByTsAndCount(ts int64, period int64) ([]any, error) {
+func (kama *LineSmaIndicator) GetLastByTsAndCount(ts int64, period int64) ([]model.DataNode, error) {
 	if kama.KAMALine == nil {
 		panic("KAMALine error")
 	}
 	if kama.erPeriod == 0 {
 		panic("erPeriod empty")
 	}
-	dataI, err := kama.KAMALine.GetLastByTsAndCount(ts, period)
-	if err != nil {
-		return nil, err
-	}
-	res := make([]any, len(dataI))
-	for i, v := range dataI {
-		res[i] = v.Value
-	}
-
-	return res, nil
+	return kama.KAMALine.GetLastByTsAndCount(ts, period)
 }
-func (kama *LineSmaIndicator) GetByTs(ts int64) any {
+func (kama *LineSmaIndicator) GetByTs(ts int64) (model.DataNode, error) {
 	if kama.KAMALine == nil {
 		panic("KAMALine error")
 	}
 	if kama.erPeriod == 0 {
 		panic("erPeriod empty")
 	}
-	data, err := kama.KAMALine.GetByTs(ts)
-	if err != nil {
-		return 0.0
-	} else {
-		return data.Value
-	}
+	return kama.KAMALine.GetByTs(ts)
 }
 func (kama *LineSmaIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	allData := kama.KAMALine.GetAllSortedData()
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.TimeStamp)
-		y[i] = math.Abs(v.Value * 100)
+		x[i] = utils.TsToString(v.GetTs())
+		y[i] = math.Abs(v.GetValue() * 100)
 	}
 	line := charts.NewLine()
 	line.SetGlobalOptions(charts.TitleOpts{Title: kama.Name()})

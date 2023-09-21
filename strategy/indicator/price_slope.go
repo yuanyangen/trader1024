@@ -30,13 +30,13 @@ func (si *SlopIndicator) Name() string {
 	return fmt.Sprintf("Slop_%v", si.period)
 }
 
-func (si *SlopIndicator) AddData(ts int64, node any) {
+func (si *SlopIndicator) AddData(ts int64, node model.DataNode) {
 	dataI, err := si.inLine.GetLastByTsAndCount(ts, si.period)
 	if err != nil {
 		si.slopLine.AddData(ts, 0)
 		return
 	}
-	data := utils.AnySliceToFloat(dataI)
+	data := utils.DataNodeSliceToFloat(dataI)
 	if data == nil {
 		si.slopLine.AddData(ts, 0)
 		return
@@ -45,40 +45,29 @@ func (si *SlopIndicator) AddData(ts int64, node any) {
 	out := (data[1] - data[0]) / data[1]
 	si.slopLine.AddData(ts, out)
 }
-func (si *SlopIndicator) GetAllSortedData() []any {
+func (si *SlopIndicator) GetAllSortedData() []model.DataNode {
 	return nil
 }
 
-func (si *SlopIndicator) GetByTs(ts int64) any {
+func (si *SlopIndicator) GetByTs(ts int64) (model.DataNode, error) {
 	if si.slopLine == nil {
 		panic("continousLine error")
 	}
 	if si.period == 0 {
 		panic("erPeriod empty")
 	}
-	data, err := si.slopLine.GetByTs(ts)
-	if err != nil {
-		return 0.0
-	} else {
-		return data.Value
-	}
+	return si.slopLine.GetByTs(ts)
 }
-func (si *SlopIndicator) GetLastByTsAndCount(ts, period int64) ([]any, error) {
-	rawData, err := si.slopLine.GetLastByTsAndCount(ts, period)
-	if err != nil {
-		return nil, err
-	}
-	res := []any{}
-	for _, v := range rawData {
-		res = append(res, v.Value)
-	}
-	return res, nil
+func (si *SlopIndicator) GetLastByTsAndCount(ts, period int64) ([]model.DataNode, error) {
+	return si.slopLine.GetLastByTsAndCount(ts, period)
 }
 
 func (si *SlopIndicator) GetCurrentFloat(ts int64) float64 {
-	v := si.GetByTs(ts)
-	f, _ := v.(float64)
-	return f
+	v, _ := si.GetByTs(ts)
+	if v == nil {
+		return 0
+	}
+	return v.GetValue()
 }
 
 func (si *SlopIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
@@ -86,8 +75,8 @@ func (si *SlopIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.TimeStamp)
-		y[i] = (v.Value * 100)
+		x[i] = utils.TsToString(v.GetTs())
+		y[i] = (v.GetValue() * 100)
 	}
 	if len(y) > 3 {
 		y[0] = 0

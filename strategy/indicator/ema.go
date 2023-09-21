@@ -31,7 +31,7 @@ func (ema *EMAIndicator) Name() string {
 	return fmt.Sprintf("EMA_%v", ema.period)
 }
 
-func (ema *EMAIndicator) AddData(ts int64, node any) {
+func (ema *EMAIndicator) AddData(ts int64, node model.DataNode) {
 	data, err := ema.kline.GetLastByTsAndCount(ts, ema.period)
 	if err != nil {
 		ema.EMALine.AddData(ts, 0)
@@ -50,32 +50,29 @@ func (ema *EMAIndicator) AddData(ts int64, node any) {
 	avg := out[len(out)-1]
 	ema.EMALine.AddData(ts, avg)
 }
-func (ema *EMAIndicator) GetAllSortedData() []any {
+func (ema *EMAIndicator) GetAllSortedData() []model.DataNode {
 	return nil
 }
-func (ema *EMAIndicator) GetLastByTsAndCount(ts int64, period int64) ([]any, error) {
+func (ema *EMAIndicator) GetLastByTsAndCount(ts int64, period int64) ([]model.DataNode, error) {
 	return nil, nil
 }
 
-func (ema *EMAIndicator) GetByTs(ts int64) any {
+func (ema *EMAIndicator) GetByTs(ts int64) (model.DataNode, error) {
 	if ema.EMALine == nil {
 		panic("EMALine error")
 	}
 	if ema.period == 0 {
 		panic("erPeriod empty")
 	}
-	data, err := ema.EMALine.GetByTs(ts)
-	if err != nil {
-		return 0
-	} else {
-		return data.Value
-	}
+	return ema.EMALine.GetByTs(ts)
 }
 
 func (ema *EMAIndicator) GetCurrentFloat(ts int64) float64 {
-	v := ema.GetByTs(ts)
-	f, _ := v.(float64)
-	return f
+	v, _ := ema.GetByTs(ts)
+	if v == nil {
+		return 0
+	}
+	return v.GetValue()
 }
 
 func (ema *EMAIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
@@ -83,8 +80,8 @@ func (ema *EMAIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.TimeStamp)
-		y[i] = v.Value
+		x[i] = utils.TsToString(v.GetTs())
+		y[i] = v.GetValue()
 	}
 	line := charts.NewLine()
 	line.SetGlobalOptions(charts.TitleOpts{Title: ema.Name()})

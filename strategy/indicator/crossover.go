@@ -34,7 +34,7 @@ func (coi *CrossOverIndicator) Name() string {
 	return fmt.Sprintf("CrossOver")
 }
 
-func (coi *CrossOverIndicator) AddData(ts int64, node any) {
+func (coi *CrossOverIndicator) AddData(ts int64, node model.DataNode) {
 	dataA := coi.getLast3Data(ts, coi.lineA)
 	dataB := coi.getLast3Data(ts, coi.lineB)
 	v := 0.0
@@ -49,11 +49,11 @@ func (coi *CrossOverIndicator) AddData(ts int64, node any) {
 
 	out := talib.Crossover(dataA, dataB)
 	if out {
-		knode := model.NewKnodeFromAny(coi.kline.GetByTs(ts))
+		knode, _ := coi.kline.GetByTs(ts)
 		if knode == nil {
 			panic("should not reach here")
 		}
-		v = knode.Close + 1000.0
+		v = knode.GetValue() + 1000.0
 	}
 	coi.crossoverScatter.AddData(ts, v)
 }
@@ -65,25 +65,21 @@ func (coi *CrossOverIndicator) getLast3Data(ts int64, line *indicator_base2.Line
 	}
 	in := make([]float64, len(dataA))
 	for i, v := range dataA {
-		in[i] = v.Value
+		in[i] = v.GetValue()
 	}
 	return in
 }
-func (coi *CrossOverIndicator) GetAllSortedData() []any {
+func (coi *CrossOverIndicator) GetAllSortedData() []model.DataNode {
 	return nil
 }
 
-func (coi *CrossOverIndicator) GetByTs(ts int64) any {
+func (coi *CrossOverIndicator) GetByTs(ts int64) (model.DataNode, error) {
 	if coi.crossoverScatter == nil {
 		panic("crossunderScatter error")
 	}
-	r, err := coi.crossoverScatter.GetByTs(ts)
-	if err != nil || r == nil {
-		return false
-	}
-	return r.Value != 0
+	return coi.crossoverScatter.GetByTs(ts)
 }
-func (coi *CrossOverIndicator) GetLastByTsAndCount(ts int64, period int64) ([]any, error) {
+func (coi *CrossOverIndicator) GetLastByTsAndCount(ts int64, period int64) ([]model.DataNode, error) {
 	return nil, nil
 }
 
@@ -93,8 +89,8 @@ func (coi *CrossOverIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Lin
 	y := make([]float64, len(allData))
 
 	for i, v := range allData {
-		y[i] = v.Value
-		x[i] = utils.TsToString(v.TimeStamp)
+		y[i] = v.GetValue()
+		x[i] = utils.TsToString(v.GetTs())
 	}
 	scatter := charts.NewScatter()
 	scatter.SetGlobalOptions(charts.TitleOpts{Title: coi.Name()})

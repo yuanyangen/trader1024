@@ -151,7 +151,8 @@ func (t *Train) genReport(result []*TrainResult) *Report {
 			t.genOneDayReport(v.strategyReq.StrategyResult.Cmd, &r.ShortWinCountAfter5Day, v.strategyTrainResult.RiseFallAfter5Day, v.strategyReq.StrategyResult.Price.InexactFloat64())
 			t.genOneDayReport(v.strategyReq.StrategyResult.Cmd, &r.ShortWinCountAfter20Day, v.strategyTrainResult.RiseFallAfter20Day, v.strategyReq.StrategyResult.Price.InexactFloat64())
 		} else {
-			panic("should not reach here")
+			continue
+			//panic("should not reach here")
 		}
 	}
 	return r
