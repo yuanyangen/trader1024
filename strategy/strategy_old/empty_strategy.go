@@ -1,4 +1,4 @@
-package strategy
+package strategy_old
 
 //
 //import "github.com/yuanyangen/trader1024/engine/model"

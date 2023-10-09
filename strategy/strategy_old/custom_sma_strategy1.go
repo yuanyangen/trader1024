@@ -1,4 +1,4 @@
-package strategy
+package strategy_old
 
 //
 //// 自定义的均线策略 ， 使用sma1， kama5, kama20
@@ -8,33 +8,37 @@ package strategy
 //	"github.com/shopspring/decimal"
 //	"github.com/yuanyangen/trader1024/engine/account"
 //	"github.com/yuanyangen/trader1024/engine/model"
-//	"github.com/yuanyangen/trader1024/strategy/indicator"
+//	"github.com/yuanyangen/trader1024/strategy_old/indicator"
 //)
 //
-//type CustomKAMAStrategy struct {
+//type CustomSMAStrategy struct {
+//	sma10  *indicator.SMAIndicator
+//	sma5   *indicator.SMAIndicator
+//	sma2   *indicator.SMAIndicator
 //	kama10 *indicator.KAMAIndicator
 //	kama5  *indicator.KAMAIndicator
 //	kama2  *indicator.KAMAIndicator
-//	slop   model.MarketIndicator
 //	loaded bool // 只有
 //}
 //
-//func NewCustomKAMAStrategyFactory() model.Strategy {
-//	return &CustomKAMAStrategy{}
+//func NewCustomSMAStrategyFactory() model.Strategy {
+//	return &CustomSMAStrategy{}
 //}
 //
-//func (es *CustomKAMAStrategy) CNName() string {
-//	return "CustomKAMAStrategy"
+//func (es *CustomSMAStrategy) CNName() string {
+//	return "CustomSMAStrategy"
 //}
 //
-//func (es *CustomKAMAStrategy) Init(ec *model.MarketStrategyContext) {
-//	es.kama10 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 10, 2, 30)
-//	es.kama5 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 5, 2, 30)
+//func (es *CustomSMAStrategy) Init(ec *model.MarketStrategyContext) {
+//	es.sma10 = indicator.NewSMAIndicator(ec.DailyData.Kline, 10)
+//	es.sma5 = indicator.NewSMAIndicator(ec.DailyData.Kline, 3)
+//	es.sma2 = indicator.NewSMAIndicator(ec.DailyData.Kline, 1)
+//	es.kama10 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 30, 2, 20)
+//	es.kama5 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 5, 2, 20)
 //	es.kama2 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 2, 2, 30)
-//	es.slop = indicator.NewSlopIndicator(es.kama2, 2)
 //}
 //
-//func (es *CustomKAMAStrategy) OnBar(ctx *model.MarketStrategyContext, ts int64) []*model.StrategyResult {
+//func (es *CustomSMAStrategy) OnBar(ctx *model.MarketStrategyContext, ts int64) []*model.StrategyResult {
 //	currentKValue := model.NewKnodeFromAny(ctx.DailyData.Kline.GetByTs(ts))
 //	if currentKValue == nil {
 //		return nil
@@ -66,4 +70,11 @@ package strategy
 //	}
 //
 //	return nil
+//}
+//
+//func long(fast, mid, slow float64) bool {
+//	return fast > mid && mid > slow
+//}
+//func short(fast, mid, slow float64) bool {
+//	return fast < mid && mid < slow
 //}

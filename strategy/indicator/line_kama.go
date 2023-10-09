@@ -12,14 +12,14 @@ import (
 
 type LineKAMAIndicator struct {
 	*indicator_base.IndicatorCommon
-	inline      model.MarketIndicator
+	inline      model.ContractIndicator
 	KAMALine    *indicator_base.Line
 	erPeriod    int64
 	shortPeriod int64
 	longPeriod  int64
 }
 
-func NewLineKAMAIndicator(inline model.MarketIndicator, period, shortPeriod, longPeriod int64) *LineKAMAIndicator {
+func NewLineKAMAIndicator(inline model.ContractIndicator, period, shortPeriod, longPeriod int64) *LineKAMAIndicator {
 	kama := &LineKAMAIndicator{
 		IndicatorCommon: indicator_base.NewIndicatorCommon(),
 		erPeriod:        period,
@@ -106,7 +106,7 @@ func (kama *LineKAMAIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Lin
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.GetTs())
+		x[i] = utils.TsToDateString(v.GetTs())
 		y[i] = math.Abs(v.GetValue() * 100)
 	}
 	line := charts.NewLine()

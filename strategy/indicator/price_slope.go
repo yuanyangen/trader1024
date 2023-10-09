@@ -6,16 +6,17 @@ import (
 	"github.com/yuanyangen/trader1024/engine/indicator_base"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/utils"
+	"math"
 )
 
 type SlopIndicator struct {
 	*indicator_base.IndicatorCommon
-	inLine   model.MarketIndicator
+	inLine   model.ContractIndicator
 	slopLine *indicator_base.Line
 	period   int64
 }
 
-func NewSlopIndicator(rawLine model.MarketIndicator, period int64) model.MarketIndicator {
+func NewSlopIndicator(rawLine model.ContractIndicator, period int64) *SlopIndicator {
 	slop := &SlopIndicator{
 		inLine:          rawLine,
 		IndicatorCommon: indicator_base.NewIndicatorCommon(),
@@ -75,8 +76,12 @@ func (si *SlopIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.GetTs())
-		y[i] = (v.GetValue() * 100)
+		x[i] = utils.TsToDateString(v.GetTs())
+		if v.GetValue() == math.NaN() {
+			y[i] = 0
+		} else {
+			y[i] = v.GetValue() * 100
+		}
 	}
 	if len(y) > 3 {
 		y[0] = 0

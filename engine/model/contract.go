@@ -64,9 +64,3 @@ func (s *Subject) AllDates() []string {
 	}
 	return out
 }
-
-type ContractPortfolioReq struct {
-	Contract       *Contract
-	StrategyResult *StrategyResult
-	Ts             int64
-}

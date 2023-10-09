@@ -3,9 +3,9 @@ package account
 import (
 	"fmt"
 	"github.com/shopspring/decimal"
+	"github.com/yuanyangen/trader1024/engine/utils"
 	"sort"
 	"sync"
-	"time"
 )
 
 type PositionType int
@@ -24,10 +24,11 @@ func (pt PositionType) String() string {
 }
 
 type ContractPosition struct {
-	mu       sync.Mutex
-	MarketId string
-	Count    decimal.Decimal //使用正表示多头， 使用负 表示空头，
-	Details  []*PositionPair
+	mu                    sync.Mutex
+	MarketId              string
+	Count                 decimal.Decimal //使用正表示多头， 使用负 表示空头，
+	Details               []*PositionPair
+	EndTimeToPositionPair map[int64]*PositionPair
 }
 
 func (p *ContractPosition) IsEmpty() bool {
@@ -41,7 +42,13 @@ func (p *ContractPosition) ProcessOrder(order *Order) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	p.processTotalCount(order)
+	if order.OrderType == OrderTypeSell {
+		p.Count = p.Count.Sub(order.Count)
+	} else if order.OrderType == OrderTypeBuy {
+		p.Count = p.Count.Add(order.Count)
+	} else {
+		panic("should not reach here")
+	}
 
 	lastCount := order.Count
 	for _, pp := range p.Details {
@@ -61,15 +68,6 @@ func (p *ContractPosition) ProcessOrder(order *Order) {
 	}
 	if lastCount.GreaterThan(decimal.Zero) {
 		p.newPositionPair(lastCount, order)
-	}
-}
-func (p *ContractPosition) processTotalCount(order *Order) {
-	if order.OrderType == OrderTypeSell {
-		p.Count = p.Count.Sub(order.Count)
-	} else if order.OrderType == OrderTypeBuy {
-		p.Count = p.Count.Add(order.Count)
-	} else {
-		panic("should not reach here")
 	}
 }
 func (p *ContractPosition) newPositionPair(lastCount decimal.Decimal, order *Order) {
@@ -105,10 +103,12 @@ func (p *ContractPosition) splitPosition(pp *PositionPair, lastCount decimal.Dec
 		p1 = pp.Sell
 		pp.Buy = p2
 	}
+
 	if p1.Count.GreaterThan(lastCount) {
 		p1LastCount := p1.Count.Sub(lastCount)
 		p2.Count = lastCount
 		pp.Clear = true
+		pp.EndTimeStamp = order.CreateTimeStamp
 		pp.genGain()
 		newP1 := &Position{
 			Count:     p1LastCount,
@@ -130,15 +130,16 @@ func (p *ContractPosition) splitPosition(pp *PositionPair, lastCount decimal.Dec
 		p2.Count = lastCount
 		p2.Price = order.Price
 		pp.Clear = true
+		pp.EndTimeStamp = order.CreateTimeStamp
 		pp.genGain()
 		lastCount = decimal.Zero
 	} else {
 		p2.Count = p1.Count
 		p2.Price = order.Price
 		pp.Clear = true
+		pp.EndTimeStamp = order.CreateTimeStamp
 		pp.genGain()
 		lastCount = lastCount.Sub(p1.Count)
-
 	}
 	return lastCount
 }
@@ -201,6 +202,7 @@ type PositionPair struct {
 	Clear           bool // 是否买卖平衡
 	Gain            decimal.Decimal
 	CreateTimeStamp int64
+	EndTimeStamp    int64
 }
 
 func (pp *PositionPair) genGain() {
@@ -211,17 +213,17 @@ func (pp *PositionPair) genGain() {
 }
 
 func (pp *PositionPair) Report() {
-	fmt.Printf("order_type=%v ", pp.Type.String())
+	fmt.Printf("order_start_time=%v order_type=%v ", utils.TsToDateString(pp.CreateTimeStamp), pp.Type.String())
 	if pp.Buy != nil {
 		fmt.Printf("buy_time=%v buy_price=%v buy_count=%v ",
-			time.Unix(pp.Buy.OrderInfo.CreateTimeStamp, 0).Format("2006-01-02 15:04:05"),
+			utils.TsToDateString(pp.Buy.OrderInfo.CreateTimeStamp),
 			pp.Buy.Price.String(),
 			pp.Buy.Count.String(),
 		)
 	}
 	if pp.Sell != nil {
 		fmt.Printf("sell_time=%v sell_price=%v sell_count=%v ",
-			time.Unix(pp.Sell.OrderInfo.CreateTimeStamp, 0).Format("2006-01-02 15:04:05"),
+			utils.TsToDateString(pp.Sell.OrderInfo.CreateTimeStamp),
 			pp.Sell.Price.String(),
 			pp.Sell.Count.String(),
 		)

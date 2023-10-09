@@ -1,11 +1,11 @@
-package strategy
+package strategy_old
 
 //
 //import (
 //	"github.com/shopspring/decimal"
 //	"github.com/yuanyangen/trader1024/engine/account"
 //	"github.com/yuanyangen/trader1024/engine/model"
-//	"github.com/yuanyangen/trader1024/strategy/indicator"
+//	"github.com/yuanyangen/trader1024/strategy_old/indicator"
 //)
 //
 //type BBandStrategy struct {

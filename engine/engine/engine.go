@@ -11,21 +11,22 @@ type Engine struct {
 	Contracts          map[string]*ContractEngine
 	EventTrigger       model.EventTrigger
 	strategies         []func() model.Strategy
+	portfolioStrategy  PortfolioStrategy
 	cmdExecutorFactory CmdExecutorFactory // 决定
 	watcherBackend     *WatcherBackend
 }
 
-type CmdExecutorFactory func() func(contract *model.Contract, kline model.MarketIndicator) CmdExecutor
+type CmdExecutorFactory func() func(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy PortfolioStrategy) CmdExecutor
 
 type CmdExecutor interface {
-	ExecuteCmd(req *model.ContractPortfolioReq)
+	ExecuteCmd(req *ContractPortfolioReq)
 	Report()
 }
 
 func NewTrainEngine(et model.EventTrigger) *Engine {
 	e := &Engine{
 		Contracts: map[string]*ContractEngine{},
-		cmdExecutorFactory: func() func(contract *model.Contract, kline model.MarketIndicator) CmdExecutor {
+		cmdExecutorFactory: func() func(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy PortfolioStrategy) CmdExecutor {
 			return newTrain
 		},
 		EventTrigger: et,
@@ -34,13 +35,14 @@ func NewTrainEngine(et model.EventTrigger) *Engine {
 	return e
 }
 
-func NewLiveExecuteEngine(et model.EventTrigger) *Engine {
+func NewLiveExecuteEngine(et model.EventTrigger, portfolioStrategy PortfolioStrategy) *Engine {
 	e := &Engine{
 		Contracts: map[string]*ContractEngine{},
-		cmdExecutorFactory: func() func(contract *model.Contract, kline model.MarketIndicator) CmdExecutor {
+		cmdExecutorFactory: func() func(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy PortfolioStrategy) CmdExecutor {
 			return newLiveCmdExecutor
 		},
-		EventTrigger: et,
+		EventTrigger:      et,
+		portfolioStrategy: portfolioStrategy,
 	}
 	e.watcherBackend = NewPlotterServers(e)
 	return e
@@ -48,7 +50,7 @@ func NewLiveExecuteEngine(et model.EventTrigger) *Engine {
 
 func (ec *Engine) RegisterContract(subjectCnName string, contractTime string, dataSource model.DateSource) {
 	if len(ec.strategies) == 0 {
-		panic("should register strategy first")
+		panic("should register strategy_old first")
 	}
 	subject := markets.GetSubjectByCnNam(subjectCnName)
 	if subject == nil {
@@ -65,7 +67,7 @@ func (ec *Engine) RegisterContract(subjectCnName string, contractTime string, da
 		strategies[i] = stFactory()
 	}
 
-	ce := NewContractEngine(contract, strategies, ec.cmdExecutorFactory, dataSource)
+	ce := NewContractEngine(contract, strategies, ec.cmdExecutorFactory, dataSource, ec.portfolioStrategy)
 	ec.EventTrigger.RegisterEventReceiver(ce.EventTriggerChan)
 	ec.Contracts[subjectCnName+contractTime] = ce
 }

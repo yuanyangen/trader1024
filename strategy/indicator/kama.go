@@ -12,32 +12,32 @@ import (
 
 type KAMAIndicator struct {
 	*indicator_base.IndicatorCommon
-	kline       model.MarketIndicator
+	parentLine  model.ContractIndicator
 	KAMALine    *indicator_base.Line
 	erPeriod    int64
 	shortPeriod int64
 	longPeriod  int64
 }
 
-func NewKAMAIndicator(kline model.MarketIndicator, period, shortPeriod, longPeriod int64) *KAMAIndicator {
+func NewKAMAIndicator(kline model.ContractIndicator, period, shortPeriod, longPeriod int64) *KAMAIndicator {
 	kama := &KAMAIndicator{
 		IndicatorCommon: indicator_base.NewIndicatorCommon(),
 		erPeriod:        period,
 		shortPeriod:     shortPeriod,
 		longPeriod:      longPeriod,
-		KAMALine:        indicator_base.NewLine(model.LineType_Day, fmt.Sprintf("kama_%v", period)),
-		kline:           kline,
+		KAMALine:        indicator_base.NewLine(model.LineType_Day, fmt.Sprintf(kline.Name()+"_%v", period)),
+		parentLine:      kline,
 	}
 	kline.AddChildrenIndicator(kama)
 	return kama
 }
 
 func (kama *KAMAIndicator) Name() string {
-	return fmt.Sprintf("KAMA_%v", kama.erPeriod)
+	return fmt.Sprintf("%v_KAMA_%v", kama.parentLine.Name(), kama.erPeriod)
 }
 
 func (kama *KAMAIndicator) AddData(ts int64, node model.DataNode) {
-	data, err := kama.kline.GetLastByTsAndCount(ts, kama.erPeriod+1)
+	data, err := kama.parentLine.GetLastByTsAndCount(ts, kama.erPeriod+1)
 	if err != nil {
 		kama.KAMALine.AddData(ts, 0)
 		return
@@ -104,7 +104,7 @@ func (kama *KAMAIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.GetTs())
+		x[i] = utils.TsToDateString(v.GetTs())
 		y[i] = v.GetValue()
 	}
 	line := charts.NewLine()

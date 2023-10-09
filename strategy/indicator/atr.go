@@ -11,12 +11,12 @@ import (
 
 type ATRIndicator struct {
 	*indicator_base.IndicatorCommon
-	kline   model.MarketIndicator
+	kline   model.ContractIndicator
 	SMALine *indicator_base.Line
 	period  int64
 }
 
-func NewATRIndicator(kline model.MarketIndicator, period int64) *ATRIndicator {
+func NewATRIndicator(kline model.ContractIndicator, period int64) *ATRIndicator {
 	sma := &ATRIndicator{
 		IndicatorCommon: indicator_base.NewIndicatorCommon(),
 		period:          period,
@@ -74,7 +74,7 @@ func (sma *ATRIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.GetTs())
+		x[i] = utils.TsToDateString(v.GetTs())
 		y[i] = v.GetValue() * 100
 	}
 	line := charts.NewLine()

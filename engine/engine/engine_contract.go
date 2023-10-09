@@ -12,14 +12,14 @@ import (
 type ContractEngine struct {
 	EventTriggerChan chan *model.EventMsg
 	Contract         *model.Contract
-	Kline            model.MarketIndicator
+	Kline            model.ContractIndicator
 	dataSource       model.DateSource
 	//DailyIndicators  *model.DailyIndicators
 	Strategies  []model.Strategy
 	CmdExecutor CmdExecutor
 }
 
-func NewContractEngine(contract *model.Contract, strategies []model.Strategy, executor CmdExecutorFactory, dataSource model.DateSource) *ContractEngine {
+func NewContractEngine(contract *model.Contract, strategies []model.Strategy, executor CmdExecutorFactory, dataSource model.DateSource, portfolioStrategy PortfolioStrategy) *ContractEngine {
 	kline := indicator.NewKLine(contract.CNName+contract.ContractTime, model.LineType_Day)
 	return &ContractEngine{
 		EventTriggerChan: make(chan *model.EventMsg, 1024),
@@ -27,7 +27,7 @@ func NewContractEngine(contract *model.Contract, strategies []model.Strategy, ex
 		Kline:            kline,
 		Strategies:       strategies,
 		dataSource:       dataSource,
-		CmdExecutor:      executor()(contract, kline),
+		CmdExecutor:      executor()(contract, kline, portfolioStrategy),
 	}
 }
 
@@ -74,7 +74,7 @@ func (m *ContractEngine) eventHandler(data *model.KNode) {
 		if stResult == nil {
 			continue
 		}
-		req := &model.ContractPortfolioReq{
+		req := &ContractPortfolioReq{
 			Contract:       m.Contract,
 			Ts:             data.TimeStamp,
 			StrategyResult: stResult,

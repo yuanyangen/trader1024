@@ -4,10 +4,18 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type OrderType int
-
 const OrderTypeSell OrderType = 1
 const OrderTypeBuy OrderType = 2
+
+type OrderType int
+
+func (ot OrderType) String() string {
+	if ot == OrderTypeSell {
+		return "sell"
+	} else {
+		return "buy"
+	}
+}
 
 type OrderStatus int
 

@@ -10,12 +10,12 @@ import (
 
 type ContinousIndicator struct {
 	*indicator_base.IndicatorCommon
-	kline         model.MarketIndicator
+	kline         model.ContractIndicator
 	continousLine *indicator_base.Line
 	period        int64
 }
 
-func NewContinousIndicator(rawLine model.MarketIndicator) model.MarketIndicator {
+func NewContinousIndicator(rawLine model.ContractIndicator) model.ContractIndicator {
 	slop := &ContinousIndicator{
 		kline:           rawLine,
 		IndicatorCommon: indicator_base.NewIndicatorCommon(),
@@ -79,7 +79,7 @@ func (si *ContinousIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.GetTs())
+		x[i] = utils.TsToDateString(v.GetTs())
 		y[i] = v.GetValue() * 100
 	}
 	if len(y) > 3 {

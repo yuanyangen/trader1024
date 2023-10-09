@@ -11,7 +11,7 @@ type KLineIndicator struct {
 	*indicator_base.IndicatorCommon
 }
 
-func NewKLine(name string, t model.LineType) model.MarketIndicator {
+func NewKLine(name string, t model.LineType) model.ContractIndicator {
 	return &KLineIndicator{
 		IndicatorCommon: indicator_base.NewIndicatorCommon(),
 		BaseLine:        indicator_base.NewBaseLine(name, t),

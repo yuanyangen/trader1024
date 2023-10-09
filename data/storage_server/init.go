@@ -1,8 +1,9 @@
 package main
 
+import "github.com/yuanyangen/trader1024/config"
+
 func Init() {
-	const storageDataPath = "/home/yuanyangen/HomeData/go/trader1024/data/datas"
-	InitAllStorage(storageDataPath, []string{"eastmoney", "main", "sina", "test"})
+	InitAllStorage(config.StorageDataPath, []string{"eastmoney", "main", "sina", "test"})
 }
 
 func InitAllStorage(dirPath string, names []string) {

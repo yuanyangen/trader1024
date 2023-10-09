@@ -7,18 +7,18 @@ import (
 
 type IndicatorCommon struct {
 	name     string
-	Children []model.MarketIndicator
+	Children []model.ContractIndicator
 }
 
 func NewIndicatorCommon() *IndicatorCommon {
-	return &IndicatorCommon{Children: []model.MarketIndicator{}}
+	return &IndicatorCommon{Children: []model.ContractIndicator{}}
 }
 
 func (bl *IndicatorCommon) Name() string {
 	return bl.name
 }
 
-func (bl *IndicatorCommon) AddChildrenIndicator(i model.MarketIndicator) {
+func (bl *IndicatorCommon) AddChildrenIndicator(i model.ContractIndicator) {
 	bl.Children = append(bl.Children, i)
 }
 

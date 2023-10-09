@@ -11,12 +11,12 @@ import (
 
 type RSIIndicator struct {
 	*indicator_base.IndicatorCommon
-	kline   model.MarketIndicator
+	kline   model.ContractIndicator
 	SMALine *indicator_base.Line
 	period  int64
 }
 
-func NewRSIIndicator(kline model.MarketIndicator, period int64) *RSIIndicator {
+func NewRSIIndicator(kline model.ContractIndicator, period int64) *RSIIndicator {
 	sma := &RSIIndicator{
 		IndicatorCommon: indicator_base.NewIndicatorCommon(),
 		period:          period,
@@ -69,7 +69,7 @@ func (ri *RSIIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.GetTs())
+		x[i] = utils.TsToDateString(v.GetTs())
 		y[i] = v.GetValue()
 	}
 	line := charts.NewLine()

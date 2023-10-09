@@ -11,13 +11,13 @@ import (
 
 type CrossUnderIndicator struct {
 	*indicator_base2.IndicatorCommon
-	kline             model.MarketIndicator
+	kline             model.ContractIndicator
 	lineA             *indicator_base2.Line
 	lineB             *indicator_base2.Line
 	crossunderScatter *indicator_base2.Scatter
 }
 
-func NewCrossUnderIndicator(kline model.MarketIndicator, lineA *indicator_base2.Line, lineB *indicator_base2.Line) *CrossUnderIndicator {
+func NewCrossUnderIndicator(kline model.ContractIndicator, lineA *indicator_base2.Line, lineB *indicator_base2.Line) *CrossUnderIndicator {
 	sma := &CrossUnderIndicator{
 		IndicatorCommon:   indicator_base2.NewIndicatorCommon(),
 		kline:             kline,
@@ -88,7 +88,7 @@ func (cou *CrossUnderIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Li
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.GetTs())
+		x[i] = utils.TsToDateString(v.GetTs())
 		y[i] = v.GetValue()
 	}
 	scatter := charts.NewScatter()

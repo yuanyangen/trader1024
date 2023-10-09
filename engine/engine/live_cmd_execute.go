@@ -3,24 +3,26 @@ package engine
 import (
 	"github.com/yuanyangen/trader1024/engine/account"
 	"github.com/yuanyangen/trader1024/engine/model"
-	"github.com/yuanyangen/trader1024/engine/portfolio"
 )
 
 type LiveCmdExecutor struct {
-	Contract *model.Contract
-	kline    model.MarketIndicator
+	Contract          *model.Contract
+	kline             model.ContractIndicator
+	portfolioStrategy PortfolioStrategy
 }
 
-func newLiveCmdExecutor(contract *model.Contract, kline model.MarketIndicator) CmdExecutor {
+func newLiveCmdExecutor(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy PortfolioStrategy) CmdExecutor {
 	t := &LiveCmdExecutor{
-		Contract: contract,
-		kline:    kline,
+		Contract:          contract,
+		kline:             kline,
+		portfolioStrategy: portfolioStrategy,
 	}
 	return t
 }
 
-func (t *LiveCmdExecutor) ExecuteCmd(req *model.ContractPortfolioReq) {
-	portfolio.Portfolio(req)
+func (t *LiveCmdExecutor) ExecuteCmd(req *ContractPortfolioReq) {
+	broker := account.GetBackTestBroker()
+	t.portfolioStrategy(broker, req)
 	account.GetAccount().EventTrigger(req.Ts)
 }
 

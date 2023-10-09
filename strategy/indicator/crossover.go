@@ -11,13 +11,13 @@ import (
 
 type CrossOverIndicator struct {
 	*indicator_base2.IndicatorCommon
-	kline            model.MarketIndicator
+	kline            model.ContractIndicator
 	lineA            *indicator_base2.Line
 	lineB            *indicator_base2.Line
 	crossoverScatter *indicator_base2.Scatter
 }
 
-func NewCrossOverIndicator(kline model.MarketIndicator, lineA *indicator_base2.Line, lineB *indicator_base2.Line) *CrossOverIndicator {
+func NewCrossOverIndicator(kline model.ContractIndicator, lineA *indicator_base2.Line, lineB *indicator_base2.Line) *CrossOverIndicator {
 	sma := &CrossOverIndicator{
 		IndicatorCommon: indicator_base2.NewIndicatorCommon(),
 
@@ -90,7 +90,7 @@ func (coi *CrossOverIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Lin
 
 	for i, v := range allData {
 		y[i] = v.GetValue()
-		x[i] = utils.TsToString(v.GetTs())
+		x[i] = utils.TsToDateString(v.GetTs())
 	}
 	scatter := charts.NewScatter()
 	scatter.SetGlobalOptions(charts.TitleOpts{Title: coi.Name()})

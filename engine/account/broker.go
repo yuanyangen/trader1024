@@ -2,12 +2,15 @@ package account
 
 import (
 	"github.com/shopspring/decimal"
+	"github.com/yuanyangen/trader1024/engine/logs"
+	"github.com/yuanyangen/trader1024/engine/model"
+	"github.com/yuanyangen/trader1024/engine/utils"
 	"sync"
 )
 
 type Broker interface {
 	GetCurrentLivePositions(contractId string) *ContractPosition
-	AddOrder(marketId string, t OrderType, count decimal.Decimal, price decimal.Decimal, reason string, ts int64) error
+	AddOrder(contract *model.Contract, t OrderType, count decimal.Decimal, price decimal.Decimal, reason string, ts int64) error
 }
 
 type BackTestBroker struct {
@@ -35,11 +38,13 @@ func (btb *BackTestBroker) GetCurrentLivePositions(marketId string) *ContractPos
 	return position
 }
 
-func (btb *BackTestBroker) AddOrder(marketId string, t OrderType, count decimal.Decimal, price decimal.Decimal, reason string, ts int64) error {
-	order := &Order{OrderType: t, Price: price, Count: count, MarketId: marketId, Reason: reason, CreateTimeStamp: ts}
+func (btb *BackTestBroker) AddOrder(contract *model.Contract, t OrderType, count decimal.Decimal, price decimal.Decimal, reason string, ts int64) error {
+	logs.Info("time=%v clean order_type=%v count=%v %v", utils.TsToString(ts), t, count, reason)
+
+	order := &Order{OrderType: t, Price: price, Count: count, MarketId: contract.Id(), Reason: reason, CreateTimeStamp: ts}
 	btb.orders = append(btb.orders, order)
 	flag := int64(1)
-	position := btb.GetCurrentLivePositions(marketId)
+	position := btb.GetCurrentLivePositions(contract.Id())
 	if t == OrderTypeSell {
 		flag = 1
 	} else if t == OrderTypeBuy {
@@ -49,8 +54,12 @@ func (btb *BackTestBroker) AddOrder(marketId string, t OrderType, count decimal.
 	}
 
 	position.ProcessOrder(order)
-	GetAccount().GetPositionByMarket(marketId).ProcessOrder(order)
+	GetAccount().GetPositionByMarket(contract.Id()).ProcessOrder(order)
 	change := count.Mul(price).Mul(decimal.NewFromInt(flag))
 	GetAccount().ChangeValue(change)
+
+	if position.IsEmpty() {
+		logs.Info("time=%v account_total order_type=%v count=%v %v", utils.TsToString(ts), t, count, reason)
+	}
 	return nil
 }

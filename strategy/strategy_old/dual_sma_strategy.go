@@ -1,40 +1,43 @@
-package strategy
+package strategy_old
 
-//
-//// 自定义的均线策略 ， 使用sma1， kama5, kama20
-//// 使用kama5+kama20 入场，使用 sma1 出场
 //
 //import (
 //	"github.com/shopspring/decimal"
 //	"github.com/yuanyangen/trader1024/engine/model"
 //	"github.com/yuanyangen/trader1024/engine/utils"
-//	"github.com/yuanyangen/trader1024/strategy/indicator"
+//	"github.com/yuanyangen/trader1024/strategy_old/indicator"
 //)
 //
-//type DualKAMAStrategy struct {
-//	kama10     *indicator.KAMAIndicator
-//	kama2      *indicator.KAMAIndicator
+//type DualSMAStrategy struct {
+//	slowSMA    *indicator.SMAIndicator
+//	fastSMA    *indicator.SMAIndicator
 //	crossover  *indicator.CrossOverIndicator
 //	crossunder *indicator.CrossUnderIndicator
-//	loaded     bool // 只有
 //}
 //
-//func NewDualKAMAStrategyFactory() model.Strategy {
-//	return &DualKAMAStrategy{}
+//func NewDualSMAStrategyFactory() model.Strategy {
+//	return &DualSMAStrategy{}
 //}
 //
-//func (es *DualKAMAStrategy) CNName() string {
-//	return "DualKAMAStrategy"
+////func (es *DualSMAStrategy) Indicators() []indicator.MarketIndicator {
+////	return []indicator.MarketIndicator{
+////		es.sma10,
+////		es.sma5,
+////	}
+////}
+//
+//func (es *DualSMAStrategy) CNName() string {
+//	return "DualSMA"
 //}
 //
-//func (es *DualKAMAStrategy) Init(ec *model.MarketStrategyContext) {
-//	es.kama10 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 10, 2, 30)
-//	es.kama2 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 2, 2, 30)
-//	es.crossover = indicator.NewCrossOverIndicator(ec.DailyData.Kline, es.kama2.KAMALine, es.kama10.KAMALine)
-//	es.crossunder = indicator.NewCrossUnderIndicator(ec.DailyData.Kline, es.kama2.KAMALine, es.kama10.KAMALine)
+//func (es *DualSMAStrategy) Init(ec *model.MarketStrategyContext) {
+//	es.slowSMA = indicator.NewSMAIndicator(ec.DailyData.Kline, 10)
+//	es.fastSMA = indicator.NewSMAIndicator(ec.DailyData.Kline, 5)
+//	es.crossover = indicator.NewCrossOverIndicator(ec.DailyData.Kline, es.fastSMA.SMALine, es.slowSMA.SMALine)
+//	es.crossunder = indicator.NewCrossUnderIndicator(ec.DailyData.Kline, es.fastSMA.SMALine, es.slowSMA.SMALine)
 //}
 //
-//func (es *DualKAMAStrategy) OnBar(ctx *model.MarketStrategyContext, ts int64) []*model.StrategyResult {
+//func (es *DualSMAStrategy) OnBar(ctx *model.MarketStrategyContext, ts int64) []*model.StrategyResult {
 //	over := es.crossover.GetByTs(ts)
 //	under := es.crossunder.GetByTs(ts)
 //	currentKValue := model.NewKnodeFromAny(ctx.DailyData.Kline.GetByTs(ts))

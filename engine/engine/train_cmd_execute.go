@@ -13,7 +13,7 @@ import (
 
 type Train struct {
 	Contract     *model.Contract
-	kline        model.MarketIndicator
+	kline        model.ContractIndicator
 	trainResults map[int64]*TrainResult
 	mu           sync.Mutex
 	allDone      bool
@@ -55,11 +55,11 @@ type StrategyResult struct {
 }
 
 type TrainResult struct {
-	strategyReq         *model.ContractPortfolioReq
+	strategyReq         *ContractPortfolioReq
 	strategyTrainResult *StrategyResult
 }
 
-func newTrain(contract *model.Contract, kline model.MarketIndicator) CmdExecutor {
+func newTrain(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy PortfolioStrategy) CmdExecutor {
 	t := &Train{
 		Contract:     contract,
 		kline:        kline,
@@ -69,7 +69,7 @@ func newTrain(contract *model.Contract, kline model.MarketIndicator) CmdExecutor
 	return t
 }
 
-func (t *Train) ExecuteCmd(req *model.ContractPortfolioReq) {
+func (t *Train) ExecuteCmd(req *ContractPortfolioReq) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	t.trainResults[req.Ts] = &TrainResult{strategyReq: req, strategyTrainResult: &StrategyResult{}}

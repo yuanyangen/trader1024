@@ -11,12 +11,12 @@ import (
 
 type VolumnSlopIndicator struct {
 	*indicator_base.IndicatorCommon
-	inLine   model.MarketIndicator
+	inLine   model.ContractIndicator
 	slopLine *indicator_base.Line
 	period   int64
 }
 
-func NewVolumnSlopIndicator(rawLine model.MarketIndicator) model.MarketIndicator {
+func NewVolumnSlopIndicator(rawLine model.ContractIndicator) model.ContractIndicator {
 	slop := &VolumnSlopIndicator{
 		inLine:          rawLine,
 		IndicatorCommon: indicator_base.NewIndicatorCommon(),
@@ -76,7 +76,7 @@ func (si *VolumnSlopIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Lin
 	x := make([]string, len(allData))
 	y := make([]float64, len(allData))
 	for i, v := range allData {
-		x[i] = utils.TsToString(v.GetTs())
+		x[i] = utils.TsToDateString(v.GetTs())
 		y[i] = math.Abs(v.GetValue())
 	}
 	if len(y) > 3 {

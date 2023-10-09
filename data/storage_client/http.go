@@ -3,16 +3,13 @@ package storage_client
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/yuanyangen/trader1024/config"
 	model2 "github.com/yuanyangen/trader1024/data/model"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"io"
 	"net/http"
 )
 
-// const httpAddr = "http://127.0.0.1:8888"
-const httpAddr = "http://192.168.1.106:8888"
-
-//
 //第一层是：数据的来源，包括： main, eastMoney等，
 //第二层是具体的DB文件，分成128个文件，文件名字是通过marketID hash得到的。
 // bucket的名字是 market + dataType ，数据类型是枚举值： daily_k, minute5_k
@@ -86,7 +83,7 @@ func (cs *HttpStorageClient) GetDataByTs(marketId string, t model.LineType, ts i
 }
 
 func (cs *HttpStorageClient) httpPost(uri string, param any) (string, error) {
-	url := httpAddr + uri
+	url := config.HttpStorageAddr + uri
 	body, _ := json.Marshal(param)
 	resp, err := http.Post(url, "", bytes.NewBuffer(body))
 	if err != nil {

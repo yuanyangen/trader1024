@@ -4,7 +4,7 @@ import "time"
 
 const DailyFormat = "2006-01-02"
 
-func TsToString(ts int64) string {
+func TsToDateString(ts int64) string {
 	t := time.Unix(ts, 0).Format(DailyFormat)
 	return t
 }
@@ -16,4 +16,9 @@ func UnityTimeStamp(ts int64, offset int64) int64 {
 
 func UnityDailyTimeStamp(ts int64) int64 {
 	return UnityTimeStamp(ts, 86400)
+}
+
+func TsToString(ts int64) string {
+	t := time.Unix(ts, 0)
+	return t.Format("2006-01-02 15:04:05")
 }
