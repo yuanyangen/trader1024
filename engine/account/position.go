@@ -13,6 +13,8 @@ type PositionType int
 const PositionTypeLong PositionType = 1  //多头
 const PositionTypeShort PositionType = 2 //空头
 
+var mu sync.Mutex
+
 func (pt PositionType) String() string {
 	if pt == 1 {
 		return "多"
@@ -152,7 +154,6 @@ func (p *ContractPosition) addPositionPair(pp *PositionPair) {
 }
 
 func (p *ContractPosition) Report() {
-
 	pairs := []*PositionPair{}
 	for _, pp := range p.Details {
 		pairs = append(pairs, pp)
@@ -165,8 +166,51 @@ func (p *ContractPosition) Report() {
 	longGain := 0.0
 	shortGain := 0.0
 	winCount := 0
+	fmt.Printf("########################data start ########################\n\n")
+	fmt.Println("StartTime EndTime PositionType BuyPrice BuyReason BuyTime SellPrice SellReason SellTime Count Result Gain")
 	for _, positionPair := range pairs {
-		positionPair.Report()
+		buyPrice := "Empty"
+		buyReason := "Empty"
+		buyTime := "Empty"
+
+		sellPrice := "Empty"
+		sellReason := "Empty"
+		sellTime := "Empty"
+		if positionPair.Buy != nil {
+			buyTime = utils.TsToDateString(positionPair.Buy.OrderInfo.CreateTimeStamp)
+			buyReason = positionPair.Buy.OrderInfo.Reason
+			buyPrice = positionPair.Buy.Price.String()
+		}
+		if positionPair.Sell != nil {
+			sellTime = utils.TsToDateString(positionPair.Sell.OrderInfo.CreateTimeStamp)
+			sellReason = positionPair.Sell.OrderInfo.Reason
+			sellPrice = positionPair.Sell.Price.String()
+		}
+		win := "unknown"
+		count := "Empty"
+		Gain := "Empty"
+		if positionPair.Clear {
+			if positionPair.Gain.LessThan(decimal.Zero) {
+				win = "false"
+			} else {
+				win = "true"
+			}
+			count = positionPair.Buy.Count.String()
+			Gain = positionPair.Gain.String()
+		}
+		fmt.Printf("%v %v %v %v %v %v %v %v %v %v %v %v\n",
+			utils.TsToDateString(positionPair.CreateTimeStamp),
+			utils.TsToDateString(positionPair.EndTimeStamp),
+			positionPair.Type.String(),
+			buyPrice,
+			buyReason,
+			buyTime,
+			sellPrice,
+			sellReason,
+			sellTime,
+			count, win, Gain,
+		)
+
 		if positionPair.Clear {
 			if positionPair.Type == PositionTypeLong {
 				longCount++
@@ -210,28 +254,6 @@ func (pp *PositionPair) genGain() {
 		return
 	}
 	pp.Gain = pp.Sell.Price.Sub(pp.Buy.Price).Mul(pp.Buy.Count)
-}
-
-func (pp *PositionPair) Report() {
-	fmt.Printf("order_start_time=%v order_type=%v ", utils.TsToDateString(pp.CreateTimeStamp), pp.Type.String())
-	if pp.Buy != nil {
-		fmt.Printf("buy_time=%v buy_price=%v buy_count=%v ",
-			utils.TsToDateString(pp.Buy.OrderInfo.CreateTimeStamp),
-			pp.Buy.Price.String(),
-			pp.Buy.Count.String(),
-		)
-	}
-	if pp.Sell != nil {
-		fmt.Printf("sell_time=%v sell_price=%v sell_count=%v ",
-			utils.TsToDateString(pp.Sell.OrderInfo.CreateTimeStamp),
-			pp.Sell.Price.String(),
-			pp.Sell.Count.String(),
-		)
-	}
-	if pp.Sell != nil && pp.Buy != nil {
-		fmt.Printf("gain=%v", pp.Gain.String())
-	}
-	fmt.Printf("\n")
 }
 
 type Position struct {

@@ -35,7 +35,7 @@ func MultiStepPortfolio(broker account.Broker, req *engine.ContractPortfolioReq)
 				if position.Count.GreaterThan(decimal.Zero) {
 					err = broker.AddOrder(req.Contract, account.OrderTypeSell, position.Count.Abs(), req.StrategyResult.Price, req.StrategyResult.Reason, req.Ts)
 				} else {
-					err = broker.AddOrder(req.Contract, account.OrderTypeBuy, position.Count.Abs(), req.StrategyResult.Price, req.StrategyResult.String(), req.Ts)
+					err = broker.AddOrder(req.Contract, account.OrderTypeBuy, position.Count.Abs(), req.StrategyResult.Price, req.StrategyResult.Reason, req.Ts)
 				}
 			}
 		}

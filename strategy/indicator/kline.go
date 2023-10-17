@@ -78,7 +78,7 @@ func (k *KLineIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {
 		charts.DataZoomOpts{Type: "slider", XAxisIndex: []int{0}, Start: 50, End: 100},
 	)
 	x, y := k.convertData()
-	kline.AddXAxis(x).AddYAxis("日K", y)
+	kline.AddXAxis(x).AddYAxis(k.Name(), y)
 	k.PlotChildren(kline, ratioLine)
 }
 

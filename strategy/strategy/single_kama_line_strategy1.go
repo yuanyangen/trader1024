@@ -13,6 +13,7 @@ import (
 
 type SingleKAMAStrategy struct {
 	kama     *indicator.KAMAIndicator
+	sma      *indicator.SMAIndicator
 	kamaKama *indicator.KAMAIndicator
 	slop     *indicator.SlopIndicator
 }
@@ -30,6 +31,7 @@ func (es *SingleKAMAStrategy) Init(ec *model.ContractStrategyContext) {
 	//es.kama5_kama3 = indicator.NewKAMAIndicator(es.kama5, 3, 5, 10)
 	//es.kama5_kama2 = indicator.NewKAMAIndicator(es.kama5, 2, 4, 6)
 	es.kama = indicator.NewKAMAIndicator(ec.Kline, 2, 5, 4)
+	es.sma = indicator.NewSMAIndicator(ec.Kline, 3)
 	es.kamaKama = indicator.NewKAMAIndicator(es.kama, 2, 4, 6)
 	es.slop = indicator.NewSlopIndicator(es.kamaKama, 2)
 }
@@ -49,45 +51,19 @@ func (es *SingleKAMAStrategy) OnBar(ctx *model.ContractStrategyContext, ts int64
 	}
 
 	kamaValue := es.kama.GetCurrentFloat(ts)
+	v, _ := es.sma.GetByTs(ts)
+	if v != nil {
+		kamaValue = v.GetValue()
+	}
 
-	gap := 0.002
+	gap := 0.001
 	if curPrice < kamaValue && (kamaValue-curPrice)/kamaValue > gap {
-		reason := fmt.Sprintf("(kama %v -  cur %v)/kama %v =  gap %v > gap", kamaValue, curPrice, kamaValue, (kamaValue-curPrice)/kamaValue)
+		reason := fmt.Sprintf("(kama(%v)-cur(%v))/kama(%v)=%v>gap(%v)", kamaValue, curPrice, kamaValue, (kamaValue-curPrice)/kamaValue, gap)
 		return model.NewStrategyResult(model.StrategyOutShort, decimal.NewFromFloat(curPrice), reason)
 	} else if curPrice > kamaValue && (curPrice-kamaValue)/curPrice > gap {
-		reason := fmt.Sprintf("(cur %v -  kama %v)/cur %v =  gap %v > gap", curPrice, kamaValue, curPrice, (curPrice-kamaValue)/curPrice)
+		reason := fmt.Sprintf("(cur(%v)-kama(%v))/cur(%v)=%v>gap(%v)", curPrice, kamaValue, curPrice, (curPrice-kamaValue)/curPrice, gap)
 		return model.NewStrategyResult(model.StrategyOutLong, decimal.NewFromFloat(curPrice), reason)
 	} else {
-		return model.NewStrategyResult(model.StrategyOutVolatility, decimal.NewFromFloat(curPrice), "")
+		return model.NewStrategyResult(model.StrategyOutVolatility, decimal.NewFromFloat(curPrice), "not_long_or_short")
 	}
-	//
-	//crossOver, _ := es.crossover.GetByTs(ts)
-	//if crossOver != nil {
-	//	return model.NewStrategyResult(model.StrategyOutLong, decimal.NewFromFloat(curPrice))
-	//}
-	//crossUnder, _ := es.crossunder.GetByTs(ts)
-	//if crossUnder != nil {
-	//	return model.NewStrategyResult(model.StrategyOutShort, decimal.NewFromFloat(curPrice))
-	//
-	//}
-	return nil
-	//if es.crossover.GetByTs(ts) utils.SliceFloatGt(slops, s) {
-	//	return model.NewStrategyResult(model.StrategyOutLong, decimal.NewFromFloat(curPrice))
-	//
-	//} else if utils.SliceFloatLt(slops, -1*s) {
-	//	return model.NewStrategyResult(model.StrategyOutShort, decimal.NewFromFloat(curPrice))
-	//
-	//} else {
-	//	return model.NewStrategyResult(model.StrategyOutVolatility, decimal.NewFromFloat(curPrice))
-	//}
-
-	//if utils.SliceFloatGt(slops, s) {
-	//	return model.NewStrategyResult(model.StrategyOutLong, decimal.NewFromFloat(curPrice))
-	//
-	//} else if utils.SliceFloatLt(slops, -1*s) {
-	//	return model.NewStrategyResult(model.StrategyOutShort, decimal.NewFromFloat(curPrice))
-	//
-	//} else {
-	//	return model.NewStrategyResult(model.StrategyOutVolatility, decimal.NewFromFloat(curPrice))
-	//}
 }

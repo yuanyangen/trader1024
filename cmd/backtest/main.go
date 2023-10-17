@@ -12,13 +12,18 @@ import (
 
 func main() {
 
-	e := engine.NewLiveExecuteEngine(event.NewBackTestDailyEventTrigger(1030494445, 1675697645), portfolio.MultiStepPortfolio)
+	e := engine.NewLiveExecuteEngine(
+		event.NewBackTestDailyEventTrigger(1030494445, 1675697645),
+		[]engine.PortfolioStrategy{
+			portfolio.MultiStepPortfolio,
+			portfolio.Evacuation,
+		})
 	//e.RegisterStrategy(strategy_old.NewDualSMAStrategyFactory)
 	//e.RegisterStrategy(strategy_old.NewSingleSMAStrategy)
 	//e.RegisterStrategy(strategy.NewCustomLAMAStrategy2Factory)
 	e.RegisterStrategy(strategy.NewSingleKAMAlineStrategyFactory)
-	e.RegisterContract("玉米", "", storage_client.SinaHttpStorage())
-	//e.RegisterContract("橡胶", "", storage_client.SinaHttpStorage())
+	//e.RegisterContract("玉米", "", storage_client.SinaHttpStorage())
+	e.RegisterContract("橡胶", "", storage_client.SinaHttpStorage())
 	account.RegisterAccount(account.NewAccount(10000000))
 	e.Start()
 	time.Sleep(time.Hour)

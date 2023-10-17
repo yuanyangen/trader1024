@@ -2,9 +2,7 @@ package account
 
 import (
 	"github.com/shopspring/decimal"
-	"github.com/yuanyangen/trader1024/engine/logs"
 	"github.com/yuanyangen/trader1024/engine/model"
-	"github.com/yuanyangen/trader1024/engine/utils"
 	"sync"
 )
 
@@ -39,7 +37,7 @@ func (btb *BackTestBroker) GetCurrentLivePositions(marketId string) *ContractPos
 }
 
 func (btb *BackTestBroker) AddOrder(contract *model.Contract, t OrderType, count decimal.Decimal, price decimal.Decimal, reason string, ts int64) error {
-	logs.Info("time=%v clean order_type=%v count=%v %v", utils.TsToString(ts), t, count, reason)
+	//logs.Info("time=%v clean order_type=%v count=%v %v", utils.TsToString(ts), t, count, reason)
 
 	order := &Order{OrderType: t, Price: price, Count: count, MarketId: contract.Id(), Reason: reason, CreateTimeStamp: ts}
 	btb.orders = append(btb.orders, order)
@@ -58,8 +56,8 @@ func (btb *BackTestBroker) AddOrder(contract *model.Contract, t OrderType, count
 	change := count.Mul(price).Mul(decimal.NewFromInt(flag))
 	GetAccount().ChangeValue(change)
 
-	if position.IsEmpty() {
-		logs.Info("time=%v account_total order_type=%v count=%v %v", utils.TsToString(ts), t, count, reason)
-	}
+	//if position.IsEmpty() {
+	//	//logs.Info("time=%v account_total order_type=%v count=%v %v", utils.TsToString(ts), t, count, reason)
+	//}
 	return nil
 }

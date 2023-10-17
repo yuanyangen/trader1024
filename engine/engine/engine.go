@@ -11,12 +11,12 @@ type Engine struct {
 	Contracts          map[string]*ContractEngine
 	EventTrigger       model.EventTrigger
 	strategies         []func() model.Strategy
-	portfolioStrategy  PortfolioStrategy
+	portfolioStrategy  []PortfolioStrategy
 	cmdExecutorFactory CmdExecutorFactory // 决定
 	watcherBackend     *WatcherBackend
 }
 
-type CmdExecutorFactory func() func(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy PortfolioStrategy) CmdExecutor
+type CmdExecutorFactory func() func(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy []PortfolioStrategy) CmdExecutor
 
 type CmdExecutor interface {
 	ExecuteCmd(req *ContractPortfolioReq)
@@ -26,7 +26,7 @@ type CmdExecutor interface {
 func NewTrainEngine(et model.EventTrigger) *Engine {
 	e := &Engine{
 		Contracts: map[string]*ContractEngine{},
-		cmdExecutorFactory: func() func(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy PortfolioStrategy) CmdExecutor {
+		cmdExecutorFactory: func() func(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy []PortfolioStrategy) CmdExecutor {
 			return newTrain
 		},
 		EventTrigger: et,
@@ -35,10 +35,10 @@ func NewTrainEngine(et model.EventTrigger) *Engine {
 	return e
 }
 
-func NewLiveExecuteEngine(et model.EventTrigger, portfolioStrategy PortfolioStrategy) *Engine {
+func NewLiveExecuteEngine(et model.EventTrigger, portfolioStrategy []PortfolioStrategy) *Engine {
 	e := &Engine{
 		Contracts: map[string]*ContractEngine{},
-		cmdExecutorFactory: func() func(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy PortfolioStrategy) CmdExecutor {
+		cmdExecutorFactory: func() func(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy []PortfolioStrategy) CmdExecutor {
 			return newLiveCmdExecutor
 		},
 		EventTrigger:      et,

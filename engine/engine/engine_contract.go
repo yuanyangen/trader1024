@@ -19,7 +19,7 @@ type ContractEngine struct {
 	CmdExecutor CmdExecutor
 }
 
-func NewContractEngine(contract *model.Contract, strategies []model.Strategy, executor CmdExecutorFactory, dataSource model.DateSource, portfolioStrategy PortfolioStrategy) *ContractEngine {
+func NewContractEngine(contract *model.Contract, strategies []model.Strategy, executor CmdExecutorFactory, dataSource model.DateSource, portfolioStrategy []PortfolioStrategy) *ContractEngine {
 	kline := indicator.NewKLine(contract.CNName+contract.ContractTime, model.LineType_Day)
 	return &ContractEngine{
 		EventTriggerChan: make(chan *model.EventMsg, 1024),

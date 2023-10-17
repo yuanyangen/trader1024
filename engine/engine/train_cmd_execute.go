@@ -59,7 +59,7 @@ type TrainResult struct {
 	strategyTrainResult *StrategyResult
 }
 
-func newTrain(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy PortfolioStrategy) CmdExecutor {
+func newTrain(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy []PortfolioStrategy) CmdExecutor {
 	t := &Train{
 		Contract:     contract,
 		kline:        kline,

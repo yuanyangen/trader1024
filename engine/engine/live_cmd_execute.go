@@ -8,10 +8,10 @@ import (
 type LiveCmdExecutor struct {
 	Contract          *model.Contract
 	kline             model.ContractIndicator
-	portfolioStrategy PortfolioStrategy
+	portfolioStrategy []PortfolioStrategy
 }
 
-func newLiveCmdExecutor(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy PortfolioStrategy) CmdExecutor {
+func newLiveCmdExecutor(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy []PortfolioStrategy) CmdExecutor {
 	t := &LiveCmdExecutor{
 		Contract:          contract,
 		kline:             kline,
@@ -22,7 +22,9 @@ func newLiveCmdExecutor(contract *model.Contract, kline model.ContractIndicator,
 
 func (t *LiveCmdExecutor) ExecuteCmd(req *ContractPortfolioReq) {
 	broker := account.GetBackTestBroker()
-	t.portfolioStrategy(broker, req)
+	for _, p := range t.portfolioStrategy {
+		p(broker, req)
+	}
 	account.GetAccount().EventTrigger(req.Ts)
 }
 

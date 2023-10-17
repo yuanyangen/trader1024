@@ -48,5 +48,5 @@ type StrategyResult struct {
 }
 
 func (sr *StrategyResult) String() string {
-	return fmt.Sprintf("strategyName=%v cmd=%v price=%v reason=%v", sr.StrategyName, sr.Cmd, sr.Price.String(), sr.Reason)
+	return fmt.Sprintf("strategyName=%v::cmd=%v::price=%v::reason=%v", sr.StrategyName, sr.Cmd, sr.Price.String(), sr.Reason)
 }
