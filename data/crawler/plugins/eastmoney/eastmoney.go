@@ -62,7 +62,7 @@ func (em *EastMoney) CrawlDaily(contract *model.Contract, startTime time.Time, e
 		KlineType:  101,
 		ReturnType: 6,
 		FuQuanType: 2,
-		secId:      GetVendorCode(contract.CNName, contract.ContractTime),
+		secId:      GetVendorCode(contract.CNName, contract.ContractDate),
 	}
 	return em.doCrawlHistoryData(req, "2006-01-02")
 }
@@ -84,7 +84,7 @@ func (em *EastMoney) CrawlMinute(contract *model.Contract, startTime time.Time, 
 			KlineType:  1,
 			ReturnType: 6,
 			FuQuanType: 2,
-			secId:      GetVendorCode(contract.CNName, contract.ContractTime),
+			secId:      GetVendorCode(contract.CNName, contract.ContractDate),
 			Lmt:        1200,
 		}
 

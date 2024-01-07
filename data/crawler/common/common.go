@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"github.com/yuanyangen/trader1024/data/markets"
 	"github.com/yuanyangen/trader1024/data/storage_client"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"time"
@@ -27,7 +28,22 @@ func CrawlMainDailyData(handler Crawler) {
 		}
 		csvStorage.SaveData(v.Id(), t, allNodes)
 		fmt.Println("finished " + v.Id())
+	}
+}
 
+func CrawlMarketMainDailyData(subjectName string, handler Crawler) {
+	csvStorage := handler.StorageClient()
+	allContracts := markets.GetAllMainContractBySubjectName(subjectName)
+	for _, v := range allContracts {
+		t := model.LineType_Day
+		allNodes, err := handler.CrawlDaily(v, time.Unix(0, 0), time.Now())
+		if err != nil {
+			panic("fadsfa")
+		}
+		if len(allNodes) > 0 {
+			err = csvStorage.SaveData(v.Id(), t, allNodes)
+			fmt.Printf("finished %v %v\n", v.Id(), err)
+		}
 	}
 }
 

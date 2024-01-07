@@ -20,7 +20,7 @@ type ContractEngine struct {
 }
 
 func NewContractEngine(contract *model.Contract, strategies []model.Strategy, executor CmdExecutorFactory, dataSource model.DateSource, portfolioStrategy []PortfolioStrategy) *ContractEngine {
-	kline := indicator.NewKLine(contract.CNName+contract.ContractTime, model.LineType_Day)
+	kline := indicator.NewKLine(contract.CNName+contract.ContractDate, model.LineType_Day)
 	return &ContractEngine{
 		EventTriggerChan: make(chan *model.EventMsg, 1024),
 		Contract:         contract,
@@ -47,8 +47,10 @@ func (m *ContractEngine) dealEvent(event *model.EventMsg) {
 	ts := event.TimeStamp
 	kData := m.dataSource.GetDataByTs(m.Contract.Id(), model.LineType_Day, ts)
 	if kData != nil {
-		m.Kline.AddData(ts, kData)
-		m.eventHandler(kData)
+		if ts < m.Contract.ContractTradeEndTime {
+			m.Kline.AddData(ts, kData)
+			m.eventHandler(kData)
+		}
 	}
 }
 

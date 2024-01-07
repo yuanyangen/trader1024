@@ -58,13 +58,13 @@ func (a *Account) ChangeValue(count decimal.Decimal) {
 //	a.Positions[marketId] = position
 //}
 
-func (a *Account) GetPositionByMarket(marketId string) *ContractPosition {
+func (a *Account) GetPositionByMarket(contractId string) *ContractPosition {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	position, ok := a.Positions[marketId]
+	position, ok := a.Positions[contractId]
 	if !ok {
-		position = &ContractPosition{MarketId: marketId, Count: decimal.NewFromInt(0)}
-		a.Positions[marketId] = position
+		position = &ContractPosition{ContractId: contractId, Count: decimal.NewFromInt(0)}
+		a.Positions[contractId] = position
 	}
 	return position
 }

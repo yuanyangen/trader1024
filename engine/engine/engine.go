@@ -48,28 +48,29 @@ func NewLiveExecuteEngine(et model.EventTrigger, portfolioStrategy []PortfolioSt
 	return e
 }
 
-func (ec *Engine) RegisterContract(subjectCnName string, contractTime string, dataSource model.DateSource) {
+func (ec *Engine) RegisterContract(subjectCnName string, contractTimes []string, dataSource model.DateSource) {
 	if len(ec.strategies) == 0 {
 		panic("should register strategy_old first")
 	}
-	subject := markets.GetSubjectByCnNam(subjectCnName)
-	if subject == nil {
-		panic("subject not define")
-	}
-	if ec.cmdExecutorFactory == nil {
-		panic("engine_mode not specify")
-	}
+	for _, contractTime := range contractTimes {
 
-	contract := &model.Contract{Subject: subject, ContractTime: contractTime}
+		contract := markets.GetContractByCnNam(subjectCnName, contractTime)
+		if contract == nil {
+			panic("contract not define")
+		}
+		if ec.cmdExecutorFactory == nil {
+			panic("engine_mode not specify")
+		}
 
-	strategies := make([]model.Strategy, len(ec.strategies))
-	for i, stFactory := range ec.strategies {
-		strategies[i] = stFactory()
+		strategies := make([]model.Strategy, len(ec.strategies))
+		for i, stFactory := range ec.strategies {
+			strategies[i] = stFactory()
+		}
+
+		ce := NewContractEngine(contract, strategies, ec.cmdExecutorFactory, dataSource, ec.portfolioStrategy)
+		ec.EventTrigger.RegisterEventReceiver(ce.EventTriggerChan)
+		ec.Contracts[subjectCnName+contractTime] = ce
 	}
-
-	ce := NewContractEngine(contract, strategies, ec.cmdExecutorFactory, dataSource, ec.portfolioStrategy)
-	ec.EventTrigger.RegisterEventReceiver(ce.EventTriggerChan)
-	ec.Contracts[subjectCnName+contractTime] = ce
 }
 
 func (ec *Engine) RegisterStrategy(stFactory func() model.Strategy) {

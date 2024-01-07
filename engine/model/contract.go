@@ -9,11 +9,15 @@ const MarKetType_FUTURE MarKetType = 2
 
 type Contract struct {
 	*Subject
-	ContractTime string
+	ContractDate         string
+	ContractStartTime    int64
+	ContractEndTime      int64
+	ContractTradeEndTime int64
+	ContractDeliveryTime int64
 }
 
 func (c *Contract) Id() string {
-	return c.CNName + c.ContractTime
+	return c.CNName + c.ContractDate
 }
 
 type Exchange struct {
@@ -34,9 +38,12 @@ type Subject struct {
 	OnlineDay     string
 	FirstContract string
 
-	OnlineTime        time.Time //第一次上线交易的时间
-	OfflineTime       time.Time //最后一次上线交易的时间
-	DailyExchangeTime []string
+	OnlineTime               time.Time //第一次上线交易的时间
+	OfflineTime              time.Time //最后一次上线交易的时间
+	DailyExchangeTime        []string  // 每天交易的时间
+	ContractMonth            []int
+	ContractLastTradeDay     int // 合约的最后一个交易日
+	RealContractLastTradeDay int // 散户实际的最后一个交易日
 }
 
 func (s *Subject) StartDate() string {

@@ -19,7 +19,7 @@ func NewKLine(name string, t model.LineType) model.ContractIndicator {
 }
 
 func (k *KLineIndicator) Name() string {
-	return k.IndicatorCommon.Name()
+	return k.BaseLine.Name
 }
 
 //func (k *KLineIndicator) GetLastByTsAndCount(ts int64, count int64) ([]model.DataNode, error) {

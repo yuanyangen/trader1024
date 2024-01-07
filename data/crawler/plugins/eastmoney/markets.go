@@ -137,6 +137,6 @@ func GetContractByCnName(cnName string, date string) *model.Contract {
 
 	return &model.Contract{
 		Subject:      m,
-		ContractTime: date,
+		ContractDate: date,
 	}
 }

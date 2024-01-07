@@ -7,15 +7,12 @@ import (
 	"fmt"
 	"github.com/shopspring/decimal"
 	"github.com/yuanyangen/trader1024/engine/model"
-	"github.com/yuanyangen/trader1024/engine/utils"
 	"github.com/yuanyangen/trader1024/strategy/indicator"
 )
 
 type SingleKAMAStrategy struct {
-	kama     *indicator.KAMAIndicator
-	sma      *indicator.SMAIndicator
-	kamaKama *indicator.KAMAIndicator
-	slop     *indicator.SlopIndicator
+	kama *indicator.KAMAIndicator
+	sma  *indicator.SMAIndicator
 }
 
 func NewSingleKAMAlineStrategyFactory() model.Strategy {
@@ -29,26 +26,19 @@ func (es *SingleKAMAStrategy) Name() string {
 func (es *SingleKAMAStrategy) Init(ec *model.ContractStrategyContext) {
 	//es.kama5 = indicator.NewKAMAIndicator(ec.Kline, 2, 2, 5)
 	//es.kama5_kama3 = indicator.NewKAMAIndicator(es.kama5, 3, 5, 10)
+
 	//es.kama5_kama2 = indicator.NewKAMAIndicator(es.kama5, 2, 4, 6)
-	es.kama = indicator.NewKAMAIndicator(ec.Kline, 2, 5, 4)
-	es.sma = indicator.NewSMAIndicator(ec.Kline, 3)
-	es.kamaKama = indicator.NewKAMAIndicator(es.kama, 2, 4, 6)
-	es.slop = indicator.NewSlopIndicator(es.kamaKama, 2)
+	es.kama = indicator.NewKAMAIndicator(ec.Kline, 3, 3, 3)
+	es.sma = indicator.NewSMAIndicator(ec.Kline, 1)
 }
 
 func (es *SingleKAMAStrategy) OnBar(ctx *model.ContractStrategyContext, ts int64) *model.StrategyResult {
 	//s := 0.01
-	slopPeriod := 10
 	currentKNode, err := ctx.Kline.GetByTs(ts)
 	if err != nil || currentKNode == nil || currentKNode.GetValue() == 0 {
 		return nil
 	}
 	curPrice := currentKNode.GetValue()
-	slopI, _ := es.slop.GetLastByTsAndCount(ts, int64(slopPeriod))
-	slops := utils.DataNodeSliceToFloat(slopI)
-	if len(slops) == 0 {
-		return nil
-	}
 
 	kamaValue := es.kama.GetCurrentFloat(ts)
 	v, _ := es.sma.GetByTs(ts)

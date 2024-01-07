@@ -27,7 +27,7 @@ func (pt PositionType) String() string {
 
 type ContractPosition struct {
 	mu                    sync.Mutex
-	MarketId              string
+	ContractId            string
 	Count                 decimal.Decimal //使用正表示多头， 使用负 表示空头，
 	Details               []*PositionPair
 	EndTimeToPositionPair map[int64]*PositionPair
@@ -167,7 +167,7 @@ func (p *ContractPosition) Report() {
 	shortGain := 0.0
 	winCount := 0
 	fmt.Printf("########################data start ########################\n\n")
-	fmt.Println("StartTime EndTime PositionType BuyPrice BuyReason BuyTime SellPrice SellReason SellTime Count Result Gain")
+	fmt.Println("ContractId StartTime EndTime PositionType BuyPrice BuyReason BuyTime SellPrice SellReason SellTime Count Result Gain")
 	for _, positionPair := range pairs {
 		buyPrice := "Empty"
 		buyReason := "Empty"
@@ -198,7 +198,8 @@ func (p *ContractPosition) Report() {
 			count = positionPair.Buy.Count.String()
 			Gain = positionPair.Gain.String()
 		}
-		fmt.Printf("%v %v %v %v %v %v %v %v %v %v %v %v\n",
+		fmt.Printf("%v %v %v %v %v %v %v %v %v %v %v %v %v\n",
+			p.ContractId,
 			utils.TsToDateString(positionPair.CreateTimeStamp),
 			utils.TsToDateString(positionPair.EndTimeStamp),
 			positionPair.Type.String(),

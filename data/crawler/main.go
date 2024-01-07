@@ -22,6 +22,7 @@ func main() {
 var crawledDate = map[int64]bool{}
 
 func oneCrawlLoop() {
-	common.CrawlMainDailyData(&sina.Sina{})
+	common.CrawlMarketMainDailyData("橡胶", &sina.Sina{})
+	//common.CrawlMainDailyData(&sina.Sina{})
 	//common.CrawlMainDailyData(&eastmoney.EastMoney{})
 }

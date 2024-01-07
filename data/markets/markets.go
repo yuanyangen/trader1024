@@ -1,13 +1,16 @@
 package markets
 
 import (
+	"fmt"
 	"github.com/yuanyangen/trader1024/engine/model"
+	"time"
 )
 
 // 合约是根据上市时间+180天计算出来的， 可能会错+漏， 但是影下你个很小， 忽略不计。
 var AllSubjects = map[string]*model.Subject{
 	"不锈钢": {CNName: "不锈钢", Exchange: "上期所", Type: model.MarKetType_FUTURE, OnlineDay: "2019年9月25日", FirstContract: "20200323"},
-	"橡胶":  {CNName: "橡胶", Exchange: "上期所", Type: model.MarKetType_FUTURE, OnlineDay: "1993年3月27日", FirstContract: "19930923"},
+	"橡胶":  {CNName: "橡胶", Exchange: "上期所", Type: model.MarKetType_FUTURE, OnlineDay: "1993年3月27日", FirstContract: "199405", ContractMonth: []int{1, 3, 4, 5, 6, 7, 8, 9, 10, 11}, ContractLastTradeDay: 15, RealContractLastTradeDay: 10},
+
 	"沥青":  {CNName: "沥青", Exchange: "上期所", Type: model.MarKetType_FUTURE, OnlineDay: "2013年10月9日", FirstContract: "20140407"},
 	"沪金":  {CNName: "沪金", Exchange: "上期所", Type: model.MarKetType_FUTURE, OnlineDay: "2008年1月9日", FirstContract: "20080707"},
 	"沪铅":  {CNName: "沪铅", Exchange: "上期所", Type: model.MarKetType_FUTURE, OnlineDay: "2011年3月24日", FirstContract: "20110920"},
@@ -39,7 +42,7 @@ var AllSubjects = map[string]*model.Subject{
 	"淀粉":  {CNName: "淀粉", Exchange: "大商所", Type: model.MarKetType_FUTURE, OnlineDay: "2014年12月19日", FirstContract: "20150617"},
 	"焦炭":  {CNName: "焦炭", Exchange: "大商所", Type: model.MarKetType_FUTURE, OnlineDay: "2011年4月15日", FirstContract: "20111012"},
 	"焦煤":  {CNName: "焦煤", Exchange: "大商所", Type: model.MarKetType_FUTURE, OnlineDay: "2013年3月22日", FirstContract: "20130918"},
-	"玉米":  {CNName: "玉米", Exchange: "大商所", Type: model.MarKetType_FUTURE, OnlineDay: "2004年9月22日", FirstContract: "20050321"},
+	"玉米":  {CNName: "玉米", Exchange: "大商所", Type: model.MarKetType_FUTURE, OnlineDay: "2004年9月22日", FirstContract: "200711", ContractMonth: []int{1, 3, 5, 7, 9, 11}, ContractLastTradeDay: 10, RealContractLastTradeDay: 1},
 	"生猪":  {CNName: "生猪", Exchange: "大商所", Type: model.MarKetType_FUTURE, OnlineDay: "2021年1月8日", FirstContract: "20210707"},
 	"粳米":  {CNName: "粳米", Exchange: "大商所", Type: model.MarKetType_FUTURE, OnlineDay: "2019年8月16日", FirstContract: "20200212"},
 	"纤维板": {CNName: "纤维板", Exchange: "大商所", Type: model.MarKetType_FUTURE, OnlineDay: "2013年12月6日", FirstContract: "20140604"},
@@ -86,6 +89,22 @@ func GetSubjectByCnNam(name string) *model.Subject {
 	return v
 }
 
+func GetContractByCnNam(name string, contractDate string) *model.Contract {
+	subject := GetSubjectByCnNam(name)
+	if subject == nil {
+		return nil
+	}
+	lastTradeT, err := time.Parse("2006012", fmt.Sprintf("%v%v", contractDate, subject.RealContractLastTradeDay))
+	if err != nil {
+		return nil
+	}
+	return &model.Contract{
+		ContractDate:         contractDate,
+		Subject:              subject,
+		ContractTradeEndTime: lastTradeT.Unix(),
+	}
+}
+
 func GetAllFutureMarketIds() []string {
 	res := []string{}
 	for _, v := range AllSubjects {
@@ -104,4 +123,30 @@ func GetAllFutureSubjects() []*model.Subject {
 		}
 	}
 	return res
+}
+
+func GetAllMainContractBySubjectName(subjectName string) []*model.Contract {
+	subject := GetSubjectByCnNam(subjectName)
+	if subject == nil {
+		panic("should not reach here")
+	}
+	allContracts := make([]*model.Contract, 0)
+	// 从2010.1.1 开始计算数据。
+	for t := time.Unix(1262275200, 0); t.Unix() < time.Now().Add(time.Hour*24*400).Unix(); t = t.Add(30 * 24 * time.Hour) {
+		month := int(t.Month())
+		for _, v := range subject.ContractMonth {
+			contractDate := t.Format("200601")
+			if v == month && contractDate > subject.FirstContract {
+				if contractDate < "202001" {
+					continue
+				}
+				contract := GetContractByCnNam(subjectName, contractDate)
+				if contract != nil {
+					allContracts = append(allContracts, contract)
+				}
+			}
+		}
+	}
+
+	return allContracts
 }

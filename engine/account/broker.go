@@ -30,7 +30,7 @@ func (btb *BackTestBroker) GetCurrentLivePositions(marketId string) *ContractPos
 	defer btb.mu.Unlock()
 	position, _ := btb.positions[marketId]
 	if position == nil {
-		position = &ContractPosition{MarketId: marketId, Count: decimal.NewFromInt(0)}
+		position = &ContractPosition{ContractId: marketId, Count: decimal.NewFromInt(0)}
 	}
 	btb.positions[marketId] = position
 	return position
