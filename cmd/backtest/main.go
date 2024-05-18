@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-
 	e := engine.NewLiveExecuteEngine(
 		event.NewBackTestDailyEventTrigger(1577841635, 1760927420),
 		[]engine.PortfolioStrategy{

@@ -1,4 +1,4 @@
-package main
+package stroage_server
 
 import (
 	"fmt"

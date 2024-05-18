@@ -52,6 +52,18 @@ func (bl *BaseLine) GetByTs(ts int64) (model.DataNode, error) {
 	}
 }
 
+// get last one
+func (bl *BaseLine) GetLastByTs(ts int64) (model.DataNode, error) {
+	nodes, err := bl.GetLastByTsAndCount(ts, 2)
+	if err != nil {
+		return nil, err
+	}
+	if len(nodes) != 2 {
+		return nil, fmt.Errorf("no last data for_%v", ts)
+	}
+	return nodes[0], nil
+}
+
 func (bl *BaseLine) GetLastByTsAndCount(ts int64, count int64) ([]model.DataNode, error) {
 	offset := bl.offset()
 	ts = bl.UnityTimeStamp(ts)

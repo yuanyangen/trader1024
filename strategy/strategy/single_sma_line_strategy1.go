@@ -41,14 +41,14 @@ func (es *SingleSMAStrategy) OnBar(ctx *model.ContractStrategyContext, ts int64)
 	if err != nil || currentKNode == nil || currentKNode.GetValue() == 0 {
 		return nil
 	}
-	curPrice := currentKNode.GetValue()
+	curPrice := currentKNode.GetValue("open")
 	slopI, _ := es.slop.GetLastByTsAndCount(ts, int64(slopPeriod))
 	slops := utils.DataNodeSliceToFloat(slopI)
 	if len(slops) == 0 {
 		return nil
 	}
 	var smaValue = 0.0
-	v, _ := es.smaSlow.GetByTs(ts)
+	v, _ := es.smaSlow.GetLastByTs(ts)
 	if v != nil {
 		smaValue = v.GetValue()
 	}

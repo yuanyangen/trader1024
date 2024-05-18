@@ -5,8 +5,9 @@ import (
 	"fmt"
 )
 
+type DataNodeValueType string
 type DataNode interface {
-	GetValue() float64
+	GetValue(...DataNodeValueType) float64
 	GetTs() int64
 }
 
@@ -34,8 +35,19 @@ type KNode struct {
 }
 
 // 获取knode的当前价格
-func (k *KNode) GetValue() float64 {
-	return (k.Open + k.Close) / 2
+func (k *KNode) GetValue(dataType ...DataNodeValueType) float64 {
+	if len(dataType) == 0 {
+		return (k.Open + k.Close) / 2
+	}
+	dt := dataType[0]
+	switch dt {
+	case "open":
+		return k.Open
+	case "close":
+		return k.Close
+	default:
+		return (k.Open + k.Close) / 2
+	}
 }
 
 func (k *KNode) GetTs() int64 {

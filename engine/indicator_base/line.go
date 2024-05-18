@@ -13,7 +13,7 @@ type LineNode struct {
 	TimeStamp int64
 }
 
-func (k *LineNode) GetValue() float64 {
+func (k *LineNode) GetValue(dt ...model.DataNodeValueType) float64 {
 	return k.Value
 }
 

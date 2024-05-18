@@ -1,10 +1,4 @@
-package main
-
-import "github.com/yuanyangen/trader1024/config"
-
-func Init() {
-	InitAllStorage(config.StorageDataPath, []string{"eastmoney", "main", "sina", "test"})
-}
+package stroage_server
 
 func InitAllStorage(dirPath string, names []string) {
 	var dbSplitCount = 128

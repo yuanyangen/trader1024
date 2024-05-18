@@ -11,7 +11,7 @@ import (
 // 执行资金管理动作，根据策略的输出，结合历史的仓位，决定下一步动作。
 // 当前写死了， 只执行一次的策略。
 func MultiStepPortfolio(broker account.Broker, req *engine.ContractPortfolioReq) {
-	count := decimal.NewFromInt(100)
+	count := decimal.NewFromInt(10)
 	var err error
 	position := broker.GetCurrentLivePositions(req.Contract.Id())
 	if req.StrategyResult == nil {

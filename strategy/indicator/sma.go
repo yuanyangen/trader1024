@@ -60,8 +60,17 @@ func (sma *SMAIndicator) GetByTs(ts int64) (model.DataNode, error) {
 	}
 	return sma.SMALine.GetByTs(ts)
 }
+func (sma *SMAIndicator) GetLastByTs(ts int64) (model.DataNode, error) {
+	if sma.SMALine == nil {
+		panic("SMALine error")
+	}
+	if sma.period == 0 {
+		panic("erPeriod empty")
+	}
+	return sma.SMALine.GetLastByTs(ts)
+}
 func (sma *SMAIndicator) GetLastByTsAndCount(ts, period int64) ([]model.DataNode, error) {
-	return nil, nil
+	return sma.SMALine.GetLastByTsAndCount(ts, period)
 }
 
 func (sma *SMAIndicator) DoPlot(kline *charts.Kline, ratioLine *charts.Line) {

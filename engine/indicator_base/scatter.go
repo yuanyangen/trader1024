@@ -13,7 +13,7 @@ type ScatterNode struct {
 	TimeStamp int64
 }
 
-func (k *ScatterNode) GetValue() float64 {
+func (k *ScatterNode) GetValue(dt ...model.DataNodeValueType) float64 {
 	return k.Value
 }
 

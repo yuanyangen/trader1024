@@ -6,7 +6,13 @@ import (
 	"time"
 )
 
-func main() {
+func asyncStartDataCrawler() {
+	go func() {
+		startDataCrawler()
+	}()
+}
+
+func startDataCrawler() {
 	for {
 		now := time.Now().Unix()
 		idx := now / 86400
