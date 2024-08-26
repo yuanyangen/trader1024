@@ -30,15 +30,15 @@ package strategy_old
 //}
 //
 //func (es *CustomKAMAStrategy2) Init(ec *model.MarketStrategyContext) {
-//	es.kama10 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 8, 2, 30)
-//	//es.kama5 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 5, 2, 30)
-//	es.kama2 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 2, 2, 30)
-//	es.crossover = indicator.NewCrossOverIndicator(ec.DailyData.Kline, es.kama2.KAMALine, es.kama10.KAMALine)
-//	es.crossunder = indicator.NewCrossUnderIndicator(ec.DailyData.Kline, es.kama2.KAMALine, es.kama10.KAMALine)
+//	es.kama10 = indicator.NewKAMAIndicator(ec.DailyData.Line, 8, 2, 30)
+//	//es.kama5 = indicator.NewKAMAIndicator(ec.DailyData.Line, 5, 2, 30)
+//	es.kama2 = indicator.NewKAMAIndicator(ec.DailyData.Line, 2, 2, 30)
+//	es.crossover = indicator.NewCrossOverIndicator(ec.DailyData.Line, es.kama2.KAMALine, es.kama10.KAMALine)
+//	es.crossunder = indicator.NewCrossUnderIndicator(ec.DailyData.Line, es.kama2.KAMALine, es.kama10.KAMALine)
 //}
 //
 //func (es *CustomKAMAStrategy2) OnBar(ctx *model.MarketStrategyContext, ts int64) []*model.StrategyResult {
-//	currentKValue := model.NewKnodeFromAny(ctx.DailyData.Kline.GetByTs(ts))
+//	currentKValue := model.NewKnodeFromAny(ctx.DailyData.Line.GetByTs(ts))
 //	if currentKValue == nil {
 //		return nil
 //	}
@@ -47,24 +47,24 @@ package strategy_old
 //	}
 //	position := account.GetAccount().GetPositionByMarket(ctx.Contract.ContractId)
 //	curPrice := (currentKValue.Open + currentKValue.Close) / 2
-//	data := []*model.StrategyResult{}
+//	data_crawler := []*model.StrategyResult{}
 //
 //	if utils.AnyToBool(es.crossover.GetByTs(ts)) || utils.AnyToBool(es.crossunder.GetByTs(ts)) {
 //		es.loaded = true
-//		data = append(data, model.NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(curPrice)))
+//		data_crawler = append(data_crawler, model.NewStrategyResult(model.StrategyCmdClean, decimal.NewFromFloat(curPrice)))
 //	}
 //
 //	if es.long(es.kama2.GetCurrentFloat(ts), es.kama10.GetCurrentFloat(ts)) {
 //		if position.IsEmpty() && es.loaded {
-//			data = append(data, model.NewStrategyResult(model.StrategyCmdBuy, decimal.NewFromFloat(curPrice)))
+//			data_crawler = append(data_crawler, model.NewStrategyResult(model.StrategyCmdBuy, decimal.NewFromFloat(curPrice)))
 //		}
 //	} else if es.short(es.kama2.GetCurrentFloat(ts), es.kama10.GetCurrentFloat(ts)) {
 //		if position.IsEmpty() && es.loaded {
-//			data = append(data, model.NewStrategyResult(model.StrategyCmdSell, decimal.NewFromFloat(curPrice)))
+//			data_crawler = append(data_crawler, model.NewStrategyResult(model.StrategyCmdSell, decimal.NewFromFloat(curPrice)))
 //		}
 //	}
 //
-//	return data
+//	return data_crawler
 //}
 //
 //func (es *CustomKAMAStrategy2) long(fast, slow float64) bool {

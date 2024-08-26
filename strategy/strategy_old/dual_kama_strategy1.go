@@ -28,16 +28,16 @@ package strategy_old
 //}
 //
 //func (es *DualKAMAStrategy) Init(ec *model.MarketStrategyContext) {
-//	es.kama10 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 10, 2, 30)
-//	es.kama2 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 2, 2, 30)
-//	es.crossover = indicator.NewCrossOverIndicator(ec.DailyData.Kline, es.kama2.KAMALine, es.kama10.KAMALine)
-//	es.crossunder = indicator.NewCrossUnderIndicator(ec.DailyData.Kline, es.kama2.KAMALine, es.kama10.KAMALine)
+//	es.kama10 = indicator.NewKAMAIndicator(ec.DailyData.Line, 10, 2, 30)
+//	es.kama2 = indicator.NewKAMAIndicator(ec.DailyData.Line, 2, 2, 30)
+//	es.crossover = indicator.NewCrossOverIndicator(ec.DailyData.Line, es.kama2.KAMALine, es.kama10.KAMALine)
+//	es.crossunder = indicator.NewCrossUnderIndicator(ec.DailyData.Line, es.kama2.KAMALine, es.kama10.KAMALine)
 //}
 //
 //func (es *DualKAMAStrategy) OnBar(ctx *model.MarketStrategyContext, ts int64) []*model.StrategyResult {
 //	over := es.crossover.GetByTs(ts)
 //	under := es.crossunder.GetByTs(ts)
-//	currentKValue := model.NewKnodeFromAny(ctx.DailyData.Kline.GetByTs(ts))
+//	currentKValue := model.NewKnodeFromAny(ctx.DailyData.Line.GetByTs(ts))
 //	if currentKValue == nil {
 //		return nil
 //	}

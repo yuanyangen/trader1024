@@ -28,14 +28,14 @@ package strategy_old
 //}
 //
 //func (es *CustomKAMAStrategy) Init(ec *model.MarketStrategyContext) {
-//	es.kama10 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 10, 2, 30)
-//	es.kama5 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 5, 2, 30)
-//	es.kama2 = indicator.NewKAMAIndicator(ec.DailyData.Kline, 2, 2, 30)
+//	es.kama10 = indicator.NewKAMAIndicator(ec.DailyData.Line, 10, 2, 30)
+//	es.kama5 = indicator.NewKAMAIndicator(ec.DailyData.Line, 5, 2, 30)
+//	es.kama2 = indicator.NewKAMAIndicator(ec.DailyData.Line, 2, 2, 30)
 //	es.slop = indicator.NewSlopIndicator(es.kama2, 2)
 //}
 //
 //func (es *CustomKAMAStrategy) OnBar(ctx *model.MarketStrategyContext, ts int64) []*model.StrategyResult {
-//	currentKValue := model.NewKnodeFromAny(ctx.DailyData.Kline.GetByTs(ts))
+//	currentKValue := model.NewKnodeFromAny(ctx.DailyData.Line.GetByTs(ts))
 //	if currentKValue == nil {
 //		return nil
 //	}

@@ -24,11 +24,11 @@ package strategy_old
 //}
 //
 //func (es *SingleSMAStrategy) Init(ec *model.MarketStrategyContext) {
-//	es.sma = indicator.NewSMAIndicator(ec.DailyData.Kline, 5)
+//	es.sma = indicator.NewSMAIndicator(ec.DailyData.Line, 5)
 //}
 //
 //func (es *SingleSMAStrategy) OnBar(ctx *model.MarketStrategyContext, ts int64) []*model.StrategyResult {
-//	currentKValue := model.NewKnodeFromAny(ctx.DailyData.Kline.GetByTs(ts))
+//	currentKValue := model.NewKnodeFromAny(ctx.DailyData.Line.GetByTs(ts))
 //	if currentKValue == nil {
 //		return nil
 //	}

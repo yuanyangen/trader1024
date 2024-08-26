@@ -7,7 +7,7 @@ import (
 
 type ContractStrategyContext struct {
 	Contract *Contract
-	Kline    ContractIndicator
+	Kline    *KLine
 }
 
 func NewStrategyResult(Cmd StrategyOut, price decimal.Decimal, reason string) *StrategyResult {

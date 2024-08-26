@@ -7,5 +7,8 @@ type EventMsg struct {
 
 type EventTrigger interface {
 	Start()
-	RegisterEventReceiver(chan *EventMsg)
+	RegisterEventReceiver(receiver EventReceiver)
+}
+type EventReceiver interface {
+	DealEvent(event *EventMsg)
 }

@@ -1,13 +1,12 @@
 package sina
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/yuanyangen/trader1024/data/markets"
-	"github.com/yuanyangen/trader1024/data/storage_client"
+	"github.com/yuanyangen/trader1024/data/crawler/http"
+	"github.com/yuanyangen/trader1024/engine/logs"
 	"github.com/yuanyangen/trader1024/engine/model"
-	"io"
-	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -89,43 +88,25 @@ var allVendorPrefix = map[string]string{
 type Sina struct {
 }
 
-func (em *Sina) StorageClient() *storage_client.HttpStorageClient {
-	return storage_client.SinaHttpStorage()
-}
-
-func (em *Sina) CrawlAllMainMarket() []*model.Contract {
-	allSubject := markets.GetAllFutureSubjects()
-	allMarkets := make([]*model.Contract, len(allSubject))
-	for i, v := range allSubject {
-		allMarkets[i] = &model.Contract{
-			Subject: v,
-		}
-	}
-	sort.Slice(allMarkets, func(i, j int) bool {
-		return allMarkets[i].Exchange+allMarkets[i].Id() < allMarkets[j].Exchange+allMarkets[j].Id()
-	})
-	return allMarkets
-}
-
-func (em *Sina) CrawlAllAvailableMainMarket() []*model.Contract {
-	allSubject := markets.GetAllFutureSubjects()
-	allMarkets := make([]*model.Contract, len(allSubject))
-	for i, v := range allSubject {
-		for _, d := range getCurrentAvailable() {
-			allMarkets[i] = &model.Contract{
-				Subject:      v,
-				ContractDate: d,
-			}
-		}
-	}
-	return allMarkets
-}
-func getCurrentAvailable() []string {
-	return nil
-}
+//func (em *Sina) CrawlAllMainMarket(ctx context.Context) []*model.Contract {
+//	allSubject, _ := markets.GetAllFutureSubjects(ctx)
+//	allMarkets := make([]*model.Contract, len(allSubject))
+//	for i, v := range allSubject {
+//		allMarkets[i] = &model.Contract{
+//			SubjectDO: v,
+//		}
+//	}
+//	sort.Slice(allMarkets, func(i, j int) bool {
+//		return allMarkets[i].Exchange+allMarkets[i].Id() < allMarkets[j].Exchange+allMarkets[j].Id()
+//	})
+//	return allMarkets
+//}
 
 // date
 func buildVendorIdByDate(vendorIdPrefix, date string) string {
+	if vendorIdPrefix == "" {
+		return ""
+	}
 	if date == "" {
 		return vendorIdPrefix + "0"
 	}
@@ -137,111 +118,107 @@ func buildVendorIdByDate(vendorIdPrefix, date string) string {
 
 }
 
-func (em *Sina) CrawlWeekly(market *model.Contract, startDate, endDate time.Time) ([]*model.KNode, error) {
+func (em *Sina) CrawlContractMinute(ctx context.Context, market *model.Contract, startDate, endDate time.Time) ([]*model.KLineNode, error) {
 	return nil, nil
 }
-func (em *Sina) CrawlMinute(market *model.Contract, startDate, endDate time.Time) ([]*model.KNode, error) {
+func (em *Sina) CrawlContractWeekly(ctx context.Context, market *model.Contract, startDate, endDate time.Time) ([]*model.KLineNode, error) {
 	return nil, nil
 }
 
-func (em *Sina) CrawlDaily(market *model.Contract, startDate, endDate time.Time) ([]*model.KNode, error) {
-	return em.CrawlDailyOld(market, startDate, endDate)
-}
-func (em *Sina) CrawlDailyNew(market *model.Contract, startDate, endDate time.Time) ([]*model.KNode, error) {
-	contractId := buildVendorIdByDate(allVendorPrefix[market.CNName], market.ContractDate)
-	reqUrl := fmt.Sprintf(`https://stock2.finance.sina.com.cn/futures/api/json.php/IndexService.getInnerFuturesDailyKLine?symbol=%v`, contractId)
-	req, err := http.NewRequest("GET", reqUrl, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authority", "stock2.finance.sina.com.cn")
-	req.Header.Set("Accept", "*/*")
-	req.Header.Set("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6")
-	//req.Header.Set("Cookie", "UOR=cn.bing.com,finance.sina.com.cn,; SINAGLOBAL=101.38.217.243_1685114877.365135; close_leftanswer=1; U_TRS1=00000026.d78f163c.64d57694.0a143a09; rotatecount=1; Apache=115.47.210.1_1691971932.526467; U_TRS2=00000001.403bc7a4.64d9715e.cb447859; FIN_ALL_VISITED=V0%2COI2309%2CSA2309%2CSA0%2CEB2312%2CUR2401%2CUR0; ULV=1691971961537:6:4:2:115.47.210.1_1691971932.526467:1691971932726; NEWESTVISITED_FUTURE=%7B%22code%22%3A%22V0%22%2C%22hqcode%22%3A%22nf_V0%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22OI2309%22%2C%22hqcode%22%3A%22nf_OI2309%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22SA2309%22%2C%22hqcode%22%3A%22nf_SA2309%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22SA0%22%2C%22hqcode%22%3A%22nf_SA0%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22EB2312%22%2C%22hqcode%22%3A%22nf_EB2312%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22UR2401%22%2C%22hqcode%22%3A%22nf_UR2401%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22UR0%22%2C%22hqcode%22%3A%22nf_UR0%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22EB0%22%2C%22hqcode%22%3A%22nf_EB0%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22EB2304%22%2C%22hqcode%22%3A%22nf_EB2304%22%2C%22type%22%3A1%7D")
-	req.Header.Set("Referer", "https://finance.sina.com.cn/futures/quotes/V0.shtml")
-	req.Header.Set("Sec-Ch-Ua", "\"Not_A Brand\";v=\"99\", \"Microsoft Edge\";v=\"109\", \"Chromium\";v=\"109\"")
-	req.Header.Set("Sec-Ch-Ua-Mobile", "?0")
-	req.Header.Set("Sec-Ch-Ua-Platform", "\"Linux\"")
-	req.Header.Set("Sec-Fetch-Dest", "script")
-	req.Header.Set("Sec-Fetch-Mode", "no-cors")
-	req.Header.Set("Sec-Fetch-Site", "same-site")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.49")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	bodyB, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	allKnodes := [][]string{}
-	err = json.Unmarshal(bodyB, &allKnodes)
-	if err != nil {
-		return nil, fmt.Errorf("sina resp data error")
-	}
-	return convertSinaKnodeToKnode(allKnodes), nil
+func (em *Sina) CrawlContractDaily(ctx context.Context, market *model.Contract, startDate, endDate time.Time) ([]*model.KLineNode, error) {
+	time.Sleep(time.Second * 2)
+	return em.crawlDailyOld(ctx, market, startDate, endDate)
 }
 
-func (em *Sina) CrawlDailyOld(market *model.Contract, startDate, endDate time.Time) ([]*model.KNode, error) {
+//func (em *Sina) crawlDailyNew(ctx context.Context, market *model.Contract, startDate, endDate time.Time) ([]*model.KLineNode, error) {
+//	contractId := buildVendorIdByDate(allVendorPrefix[market.CNName], market.ContractDate)
+//	body, err := http.Get(ctx, "https://stock2.finance.sina.com.cn/futures/api/json.php/IndexService.getInnerFuturesDailyKLine", map[string]string{
+//		"symbol": contractId,
+//	}, map[string]string{
+//		"Authority":          "stock2.finance.sina.com.cn",
+//		"Accept":             "*/*",
+//		"Accept-Language":    "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+//		"Referer":            "https://finance.sina.com.cn/futures/quotes/V0.shtml",
+//		"Sec-Ch-Ua":          "\"Not_A Brand\";v=\"99\", \"Microsoft Edge\";v=\"109\", \"Chromium\";v=\"109\"",
+//		"Sec-Ch-Ua-Mobile":   "?0",
+//		"Sec-Ch-Ua-Platform": "\"Linux\"",
+//		"Sec-Fetch-Dest":     "script",
+//		"Sec-Fetch-Mode":     "no-cors",
+//		"Sec-Fetch-Site":     "same-site",
+//		"User-Agent":         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.49",
+//	})
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	allKnodes := [][]string{}
+//	err = sonic.UnmarshalString(body, &allKnodes)
+//	if err != nil {
+//		logs.Info("sina response error")
+//		return nil, fmt.Errorf("sina resp data_crawler error")
+//	}
+//	return convertSinaKnodeToKnode(ctx, market, allKnodes), nil
+//}
+
+func (em *Sina) crawlDailyOld(ctx context.Context, contract *model.Contract, startDate, endDate time.Time) ([]*model.KLineNode, error) {
 	//crawlDateStr := time.Now().Format("2006_1_2")
-	contractId := buildVendorIdByDate(allVendorPrefix[market.CNName], market.ContractDate)
-	//reqUrl := fmt.Sprintf(`https://stock2.finance.sina.com.cn/futures/api/jsonp.php/var%%20_%v%v=/InnerFuturesNewService.getDailyKLine?symbol=%v&_=%v`, contractId, crawlDateStr, contractId, crawlDateStr)
-	reqUrl := fmt.Sprintf(`https://stock2.finance.sina.com.cn/futures/api/jsonp.php/var=/InnerFuturesNewService.getDailyKLine?symbol=%v`, contractId)
-	req, err := http.NewRequest("GET", reqUrl, nil)
-	if err != nil {
-		return nil, err
+	contractId := buildVendorIdByDate(allVendorPrefix[contract.CNName], contract.ContractDate)
+	if contractId == "" {
+		logs.Info("%v %v not support", contract.ContractCnName, contract.ContractDate)
+		return nil, nil
 	}
-	req.Header.Set("Authority", "stock2.finance.sina.com.cn")
-	req.Header.Set("Accept", "*/*")
-	req.Header.Set("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6")
-	//req.Header.Set("Cookie", "UOR=cn.bing.com,finance.sina.com.cn,; SINAGLOBAL=101.38.217.243_1685114877.365135; close_leftanswer=1; U_TRS1=00000026.d78f163c.64d57694.0a143a09; rotatecount=1; Apache=115.47.210.1_1691971932.526467; U_TRS2=00000001.403bc7a4.64d9715e.cb447859; FIN_ALL_VISITED=V0%2COI2309%2CSA2309%2CSA0%2CEB2312%2CUR2401%2CUR0; ULV=1691971961537:6:4:2:115.47.210.1_1691971932.526467:1691971932726; NEWESTVISITED_FUTURE=%7B%22code%22%3A%22V0%22%2C%22hqcode%22%3A%22nf_V0%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22OI2309%22%2C%22hqcode%22%3A%22nf_OI2309%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22SA2309%22%2C%22hqcode%22%3A%22nf_SA2309%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22SA0%22%2C%22hqcode%22%3A%22nf_SA0%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22EB2312%22%2C%22hqcode%22%3A%22nf_EB2312%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22UR2401%22%2C%22hqcode%22%3A%22nf_UR2401%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22UR0%22%2C%22hqcode%22%3A%22nf_UR0%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22EB0%22%2C%22hqcode%22%3A%22nf_EB0%22%2C%22type%22%3A1%7D%7C%7B%22code%22%3A%22EB2304%22%2C%22hqcode%22%3A%22nf_EB2304%22%2C%22type%22%3A1%7D")
-	req.Header.Set("Referer", "https://finance.sina.com.cn/futures/quotes/V0.shtml")
-	req.Header.Set("Sec-Ch-Ua", "\"Not_A Brand\";v=\"99\", \"Microsoft Edge\";v=\"109\", \"Chromium\";v=\"109\"")
-	req.Header.Set("Sec-Ch-Ua-Mobile", "?0")
-	req.Header.Set("Sec-Ch-Ua-Platform", "\"Linux\"")
-	req.Header.Set("Sec-Fetch-Dest", "script")
-	req.Header.Set("Sec-Fetch-Mode", "no-cors")
-	req.Header.Set("Sec-Fetch-Site", "same-site")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.49")
+	bodyB, err := http.Get(ctx, "https://stock2.finance.sina.com.cn/futures/api/jsonp.php/var=/InnerFuturesNewService.getDailyKLine", map[string]string{
+		"symbol": contractId,
+	}, map[string]string{
+		"Authority":          "stock2.finance.sina.com.cn",
+		"Accept":             "*/*",
+		"Accept-Language":    "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+		"Referer":            "https://finance.sina.com.cn/futures/quotes/V0.shtml",
+		"Sec-Ch-Ua":          "\"Not_A Brand\";v=\"99\", \"Microsoft Edge\";v=\"109\", \"Chromium\";v=\"109\"",
+		"Sec-Ch-Ua-Mobile":   "?0",
+		"Sec-Ch-Ua-Platform": "\"Linux\"",
+		"Sec-Fetch-Dest":     "script",
+		"Sec-Fetch-Mode":     "no-cors",
+		"Sec-Fetch-Site":     "same-site",
+		"User-Agent":         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.49",
+	})
+	if err != nil {
+		logs.Info("sina resp data_crawler error, no this contract data_crawler  %v", err)
+		return nil, fmt.Errorf("do http error %v", err)
+	}
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	bodyB, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
 	tmp := strings.Split(string(bodyB), "(")
 	if len(tmp) < 2 {
-		return nil, fmt.Errorf("sina resp data error")
+		logs.Info("sina resp data_crawler error, no this contract data_crawler  %v %v", err, string(bodyB))
+		return nil, fmt.Errorf("sina resp data_crawler error, no this contract data_crawler  %v %v", err, string(bodyB))
 	}
 	tmp2 := tmp[1]
 	body := tmp2[:len(tmp2)-2]
 	allKnodes := []*SinaKnode{}
 	err = json.Unmarshal([]byte(body), &allKnodes)
 	if err != nil {
-		return nil, fmt.Errorf("sina resp data error")
+		logs.Info("sina resp data_crawler error, no this contract data_crawler  %v", err)
+		return nil, fmt.Errorf("sina resp data_crawler error, no this contract data_crawler %v", err)
 	}
-	return convertSinaKnodeToKnodeOld(allKnodes), nil
+	return convertSinaKnodeToKnodeOld(ctx, contract, allKnodes), nil
 }
 
-func convertSinaKnodeToKnode(in [][]string) []*model.KNode {
-	out := make([]*model.KNode, len(in))
+func convertSinaKnodeToKnode(ctx context.Context, market *model.Contract, in [][]string) []*model.KLineNode {
+	out := make([]*model.KLineNode, len(in))
 	for i, sinaKnode := range in {
-		out[i] = &model.KNode{
-			Date:   sinaKnode[0],
-			Open:   StrToFloat(sinaKnode[1]),
-			High:   StrToFloat(sinaKnode[2]),
-			Low:    StrToFloat(sinaKnode[3]),
-			Close:  StrToFloat(sinaKnode[4]),
-			Volume: StrToFloat(sinaKnode[5]),
+		out[i] = &model.KLineNode{
+			ContractCnName: market.ContractCnName,
+			ContractDate:   market.ContractDate,
+			Type:           model.LineType_Day,
+			Open:           StrToFloat(sinaKnode[1]),
+			High:           StrToFloat(sinaKnode[2]),
+			Low:            StrToFloat(sinaKnode[3]),
+			Close:          StrToFloat(sinaKnode[4]),
+			Volume:         StrToFloat(sinaKnode[5]),
 		}
 		t, _ := time.Parse("2006-01-02", sinaKnode[0])
 		out[i].TimeStamp = t.Unix()
+		out[i].TimeStampDesc = sinaKnode[0]
 	}
 	sort.Slice(out, func(i, j int) bool {
 		return out[i].TimeStamp < out[j].TimeStamp
@@ -265,19 +242,24 @@ type SinaKnode struct {
 	//S      string `json:"s"`
 }
 
-func convertSinaKnodeToKnodeOld(in []*SinaKnode) []*model.KNode {
-	out := make([]*model.KNode, len(in))
+func convertSinaKnodeToKnodeOld(ctx context.Context, market *model.Contract, in []*SinaKnode) []*model.KLineNode {
+	out := make([]*model.KLineNode, len(in))
 	for i, sinaKnode := range in {
-		out[i] = &model.KNode{
-			Date:   sinaKnode.Date,
-			Open:   StrToFloat(sinaKnode.Open),
-			Close:  StrToFloat(sinaKnode.Close),
-			Low:    StrToFloat(sinaKnode.Low),
-			High:   StrToFloat(sinaKnode.High),
-			Volume: StrToFloat(sinaKnode.Volume),
+		out[i] = &model.KLineNode{
+			ContractCnName: market.ContractCnName,
+			ContractDate:   market.ContractDate,
+			Type:           model.LineType_Day,
+			TimeStampDesc:  sinaKnode.Date,
+			Open:           StrToFloat(sinaKnode.Open),
+			Close:          StrToFloat(sinaKnode.Close),
+			Low:            StrToFloat(sinaKnode.Low),
+			High:           StrToFloat(sinaKnode.High),
+			Volume:         StrToFloat(sinaKnode.Volume),
 		}
 		t, _ := time.Parse("2006-01-02", sinaKnode.Date)
 		out[i].TimeStamp = t.Unix()
+		out[i].TimeStampDesc = sinaKnode.Date
+
 	}
 	sort.Slice(out, func(i, j int) bool {
 		return out[i].TimeStamp < out[j].TimeStamp

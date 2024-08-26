@@ -1,10 +1,9 @@
 package eastmoney
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/yuanyangen/trader1024/data/markets"
-	"github.com/yuanyangen/trader1024/data/storage_client"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"io"
 	"net/http"
@@ -20,7 +19,7 @@ type EastMoney struct {
 }
 
 //var EastmoneyParamsMap = map[string]string{
-//	"f51": "Date",
+//	"f51": "TimeStampDesc",
 //	"f52": "Open",
 //	"f53": "Close",
 //	"f54": "High",
@@ -33,17 +32,16 @@ type EastMoney struct {
 //	"f61": "换手率",
 //}
 
-func (em *EastMoney) StorageClient() *storage_client.HttpStorageClient {
-	return storage_client.EastMoneyHttpStorage()
-}
-
-func (em *EastMoney) CrawlAllMainMarket() []*model.Contract {
-	allSubject := markets.GetAllFutureSubjects()
+func (em *EastMoney) CrawlAllMainMarket(ctx context.Context) ([]*model.Contract, error) {
+	//allSubject, err := mongo.QueryAllSubject(ctx)
+	//if err != nil {
+	//	return nil, err
+	//}
 	out := []*model.Contract{}
-	for _, v := range allSubject {
-		out = append(out, GetContractByCnName(v.CNName, ""))
-	}
-	return out
+	//for _, v := range allSubject {
+	//	out = append(out, GetContractByCnName(v.CNName, ""))
+	//}
+	return out, nil
 }
 
 func (em *EastMoney) CrawlAllAvailableMainMarket() []*model.Contract {
@@ -51,7 +49,7 @@ func (em *EastMoney) CrawlAllAvailableMainMarket() []*model.Contract {
 	return nil
 }
 
-func (em *EastMoney) CrawlDaily(contract *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
+func (em *EastMoney) CrawlDaily(contract *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KLineNode, error) {
 	startDate := startTime.Format("20060102")
 	endDate := endTime.Format("20060102")
 	req := &EastMoneyReq{
@@ -67,12 +65,12 @@ func (em *EastMoney) CrawlDaily(contract *model.Contract, startTime time.Time, e
 	return em.doCrawlHistoryData(req, "2006-01-02")
 }
 
-func (em *EastMoney) CrawlWeekly(market *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
+func (em *EastMoney) CrawlWeekly(market *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KLineNode, error) {
 	return nil, nil
 }
 
-func (em *EastMoney) CrawlMinute(contract *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KNode, error) {
-	var res []*model.KNode
+func (em *EastMoney) CrawlMinute(contract *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KLineNode, error) {
+	var res []*model.KLineNode
 	endTs := time.Now()
 	for {
 		endD := endTs.Format("20060102")
@@ -127,7 +125,7 @@ var codeToE = map[int]string{
 	8:   "中金所",
 }
 
-func (em *EastMoney) doCrawlHistoryData(req *EastMoneyReq, dateformat string) ([]*model.KNode, error) {
+func (em *EastMoney) doCrawlHistoryData(req *EastMoneyReq, dateformat string) ([]*model.KLineNode, error) {
 	params := url.Values{}
 	params.Set("fields1", req.Fields1)
 	params.Set("fields2", req.Fields2)
@@ -158,7 +156,7 @@ func (em *EastMoney) doCrawlHistoryData(req *EastMoneyReq, dateformat string) ([
 		return nil, err
 
 	}
-	//fmt.Println(string(bodyB))
+	//logs.Info(string(bodyB))
 
 	res := &EastMoneyResp{}
 	err = json.Unmarshal(bodyB, &res)
@@ -171,13 +169,13 @@ func (em *EastMoney) doCrawlHistoryData(req *EastMoneyReq, dateformat string) ([
 
 	return convertDataToStruct(res.Data.Klines, dateformat), nil
 }
-func convertDataToStruct(in []string, dateFormate string) []*model.KNode {
-	res := make([]*model.KNode, len(in))
+func convertDataToStruct(in []string, dateFormate string) []*model.KLineNode {
+	res := make([]*model.KLineNode, len(in))
 
 	for i, oneK := range in {
 		tmpData := strings.Split(oneK, ",")
-		knode := &model.KNode{
-			Date:          tmpData[0],
+		knode := &model.KLineNode{
+			TimeStampDesc: tmpData[0],
 			Open:          convertStrToFloat(tmpData[1]),
 			Close:         convertStrToFloat(tmpData[2]),
 			High:          convertStrToFloat(tmpData[3]),
@@ -222,7 +220,7 @@ type EastMoneyResp struct {
 		//PrePrice   int      `json:"prePrice"`
 		//QtMiscType int      `json:"qtMiscType"`
 		Klines []string `json:"klines"`
-	} `json:"data"`
+	} `json:"data_crawler"`
 }
 
 type EasyMoneyAllMarketResp struct {
@@ -232,7 +230,7 @@ type EasyMoneyAllMarketResp struct {
 	Lt     int                `json:"lt"`
 	Full   int                `json:"full"`
 	Dlmkts string             `json:"dlmkts"`
-	Data   EasyMoneyAllMarket `json:"data"`
+	Data   EasyMoneyAllMarket `json:"data_crawler"`
 }
 type OneMarket struct {
 	F1         int    `json:"f1"`

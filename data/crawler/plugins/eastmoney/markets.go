@@ -1,7 +1,8 @@
 package eastmoney
 
 import (
-	"github.com/yuanyangen/trader1024/data/markets"
+	"context"
+	"github.com/yuanyangen/trader1024/dal/mongo"
 	"github.com/yuanyangen/trader1024/engine/model"
 )
 
@@ -120,23 +121,25 @@ func getVendorId4(code string, date string) string {
 	return code + date
 }
 
-// date的格式是"230809"
-func GetContractByCnName(cnName string, date string) *model.Contract {
-	m := markets.GetSubjectByCnNam(cnName)
-	if m == nil {
-		panic("markte not support")
+// date的格式是"20230809"
+func GetContractByCnName(ctx context.Context, cnName string, date string) (*model.Contract, error) {
+	s, err := mongo.QuerySubject(ctx, cnName)
+	if err != nil {
+		return nil, err
 	}
-
-	v, _ := allSubjectsMap[cnName]
-	if v == nil {
-		panic("markte not support by east money")
+	if s == nil {
+		panic("subject not support")
 	}
-	if v.Code == "" || v.VendorIdHandler == nil {
-		panic("markte not support by east money")
+	c, err := mongo.QueryContract(ctx, cnName, date)
+	if err != nil {
+		return nil, err
+	}
+	if c == nil {
+		panic("contract not support")
 	}
 
 	return &model.Contract{
-		Subject:      m,
-		ContractDate: date,
-	}
+		SubjectDO:  s,
+		ContractDO: c,
+	}, nil
 }

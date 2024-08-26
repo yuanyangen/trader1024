@@ -1,12 +1,14 @@
 package model
 
+import "context"
+
 type DataType int64
 
 const DataTypeKLine DataType = 1
 
 type Data struct {
 	DataType DataType
-	KData    *KNode
+	Data     *KLineNode
 }
 
 type SourceType int64
@@ -22,5 +24,7 @@ type DataFeed interface {
 }
 
 type DateSource interface {
-	GetDataByTs(marketId string, lineType LineType, ts int64) *KNode
+	GetDataByTs(ctx context.Context, subjectName string, contractDate string, lineType LineType, ts int64) *KLineNode
+	SaveDataByTs(ctx context.Context, data *KLineNode) error
+	GetAllContractBySubjectName(ctx context.Context, subjectName string) []*Contract
 }

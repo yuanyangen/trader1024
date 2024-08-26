@@ -22,3 +22,9 @@ func TsToString(ts int64) string {
 	t := time.Unix(ts, 0)
 	return t.Format("2006-01-02 15:04:05")
 }
+
+func StrToTs(in, format string) int64 {
+	expireT, _ := time.ParseInLocation(format, in, time.FixedZone("CST", 8*3600))
+
+	return expireT.Unix()
+}

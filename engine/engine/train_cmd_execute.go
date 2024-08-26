@@ -3,9 +3,9 @@ package engine
 import (
 	"fmt"
 	"github.com/jedib0t/go-pretty/table"
+	"github.com/yuanyangen/trader1024/engine/logs"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/utils"
-	"github.com/yuanyangen/trader1024/strategy/indicator"
 	"os"
 	"sync"
 	"time"
@@ -13,7 +13,7 @@ import (
 
 type Train struct {
 	Contract     *model.Contract
-	kline        model.ContractIndicator
+	kline        *model.KLine
 	trainResults map[int64]*TrainResult
 	mu           sync.Mutex
 	allDone      bool
@@ -55,11 +55,11 @@ type StrategyResult struct {
 }
 
 type TrainResult struct {
-	strategyReq         *ContractPortfolioReq
+	strategyReq         *model.ContractPortfolioReq
 	strategyTrainResult *StrategyResult
 }
 
-func newTrain(contract *model.Contract, kline model.ContractIndicator, portfolioStrategy []PortfolioStrategy) CmdExecutor {
+func newTrain(contract *model.Contract, kline *model.KLine, portfolioStrategy []model.PortfolioStrategy) CmdExecutor {
 	t := &Train{
 		Contract:     contract,
 		kline:        kline,
@@ -69,7 +69,7 @@ func newTrain(contract *model.Contract, kline model.ContractIndicator, portfolio
 	return t
 }
 
-func (t *Train) ExecuteCmd(req *ContractPortfolioReq) {
+func (t *Train) ExecuteCmd(req *model.ContractPortfolioReq) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	t.trainResults[req.Ts] = &TrainResult{strategyReq: req, strategyTrainResult: &StrategyResult{}}
@@ -113,19 +113,20 @@ func (t *Train) calcResult() {
 
 // 计算 xx day 之后， 价格相对当前值的变化
 func (t *Train) calcDayResult(ts int64, day int64) (float64, error) {
-	kline, ok := t.kline.(*indicator.KLineIndicator)
-	if !ok {
-		panic("should not reach here")
-	}
-	nodes, err := kline.GetForwardByTsAndCount(ts, day+1)
-	if err != nil {
-		return 0, err
-	}
-	kNodes := model.NewKnodesFromAny(nodes)
-	current := kNodes[0]
-	xDayAfter := kNodes[len(kNodes)-1]
-	rise := xDayAfter.GetValue() - current.GetValue()
-	return rise, nil
+	//kline, ok := t.kline.(*indicator.KLineIndicator)
+	//if !ok {
+	//	panic("should not reach here")
+	//}
+	//nodes, err := kline.GetForwardByTsAndCount(ts, day+1)
+	//if err != nil {
+	//	return 0, err
+	//}
+	//kNodes := model.NewKnodesFromAny(nodes)
+	//current := kNodes[0]
+	//xDayAfter := kNodes[len(kNodes)-1]
+	//rise := xDayAfter.GetValue() - current.GetValue()
+	//return rise, nil
+	return 0, nil
 }
 
 func (t *Train) genReport(result []*TrainResult) *Report {
@@ -135,7 +136,7 @@ func (t *Train) genReport(result []*TrainResult) *Report {
 	for _, v := range result {
 		r.AllCount++
 		if v.strategyReq == nil || v.strategyReq.StrategyResult == nil {
-			fmt.Println("error")
+			logs.Info("error")
 			//panic("fasdfas")
 			continue
 		}
@@ -198,7 +199,7 @@ func (t *Train) Report() {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	report := t.genReportAll()
-	fmt.Printf("=============================================================================================\n")
+	logs.Info("=============================================================================================\n")
 	ta := table.NewWriter()
 	ta.SetOutputMirror(os.Stdout)
 	ta.AppendHeader(table.Row{"指标名字", "lose", "0%", "1%", "3%", "5%", "7%", "10%"})

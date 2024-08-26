@@ -5936,7 +5936,7 @@ func Crossunder(series1 []float64, series2 []float64) bool {
 
 // GroupCandles groups a set of candles in another set of candles, basing on a grouping factor.
 //
-// This is pretty useful if you want to transform, for example, 15min candles into 1h candles using same data.
+// This is pretty useful if you want to transform, for example, 15min candles into 1h candles using same data_crawler.
 //
 // This avoid calling multiple times the exchange for multiple contexts.
 //
