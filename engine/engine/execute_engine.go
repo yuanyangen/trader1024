@@ -23,7 +23,6 @@ type CmdExecutor interface {
 }
 
 func NewExecuteEngine(et model.EventTrigger, dataSource model.DateSource, strategies []func() model.Strategy, portfolioStrategy []model.PortfolioStrategy, brokers []model.Broker) *ExecuteEngine {
-	brokers = append([]model.Broker{local_account.GetLocalBroker()}, brokers...)
 	e := &ExecuteEngine{
 		baseEngine: &baseEngine{
 			Contracts:      map[string]*model.Contract{},
@@ -34,6 +33,7 @@ func NewExecuteEngine(et model.EventTrigger, dataSource model.DateSource, strate
 		strategies:        strategies,
 		portfolioStrategy: portfolioStrategy,
 		ContractEngines:   map[string]*ContractExecuteEngine{},
+		brokers:           append([]model.Broker{local_account.GetLocalBroker()}, brokers...),
 	}
 	return e
 }
@@ -113,12 +113,15 @@ func (m *ContractExecuteEngine) runStrategies(ctx *model.ContractEngineContext) 
 	for _, st := range m.Strategies {
 		stResult := st.OnBar(ctx)
 		if stResult != nil {
+			stResult.StrategyName = st.Name()
 			ctx.StrategyResult = append(ctx.StrategyResult, stResult)
 		}
 	}
 }
-
 func (m *ContractExecuteEngine) runPortfolioStrategies(ctx *model.ContractEngineContext) {
+	if len(ctx.StrategyResult) == 0 {
+		return
+	}
 	for _, p := range m.portfolioStrategy {
 		p(ctx)
 	}

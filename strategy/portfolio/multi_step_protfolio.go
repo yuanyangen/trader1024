@@ -9,13 +9,10 @@ import (
 
 // 执行资金管理动作，根据策略的输出，结合历史的仓位，决定下一步动作。
 // 当前写死了， 只执行一次的策略。
-func MultiStepPortfolio(broker model.Broker, ctx *model.ContractEngineContext) {
+func MultiStepPortfolio(ctx *model.ContractEngineContext) {
 	count := decimal.NewFromInt(10)
 	var err error
 	position := local_account.GetLocalBroker().GetCurrentLivePositions(ctx.Contract)
-	if ctx.StrategyResult == nil {
-		return
-	}
 
 	allOnlinePosition := []*model.PositionPair{}
 	for _, v := range position.Details {

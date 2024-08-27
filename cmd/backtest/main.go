@@ -22,7 +22,7 @@ func main() {
 			strategy.NewCustomStrategy2Factory,
 		},
 		[]model.PortfolioStrategy{
-			portfolio.Evacuation,
+			portfolio.MultiStepPortfolio,
 		},
 		nil,
 	)
