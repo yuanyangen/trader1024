@@ -1,15 +1,16 @@
 package portfolio
 
 import (
+	"github.com/yuanyangen/trader1024/engine/account/local_account"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"sort"
 )
 
 // 执行资金管理动作，根据策略的输出，结合历史的仓位，决定下一步动作。
 // 当前写死了， 只执行一次的策略。
-func Evacuation(broker model.Broker, req *model.ContractPortfolioReq) {
-	position := broker.GetCurrentLivePositions(req.Contract.Id())
-	if req.StrategyResult == nil {
+func Evacuation(ctx *model.ContractEngineContext) {
+	position := local_account.GetLocalBroker().GetCurrentLivePositions(ctx.Contract)
+	if ctx.StrategyResult == nil {
 		return
 	}
 
@@ -26,14 +27,29 @@ func Evacuation(broker model.Broker, req *model.ContractPortfolioReq) {
 		return
 	}
 	lastPosition := allOnlinePosition[len(allOnlinePosition)-1]
-	if lastPosition.Type == model.PositionTypeLong {
-		if req.StrategyResult.Price.LessThan(lastPosition.Buy.Price) {
-			broker.AddOrder(req.Contract, model.OrderTypeSell, position.Count.Abs(), req.StrategyResult.Price, "evacuation_"+req.StrategyResult.Reason, req.Ts)
-
-		}
-	} else if lastPosition.Type == model.PositionTypeShort {
-		if req.StrategyResult.Price.GreaterThan(lastPosition.Sell.Price) {
-			broker.AddOrder(req.Contract, model.OrderTypeBuy, position.Count.Abs(), req.StrategyResult.Price, "evacuation_"+req.StrategyResult.Reason, req.Ts)
+	for _, sr := range ctx.StrategyResult {
+		if lastPosition.Type == model.PositionTypeLong {
+			if sr.Price.LessThan(lastPosition.Buy.Price) {
+				ctx.Orders = append(ctx.Orders, &model.Order{
+					OrderType:       model.OrderTypeSell,
+					Count:           position.Count.Abs(),
+					Price:           sr.Price,
+					Contract:        ctx.Contract,
+					Reason:          "evacuation_" + sr.Reason,
+					CreateTimeStamp: ctx.Ts,
+				})
+			}
+		} else if lastPosition.Type == model.PositionTypeShort {
+			if sr.Price.GreaterThan(lastPosition.Sell.Price) {
+				ctx.Orders = append(ctx.Orders, &model.Order{
+					OrderType:       model.OrderTypeBuy,
+					Count:           position.Count.Abs(),
+					Price:           sr.Price,
+					Contract:        ctx.Contract,
+					Reason:          "evacuation_" + sr.Reason,
+					CreateTimeStamp: ctx.Ts,
+				})
+			}
 		}
 	}
 }

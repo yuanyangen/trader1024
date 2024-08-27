@@ -55,7 +55,7 @@ type StrategyResult struct {
 }
 
 type TrainResult struct {
-	strategyReq         *model.ContractPortfolioReq
+	strategyReq         *model.ContractEngineContext
 	strategyTrainResult *StrategyResult
 }
 
@@ -69,12 +69,12 @@ func newTrain(contract *model.Contract, kline *model.KLine, portfolioStrategy []
 	return t
 }
 
-func (t *Train) ExecuteCmd(req *model.ContractPortfolioReq) {
+func (t *Train) ExecuteCmd(req *model.ContractEngineContext) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	t.trainResults[req.Ts] = &TrainResult{strategyReq: req, strategyTrainResult: &StrategyResult{}}
 	t.calcResult()
-	//t.Report()
+	//t.ReportToCmd()
 }
 
 func (t *Train) calcResultAndReportDaemon() {
@@ -134,27 +134,31 @@ func (t *Train) genReport(result []*TrainResult) *Report {
 		//MarketName: t,
 	}
 	for _, v := range result {
-		r.AllCount++
-		if v.strategyReq == nil || v.strategyReq.StrategyResult == nil {
-			logs.Info("error")
-			//panic("fasdfas")
-			continue
-		}
-		if v.strategyReq.StrategyResult.Cmd == model.StrategyOutLong {
-			r.LongCount++
-			t.genOneDayReport(v.strategyReq.StrategyResult.Cmd, &r.LongWinCountAfter1Day, v.strategyTrainResult.RiseFallAfter1Day, v.strategyReq.StrategyResult.Price.InexactFloat64())
-			t.genOneDayReport(v.strategyReq.StrategyResult.Cmd, &r.LongWinCountAfter5Day, v.strategyTrainResult.RiseFallAfter5Day, v.strategyReq.StrategyResult.Price.InexactFloat64())
-			t.genOneDayReport(v.strategyReq.StrategyResult.Cmd, &r.LongWinCountAfter20Day, v.strategyTrainResult.RiseFallAfter20Day, v.strategyReq.StrategyResult.Price.InexactFloat64())
+		for _, sr := range v.strategyReq.StrategyResult {
 
-		} else if v.strategyReq.StrategyResult.Cmd == model.StrategyOutShort {
-			r.ShortCount++
-			t.genOneDayReport(v.strategyReq.StrategyResult.Cmd, &r.ShortWinCountAfter1Day, v.strategyTrainResult.RiseFallAfter1Day, v.strategyReq.StrategyResult.Price.InexactFloat64())
-			t.genOneDayReport(v.strategyReq.StrategyResult.Cmd, &r.ShortWinCountAfter5Day, v.strategyTrainResult.RiseFallAfter5Day, v.strategyReq.StrategyResult.Price.InexactFloat64())
-			t.genOneDayReport(v.strategyReq.StrategyResult.Cmd, &r.ShortWinCountAfter20Day, v.strategyTrainResult.RiseFallAfter20Day, v.strategyReq.StrategyResult.Price.InexactFloat64())
-		} else {
-			continue
-			//panic("should not reach here")
+			r.AllCount++
+			if v.strategyReq == nil || sr == nil {
+				logs.Info("error")
+				//panic("fasdfas")
+				continue
+			}
+			if sr.Cmd == model.StrategyOutLong {
+				r.LongCount++
+				t.genOneDayReport(sr.Cmd, &r.LongWinCountAfter1Day, v.strategyTrainResult.RiseFallAfter1Day, sr.Price.InexactFloat64())
+				t.genOneDayReport(sr.Cmd, &r.LongWinCountAfter5Day, v.strategyTrainResult.RiseFallAfter5Day, sr.Price.InexactFloat64())
+				t.genOneDayReport(sr.Cmd, &r.LongWinCountAfter20Day, v.strategyTrainResult.RiseFallAfter20Day, sr.Price.InexactFloat64())
+
+			} else if sr.Cmd == model.StrategyOutShort {
+				r.ShortCount++
+				t.genOneDayReport(sr.Cmd, &r.ShortWinCountAfter1Day, v.strategyTrainResult.RiseFallAfter1Day, sr.Price.InexactFloat64())
+				t.genOneDayReport(sr.Cmd, &r.ShortWinCountAfter5Day, v.strategyTrainResult.RiseFallAfter5Day, sr.Price.InexactFloat64())
+				t.genOneDayReport(sr.Cmd, &r.ShortWinCountAfter20Day, v.strategyTrainResult.RiseFallAfter20Day, sr.Price.InexactFloat64())
+			} else {
+				continue
+				//panic("should not reach here")
+			}
 		}
+
 	}
 	return r
 }

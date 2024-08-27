@@ -19,10 +19,11 @@ func (es *CustomStrategy2) Name() string {
 	return "CustomStrategy2"
 }
 
-func (es *CustomStrategy2) Init(ec *model.ContractStrategyContext) {
+func (es *CustomStrategy2) Init(ec *model.ContractEngineContext) {
 }
 
-func (es *CustomStrategy2) OnBar(ctx *model.ContractStrategyContext, ts int64) *model.StrategyResult {
+func (es *CustomStrategy2) OnBar(ctx *model.ContractEngineContext) *model.StrategyResult {
+	ts := ctx.Ts
 	currentKNode, err := ctx.Kline.GetNodeByTs(ts)
 	if err != nil || currentKNode == nil {
 		return nil

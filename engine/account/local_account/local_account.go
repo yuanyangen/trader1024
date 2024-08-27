@@ -57,7 +57,8 @@ func (a *LocalAccount) showFinalNum() {
 	logs.Info(total.String())
 }
 
-func (a *LocalAccount) EventTrigger(ts int64) {
+func (a *LocalAccount) DealEvent(event *model.EventMsg) {
+	ts := event.TimeStamp
 	currentVal, _ := a.Total.Float64()
 	a.AccountLine.AddData(ts, &model.LineNode{TimeStamp: ts, DataNode: currentVal})
 }
@@ -79,23 +80,13 @@ func (a *LocalAccount) ChangeValue(count decimal.Decimal) {
 //	a.Positions[marketId] = position
 //}
 
-func (a *LocalAccount) GetPositionByMarket(contractId string) *model.ContractPosition {
+func (a *LocalAccount) GetPositionByMarket(contract *model.Contract) *model.ContractPosition {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	position, ok := a.Positions[contractId]
+	position, ok := a.Positions[contract.Id()]
 	if !ok {
-		position = &model.ContractPosition{ContractId: contractId, Count: decimal.NewFromInt(0)}
-		a.Positions[contractId] = position
+		position = &model.ContractPosition{Contract: contract, Count: decimal.NewFromInt(0)}
+		a.Positions[contract.Id()] = position
 	}
 	return position
-}
-
-var defaultAccount *LocalAccount
-
-func RegisterAccount(account *LocalAccount) {
-	defaultAccount = account
-}
-
-func GetAccount() *LocalAccount {
-	return defaultAccount
 }

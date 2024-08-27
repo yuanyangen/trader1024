@@ -77,7 +77,6 @@ func (bl *KLine) GetLastNodeByTsAndCount(ts int64, count int64) ([]*KLineNode, e
 
 func (bl *KLine) GetForwardNodeByTsAndCount(ts int64, count int64) ([]*KLineNode, error) {
 	return bl.convertAnyToLineNodes(bl.GetForwardByTsAndCount(ts, count))
-
 }
 
 func (bl *KLine) AddNodeData(ts int64, node *KLineNode) {

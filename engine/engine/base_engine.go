@@ -8,9 +8,10 @@ import (
 
 // 最外层，处理全部合约
 type baseEngine struct {
-	dataSource   model.DateSource
-	Contracts    map[string]*model.Contract
-	EventTrigger model.EventTrigger
+	dataSource     model.DateSource
+	Contracts      map[string]*model.Contract
+	EventTrigger   model.EventTrigger
+	watcherBackend *WatcherBackend
 }
 
 func (be *baseEngine) RegisterContract(ctx context.Context, subjectCnName string, contractDate string) {

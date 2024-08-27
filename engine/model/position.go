@@ -17,7 +17,7 @@ var mu sync.Mutex
 
 type ContractPosition struct {
 	mu                    sync.Mutex
-	ContractId            string
+	Contract              *Contract
 	Count                 decimal.Decimal //使用正表示多头， 使用负 表示空头，
 	Details               []*PositionPair
 	EndTimeToPositionPair map[int64]*PositionPair
@@ -163,7 +163,7 @@ func (p *ContractPosition) addPositionPair(pp *PositionPair) {
 	})
 }
 
-func (p *ContractPosition) Report() {
+func (p *ContractPosition) ReportToCmd() {
 	pairs := []*PositionPair{}
 	for _, pp := range p.Details {
 		pairs = append(pairs, pp)
@@ -209,7 +209,7 @@ func (p *ContractPosition) Report() {
 			Gain = positionPair.Gain.String()
 		}
 		logs.Info("%v %v %v %v %v %v %v %v %v %v %v %v %v\n",
-			p.ContractId,
+			p.Contract.Id(),
 			utils.TsToDateString(positionPair.CreateTimeStamp),
 			utils.TsToDateString(positionPair.EndTimeStamp),
 			positionPair.Type.String(),

@@ -5,11 +5,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type ContractStrategyContext struct {
-	Contract *Contract
-	Kline    *KLine
-}
-
 func NewStrategyResult(Cmd StrategyOut, price decimal.Decimal, reason string) *StrategyResult {
 	return &StrategyResult{
 		Cmd:    Cmd,
@@ -19,8 +14,8 @@ func NewStrategyResult(Cmd StrategyOut, price decimal.Decimal, reason string) *S
 }
 
 type Strategy interface {
-	Init(ctx *ContractStrategyContext)
-	OnBar(ctx *ContractStrategyContext, ts int64) *StrategyResult
+	Init(ctx *ContractEngineContext)
+	OnBar(ctx *ContractEngineContext) *StrategyResult
 	Name() string
 }
 

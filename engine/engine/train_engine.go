@@ -12,20 +12,19 @@ type TrainEngine struct {
 	*baseEngine
 	ContractTrainEngines map[string]*ContractTrainEngine
 	strategies           []func() model.Strategy
-	watcherBackend       *WatcherBackend
 }
 
 func NewTrainEngine(et model.EventTrigger, dataSource model.DateSource, strategies []func() model.Strategy) *TrainEngine {
 	e := &TrainEngine{
 		baseEngine: &baseEngine{
-			Contracts:    map[string]*model.Contract{},
-			EventTrigger: et,
-			dataSource:   dataSource,
+			Contracts:      map[string]*model.Contract{},
+			EventTrigger:   et,
+			dataSource:     dataSource,
+			watcherBackend: NewPlotterServers(),
 		},
 		strategies:           strategies,
 		ContractTrainEngines: map[string]*ContractTrainEngine{},
 	}
-	e.watcherBackend = NewPlotterServers()
 	return e
 }
 
@@ -39,7 +38,7 @@ func (ec *TrainEngine) doRegisterContract() {
 		kline := model.NewKLine(contract.CNName+contract.ContractDate, model.LineType_Day)
 		if strategies != nil {
 			for _, stra := range strategies {
-				ctx := &model.ContractStrategyContext{Kline: kline}
+				ctx := &model.ContractEngineContext{Kline: kline}
 				stra.Init(ctx)
 			}
 		}
@@ -93,17 +92,19 @@ func (m *ContractTrainEngine) DealEvent(event *model.EventMsg) {
 }
 
 func (m *ContractTrainEngine) eventHandler(data *model.KLineNode) {
-	ctx := &model.ContractStrategyContext{
-		Contract: m.Contract,
-		Kline:    m.Line,
+	ctx := &model.ContractEngineContext{
+		Contract:     m.Contract,
+		Kline:        m.Line,
+		CurrentKNode: data,
+		Ts:           data.TimeStamp,
 	}
 
 	for _, st := range m.Strategies {
-		stResult := st.OnBar(ctx, data.TimeStamp)
+		stResult := st.OnBar(ctx)
 		if stResult == nil {
 			continue
 		}
-		//req := &ContractPortfolioReq{
+		//req := &ContractEngineContext{
 		//	Contract:       m.Contract,
 		//	Ts:             data_crawler.TimeStamp,
 		//	StrategyResult: stResult,
@@ -113,8 +114,8 @@ func (m *ContractTrainEngine) eventHandler(data *model.KLineNode) {
 }
 
 func (m *ContractTrainEngine) DoPlot(p *charts.Page) {
-	position := local_account.GetBackTestBroker().GetCurrentLivePositions(m.Contract.Id()) //????
-	position.Report()
+	position := local_account.GetLocalBroker().GetCurrentLivePositions(m.Contract) //????
+	position.ReportToCmd()
 	DoPlot(p, m.Line)
 }
 func (m *ContractTrainEngine) Name() string {
