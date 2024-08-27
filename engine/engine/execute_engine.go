@@ -73,27 +73,27 @@ func (ec *ExecuteEngine) Start() error {
 
 // 处理某个具体的合约
 type ContractExecuteEngine struct {
-	Contract          *model.Contract
-	Line              *model.KLine
+	Contract   *model.Contract
+	dataSource model.DateSource
+	Line       *model.KLine
+
 	Strategies        []model.Strategy
-	dataSource        model.DateSource
 	portfolioStrategy []model.PortfolioStrategy
 	Brokers           []model.Broker
 }
 
 func (m *ContractExecuteEngine) DealEvent(event *model.EventMsg) {
-	if event == nil {
+	if event == nil || event.TimeStamp == 0 {
 		return
 	}
 	if m.dataSource == nil {
 		panic("no data_crawler source")
 	}
-	ts := event.TimeStamp
 
-	if ts >= m.Contract.ContractEndTime || ts < m.Contract.ContractStartTime {
+	if event.TimeStamp >= m.Contract.ContractEndTime || event.TimeStamp < m.Contract.ContractStartTime {
 		return
 	}
-	dataNode := m.dataSource.GetDataByTs(context.Background(), m.Contract.ContractCnName, m.Contract.ContractDate, model.LineType_Day, ts)
+	dataNode := m.dataSource.GetDataByTs(context.Background(), m.Contract.ContractCnName, m.Contract.ContractDate, model.LineType_Day, event.TimeStamp)
 	if dataNode == nil {
 		return
 	}
@@ -101,9 +101,9 @@ func (m *ContractExecuteEngine) DealEvent(event *model.EventMsg) {
 		Contract:     m.Contract,
 		Kline:        m.Line,
 		CurrentKNode: dataNode,
-		Ts:           ts,
+		Ts:           event.TimeStamp,
 	}
-	m.Line.AddNodeData(ts, dataNode)
+	m.Line.AddNodeData(event.TimeStamp, dataNode)
 	m.runStrategies(ctx)
 	m.runPortfolioStrategies(ctx)
 	m.executeBuySellCmd(ctx)
@@ -143,9 +143,4 @@ func (m *ContractExecuteEngine) DoPlot(p *charts.Page) {
 	position := local_account.GetLocalBroker().GetCurrentLivePositions(m.Contract) //????
 	position.ReportToCmd()
 	DoPlot(p, m.Line)
-}
-
-func (m *ContractExecuteEngine) plotKline() *charts.Kline {
-	kline := charts.NewKLine()
-	return kline
 }
