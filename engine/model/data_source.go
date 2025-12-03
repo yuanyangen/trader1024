@@ -24,7 +24,7 @@ type DataFeed interface {
 }
 
 type DateSource interface {
-	GetDataByTs(ctx context.Context, subjectName string, contractDate string, lineType LineType, ts int64) *KLineNode
+	GetDataByTs(ctx context.Context, uniqueCode string, lineType LineType, ts int64) *KLineNode
 	SaveDataByTs(ctx context.Context, data *KLineNode) error
-	GetAllContractBySubjectName(ctx context.Context, subjectName string) []*Contract
+	GetAllContractBySubjectName(ctx context.Context, subjectName string) []*TradeObject
 }

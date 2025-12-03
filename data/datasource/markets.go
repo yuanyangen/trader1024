@@ -2,13 +2,14 @@ package datasource
 
 import (
 	"context"
+
 	"github.com/yuanyangen/trader1024/dal/mongo"
 	"github.com/yuanyangen/trader1024/engine/logs"
 	"github.com/yuanyangen/trader1024/engine/model"
 )
 
 type VendorMarket interface {
-	GetMarketFromVendor(CNName string, date string) *model.Contract
+	GetMarketFromVendor(CNName string, date string) *model.TradeObject
 }
 
 func GetSubjectByCnNam(ctx context.Context, name string) *model.SubjectDO {
@@ -16,7 +17,7 @@ func GetSubjectByCnNam(ctx context.Context, name string) *model.SubjectDO {
 	return v
 }
 
-func GetContractByCnName(ctx context.Context, name string, contractDate string) (*model.Contract, error) {
+func GetContractByCnName(ctx context.Context, name string, contractDate string) (*model.TradeObject, error) {
 	s, err := mongo.QuerySubject(ctx, name)
 	if err != nil {
 		return nil, err
@@ -32,7 +33,7 @@ func GetContractByCnName(ctx context.Context, name string, contractDate string) 
 		panic(name + " not support")
 	}
 
-	return &model.Contract{
+	return &model.TradeObject{
 		SubjectDO:  s,
 		ContractDO: c,
 	}, nil
@@ -42,7 +43,7 @@ func GetAllFutureSubjects(ctx context.Context) ([]*model.SubjectDO, error) {
 	return mongo.QueryAllSubject(ctx)
 }
 
-func GetAllContractFromDb(ctx context.Context, subjectName string) []*model.Contract {
+func GetAllContractFromDb(ctx context.Context, subjectName string) []*model.TradeObject {
 	subject, err := mongo.QuerySubject(ctx, subjectName)
 	if err != nil {
 		logs.Info("QuerySubject error " + err.Error())
@@ -53,12 +54,17 @@ func GetAllContractFromDb(ctx context.Context, subjectName string) []*model.Cont
 		logs.Info("QueryAllContractBySubjectName error " + err.Error())
 		return nil
 	}
-	out := make([]*model.Contract, len(allContracts))
+	out := make([]*model.TradeObject, len(allContracts))
 	for i, v := range allContracts {
-		out[i] = &model.Contract{
+		out[i] = &model.TradeObject{
 			SubjectDO:  subject,
 			ContractDO: v,
 		}
 	}
 	return out
+}
+
+func GetDataByTs(ctx context.Context, uniqueCode string, lineType model.LineType, ts int64, period int) *model.KLineNode {
+	nd, _ := mongo.QueryDataNode(ctx, uniqueCode, ts)
+	return nd
 }

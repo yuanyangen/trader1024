@@ -23,7 +23,7 @@ const OrderStatusSucccess = 1
 const OrderStatusFinished = 2
 
 type Order struct {
-	Contract        *Contract
+	Contract        *TradeObject
 	BrokerId        string
 	OrderType       OrderType
 	Count           decimal.Decimal

@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"github.com/yuanyangen/trader1024/engine/utils"
+	"slices"
 	"sort"
 	"sync"
 )
@@ -76,36 +77,37 @@ func (bl *BaseLine) GetByTs(ts int64) (*LineNode, error) {
 
 // get last one
 func (bl *BaseLine) GetLastByTs(ts int64) (*LineNode, error) {
-	nodes, err := bl.GetLastByTsAndCount(ts, 2)
+	nodes, err := bl.GetLastByTsAndCount(ts, 1)
 	if err != nil {
 		return nil, err
 	}
-	if len(nodes) != 2 {
-		return nil, fmt.Errorf("no last data_crawler for_%v", ts)
-	}
+
 	return nodes[0], nil
 }
 
-func (bl *BaseLine) GetLastByTsAndCount(ts int64, count int64) ([]*LineNode, error) {
+func (bl *BaseLine) GetLastByTsAndCount(ts int64, count int64) (resp []*LineNode, err error) {
 	offset := bl.offset()
 	ts = bl.UnityTimeStamp(ts)
-	resp := make([]*LineNode, count)
 	bl.Mu.Lock()
 	defer bl.Mu.Unlock()
 	found := int64(0)
 	for i := int64(0); found < count; i++ {
 		timeK := ts - i*offset
 		if timeK < bl.StartTs {
-			return nil, fmt.Errorf("no enough data_crawler for %v", timeK)
+			break
 		}
 
 		node, ok := bl.data[timeK]
 		if ok {
-			resp[count-found-1] = node
+			resp = append(resp, node)
 			found++
 		}
 	}
-	return resp, nil
+	if found < count {
+		err = fmt.Errorf("no enough data_crawler for %v", count)
+	}
+	slices.Reverse(resp)
+	return resp, err
 }
 
 func (bl *BaseLine) GetForwardByTsAndCount(ts int64, count int64) ([]*LineNode, error) {

@@ -8,6 +8,7 @@ type EventMsg struct {
 type EventTrigger interface {
 	Start()
 	RegisterEventReceiver(receiver EventReceiver)
+	Wait()
 }
 type EventReceiver interface {
 	DealEvent(event *EventMsg)

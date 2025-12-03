@@ -6,10 +6,12 @@ import (
 
 type MarKetType int64
 
+const MainContinuous = "main_continuous"
+
 const MarKetType_STOCK MarKetType = 1
 const MarKetType_FUTURE MarKetType = 2
 
-type Contract struct {
+type TradeObject struct {
 	*SubjectDO
 	*ContractDO
 }
@@ -28,28 +30,36 @@ func (s *ContractDO) String() string {
 	return r
 }
 
-func (c *Contract) Id() string {
+func (c *TradeObject) Id() string {
+	if c.Type == MarKetType_STOCK {
+		return c.UniqueCode
+	}
 	return c.CNName + c.ContractDate
 }
 
-type Exchange struct {
-	Name string
-}
+// type Exchange struct {
+// 	Name string
+// }
 
-type ExchangeTime struct {
-	CollectionBiddingDeclaration string
-	CollectionBiddingMatchmaking string
-	TradeTimes1                  []string
-	TradeTimes2                  []string
-}
+// type ExchangeTime struct {
+// 	CollectionBiddingDeclaration string
+// 	CollectionBiddingMatchmaking string
+// 	TradeTimes1                  []string
+// 	TradeTimes2                  []string
+// }
 
 type SubjectDO struct {
-	CNName        string //CN name
-	Type          MarKetType
-	Exchange      string
-	OnlineDay     string
-	FirstContract string
-
+	CNName       string //CN name
+	UniqueCode   string // 唯一编码， 格式是： 002594.SZ
+	Type         MarKetType
+	Exchange     string // 交易所的名字
+	OnlineDay    string
+	TypeLevel1   []string //按照 中国上市公司分类指引 ， BYD的一级分类，二级分类分别是什么？
+	TypeLevel2   []string
+	ContractInfo *ContractInfo
+}
+type ContractInfo struct {
+	FirstContract            string
 	OnlineTime               string   //第一次上线交易的时间 20060102
 	OfflineTime              string   //最后一次上线交易的时间 20060102
 	DailyExchangeTime        []string // 每天交易的时间
@@ -59,11 +69,11 @@ type SubjectDO struct {
 }
 
 func (s *SubjectDO) StartDate() string {
-	return s.OnlineTime
+	return s.ContractInfo.OnlineTime
 }
 
 func (s *SubjectDO) EndDate() string {
-	return s.OfflineTime
+	return s.ContractInfo.OfflineTime
 }
 
 func (s *SubjectDO) AllDates() []string {

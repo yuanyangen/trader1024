@@ -2,8 +2,9 @@ package engine
 
 import (
 	"context"
+
 	"github.com/go-echarts/go-echarts/charts"
-	"github.com/yuanyangen/trader1024/engine/account/local_account"
+	local_broker2 "github.com/yuanyangen/trader1024/engine/local_broker"
 	"github.com/yuanyangen/trader1024/engine/model"
 )
 
@@ -11,60 +12,60 @@ import (
 type ExecuteEngine struct {
 	*baseEngine
 
-	ContractEngines   map[string]*ContractExecuteEngine
+	ContractEngines   map[string]*TradeObjectExecuteEngine
 	strategies        []func() model.Strategy
 	portfolioStrategy []model.PortfolioStrategy
 	brokers           []model.Broker
 }
 
 type CmdExecutor interface {
-	ExecuteCmd(req *model.ContractEngineContext)
+	ExecuteCmd(req *model.TradeObjectEngineContext)
 	Report()
 }
 
-func NewExecuteEngine(et model.EventTrigger, dataSource model.DateSource, strategies []func() model.Strategy, portfolioStrategy []model.PortfolioStrategy, brokers []model.Broker) *ExecuteEngine {
+func NewEngine(et model.EventTrigger, dataSource model.DateSource, strategies []func() model.Strategy, portfolioStrategy []model.PortfolioStrategy, brokers []model.Broker) *ExecuteEngine {
 	e := &ExecuteEngine{
 		baseEngine: &baseEngine{
-			Contracts:      map[string]*model.Contract{},
+			TradeObjects:   map[string]*model.TradeObject{},
 			EventTrigger:   et,
 			dataSource:     dataSource,
 			watcherBackend: NewPlotterServers(),
 		},
 		strategies:        strategies,
 		portfolioStrategy: portfolioStrategy,
-		ContractEngines:   map[string]*ContractExecuteEngine{},
-		brokers:           append([]model.Broker{local_account.GetLocalBroker()}, brokers...),
+		ContractEngines:   map[string]*TradeObjectExecuteEngine{},
+		brokers:           append([]model.Broker{local_broker2.GetLocalBroker()}, brokers...),
 	}
 	return e
 }
 
 func (ec *ExecuteEngine) Start() error {
-	for _, contract := range ec.Contracts {
+	for _, tradeObject := range ec.TradeObjects {
 		strategies := make([]model.Strategy, len(ec.strategies))
 		for i, stFactory := range ec.strategies {
 			strategies[i] = stFactory()
 		}
 
-		kline := model.NewKLine(contract.CNName+contract.ContractDate, model.LineType_Day)
+		kline := model.NewKLine(tradeObject.CNName+tradeObject.ContractDate, model.LineType_Day)
 		if strategies != nil {
 			for _, stra := range strategies {
-				ctx := &model.ContractEngineContext{Kline: kline}
+				ctx := &model.TradeObjectEngineContext{Kline: kline}
 				stra.Init(ctx)
 			}
 		}
-		ce := &ContractExecuteEngine{
+		ce := &TradeObjectExecuteEngine{
 			dataSource:        ec.dataSource,
-			Contract:          contract,
+			TradeObject:       tradeObject,
 			Line:              kline,
 			Strategies:        strategies,
 			portfolioStrategy: ec.portfolioStrategy,
 			Brokers:           ec.brokers,
 		}
 		ec.EventTrigger.RegisterEventReceiver(ce)
-		ec.ContractEngines[contract.ContractCnName+contract.ContractDate] = ce
+		ec.ContractEngines[tradeObject.ContractCnName+tradeObject.ContractDate] = ce
 		ec.watcherBackend.AddPlotter(ce)
 	}
-	ec.EventTrigger.RegisterEventReceiver(local_account.DefaultLocalAccount)
+	ec.EventTrigger.RegisterEventReceiver(local_broker2.DefaultLocalAccount)
 
 	ec.EventTrigger.Start()
 	ec.watcherBackend.Start()
@@ -72,17 +73,17 @@ func (ec *ExecuteEngine) Start() error {
 }
 
 // 处理某个具体的合约
-type ContractExecuteEngine struct {
-	Contract   *model.Contract
-	dataSource model.DateSource
-	Line       *model.KLine
+type TradeObjectExecuteEngine struct {
+	TradeObject *model.TradeObject
+	dataSource  model.DateSource
+	Line        *model.KLine
 
 	Strategies        []model.Strategy
 	portfolioStrategy []model.PortfolioStrategy
 	Brokers           []model.Broker
 }
 
-func (m *ContractExecuteEngine) DealEvent(event *model.EventMsg) {
+func (m *TradeObjectExecuteEngine) DealEvent(event *model.EventMsg) {
 	if event == nil || event.TimeStamp == 0 {
 		return
 	}
@@ -90,15 +91,16 @@ func (m *ContractExecuteEngine) DealEvent(event *model.EventMsg) {
 		panic("no data_crawler source")
 	}
 
-	if event.TimeStamp >= m.Contract.ContractEndTime || event.TimeStamp < m.Contract.ContractStartTime {
+	if (m.TradeObject.ContractEndTime != 0 && event.TimeStamp >= m.TradeObject.ContractEndTime) ||
+		(event.TimeStamp < m.TradeObject.ContractStartTime && m.TradeObject.ContractStartTime != 0) {
 		return
 	}
-	dataNode := m.dataSource.GetDataByTs(context.Background(), m.Contract.ContractCnName, m.Contract.ContractDate, model.LineType_Day, event.TimeStamp)
+	dataNode := m.dataSource.GetDataByTs(context.Background(), m.TradeObject.UniqueCode, model.LineType_Day, event.TimeStamp)
 	if dataNode == nil {
 		return
 	}
-	ctx := &model.ContractEngineContext{
-		Contract:     m.Contract,
+	ctx := &model.TradeObjectEngineContext{
+		TradeObject:  m.TradeObject,
 		Kline:        m.Line,
 		CurrentKNode: dataNode,
 		Ts:           event.TimeStamp,
@@ -109,7 +111,7 @@ func (m *ContractExecuteEngine) DealEvent(event *model.EventMsg) {
 	m.executeBuySellCmd(ctx)
 }
 
-func (m *ContractExecuteEngine) runStrategies(ctx *model.ContractEngineContext) {
+func (m *TradeObjectExecuteEngine) runStrategies(ctx *model.TradeObjectEngineContext) {
 	for _, st := range m.Strategies {
 		stResult := st.OnBar(ctx)
 		if stResult != nil {
@@ -118,7 +120,7 @@ func (m *ContractExecuteEngine) runStrategies(ctx *model.ContractEngineContext) 
 		}
 	}
 }
-func (m *ContractExecuteEngine) runPortfolioStrategies(ctx *model.ContractEngineContext) {
+func (m *TradeObjectExecuteEngine) runPortfolioStrategies(ctx *model.TradeObjectEngineContext) {
 	if len(ctx.StrategyResult) == 0 {
 		return
 	}
@@ -127,7 +129,7 @@ func (m *ContractExecuteEngine) runPortfolioStrategies(ctx *model.ContractEngine
 	}
 }
 
-func (m *ContractExecuteEngine) executeBuySellCmd(ctx *model.ContractEngineContext) {
+func (m *TradeObjectExecuteEngine) executeBuySellCmd(ctx *model.TradeObjectEngineContext) {
 	for _, order := range ctx.Orders {
 		for _, broker := range m.Brokers {
 			broker.AddOrder(order)
@@ -135,12 +137,12 @@ func (m *ContractExecuteEngine) executeBuySellCmd(ctx *model.ContractEngineConte
 	}
 }
 
-func (m *ContractExecuteEngine) Name() string {
-	return m.Contract.ContractCnName + m.Contract.ContractDate
+func (m *TradeObjectExecuteEngine) Name() string {
+	return m.TradeObject.ContractCnName + m.TradeObject.ContractDate
 }
 
-func (m *ContractExecuteEngine) DoPlot(p *charts.Page) {
-	position := local_account.GetLocalBroker().GetCurrentLivePositions(m.Contract) //????
+func (m *TradeObjectExecuteEngine) DoPlot(p *charts.Page) {
+	position := local_broker2.GetLocalBroker().GetPositionsByContract(m.TradeObject) //????
 	position.ReportToCmd()
-	DoPlot(p, m.Line)
+	m.Line.DoPlot(p)
 }

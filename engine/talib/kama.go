@@ -4,7 +4,7 @@ import "math"
 
 func CustomKama(values []float64, period, fastEma, slowEma int, lastValue float64) []float64 {
 	if len(values) <= period {
-		panic("data_crawler error")
+		panic("no enough data for kama")
 	}
 	fastAlpha := 2.0 / (float64(fastEma) + 1.0)
 	slowAlpha := 2 / (float64(slowEma) + 1.0)

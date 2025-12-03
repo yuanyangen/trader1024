@@ -9,6 +9,10 @@ func TsToDateString(ts int64) string {
 	return t
 }
 
+func DateToTs(date string) int64 {
+	return StrToTs(date, DailyFormat)
+}
+
 func UnityTimeStamp(ts int64, offset int64) int64 {
 	ts = (ts / offset) * offset
 	return ts

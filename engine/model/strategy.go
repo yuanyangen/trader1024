@@ -2,10 +2,11 @@ package model
 
 import (
 	"fmt"
+
 	"github.com/shopspring/decimal"
 )
 
-func NewStrategyResult(Cmd StrategyOut, price decimal.Decimal, reason string) *StrategyResult {
+func NewStrategyResult(Cmd PositionType, price decimal.Decimal, reason string) *StrategyResult {
 	return &StrategyResult{
 		Cmd:    Cmd,
 		Price:  price,
@@ -14,31 +15,15 @@ func NewStrategyResult(Cmd StrategyOut, price decimal.Decimal, reason string) *S
 }
 
 type Strategy interface {
-	Init(ctx *ContractEngineContext)
-	OnBar(ctx *ContractEngineContext) *StrategyResult
+	Init(ctx *TradeObjectEngineContext)
+	OnBar(ctx *TradeObjectEngineContext) *StrategyResult
 	Name() string
-}
-
-const StrategyOutLong StrategyOut = 1
-const StrategyOutShort StrategyOut = 2
-const StrategyOutVolatility StrategyOut = 3
-
-type StrategyOut int64
-
-func (so StrategyOut) String() string {
-	if so == StrategyOutLong {
-		return "long"
-	} else if so == StrategyOutShort {
-		return "short"
-	} else {
-		return "volatility"
-	}
 }
 
 type StrategyResult struct {
 	StrategyName string
 	Reason       string
-	Cmd          StrategyOut
+	Cmd          PositionType
 	Price        decimal.Decimal
 }
 

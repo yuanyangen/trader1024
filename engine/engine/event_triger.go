@@ -3,10 +3,12 @@ package engine
 import (
 	"github.com/yuanyangen/trader1024/engine/model"
 	"github.com/yuanyangen/trader1024/engine/utils"
+	"sync"
 	"time"
 )
 
 type baseEventTrigger struct {
+	wg            sync.WaitGroup
 	eventReceiver []model.EventReceiver
 }
 
@@ -61,6 +63,7 @@ func NewBackTestDailyEventTrigger(startDate, endDate, format string) model.Event
 }
 
 func (det *BackTestDailyEventTrigger) Start() {
+	det.wg.Add(1)
 	utils.AsyncRun(func() {
 		for ts := det.StartTimeStamp; ts <= det.EndTimeStamp; {
 			msg := &model.EventMsg{
@@ -69,5 +72,9 @@ func (det *BackTestDailyEventTrigger) Start() {
 			det.baseEventTrigger.sendEvent(msg)
 			ts += 86400
 		}
+		det.wg.Done()
 	})
+}
+func (det *BackTestDailyEventTrigger) Wait() {
+	det.wg.Wait()
 }

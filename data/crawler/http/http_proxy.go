@@ -2,9 +2,10 @@ package http
 
 import (
 	"context"
-	"github.com/yuanyangen/trader1024/engine/logs"
 	"io"
 	"net/http"
+
+	"github.com/yuanyangen/trader1024/engine/logs"
 )
 
 // 小幻代理  https://ip.ihuan.me/
@@ -18,10 +19,10 @@ import (
 // 极速代理  ~~https://superfastip.com/#/freeip~~
 // 全网代理IP  ~~http://www.goubanjia.com/~~
 
-func Get(ctx context.Context, reqUrl string, queries, headers map[string]string) (string, error) {
+func Get(ctx context.Context, reqUrl string, queries, headers map[string]string, useProxy bool) (string, error) {
 	reqUrl = reqUrl + "?"
 	for k, v := range queries {
-		reqUrl = reqUrl + k + "=" + v
+		reqUrl = reqUrl + k + "=" + v + "&"
 	}
 	req, err := http.NewRequest("GET", reqUrl, nil)
 	if err != nil {
@@ -30,20 +31,18 @@ func Get(ctx context.Context, reqUrl string, queries, headers map[string]string)
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
-
-	proxyUri := GetProxy(ctx)
-	if proxyUri == nil {
-		logs.Info("get proxy error no proxy found %v", err)
-		return "", err
-	}
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			Proxy: http.ProxyURL(proxyUri),
-		},
+	httpClient := &http.Client{}
+	if useProxy {
+		proxyUri := GetProxy(ctx)
+		if proxyUri == nil {
+			logs.Info("get proxy error no proxy found %v", err)
+			return "", err
+		}
+		httpClient.Transport = &http.Transport{Proxy: http.ProxyURL(proxyUri)}
 	}
 
 	resp, err := httpClient.Do(req)
-	logs.Info("do http req with proxy %v error:%v", proxyUri.Host, err)
+	logs.Info("do http req with proxy %v error:%v", nil, err)
 
 	if err != nil {
 		return "", err

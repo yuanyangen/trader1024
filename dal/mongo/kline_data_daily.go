@@ -2,9 +2,10 @@ package mongo
 
 import (
 	"context"
-	"dario.cat/mergo"
 	"errors"
 	"fmt"
+
+	"dario.cat/mergo"
 	"github.com/yuanyangen/trader1024/engine/logs"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,30 +18,29 @@ func SaveDataNode(ctx context.Context, m *model.KLineNode) error {
 	if m == nil {
 		return fmt.Errorf("m nil")
 	}
-	if m.ContractCnName == "" || m.ContractDate == "" || m.TimeStamp == 0 {
+	if m.UniqueCode == "" || m.TimeStamp == 0 {
 		return fmt.Errorf("cn name or date empty")
 	}
-	subject, err := QueryDataNode(ctx, m.ContractCnName, m.ContractDate, m.TimeStamp)
+	subject, err := QueryDataNode(ctx, m.UniqueCode, m.TimeStamp)
 	if err != nil {
 		return err
 	}
 	if subject == nil {
 		return InsertDataNode(ctx, m)
 	} else {
-		mergo.Merge(m, subject, mergo.WithOverride)
-		return UpdateDataNode(ctx, m.ContractCnName, m.ContractDate, m.TimeStamp, m)
+		mergo.Merge(subject, m, mergo.WithOverride)
+		return UpdateDataNode(ctx, m.UniqueCode, m.TimeStamp, m)
 	}
 }
 
-func UpdateDataNode(ctx context.Context, cnName, contractDate string, ts int64, s *model.KLineNode) error {
+func UpdateDataNode(ctx context.Context, UniqueCode string, ts int64, s *model.KLineNode) error {
 	collection := Trader1024Db.Collection(kLineDataCollectionName)
 	_, err := collection.UpdateOne(ctx, bson.D{
-		{"contractcnname", cnName},
-		{"contractdate", contractDate},
+		{"uniquecode", UniqueCode},
 		{"timestamp", ts}},
 		bson.D{{"$set", s}})
 	if err != nil {
-		logs.Info("insert error %v %v", err, cnName)
+		logs.Info("insert error %v %v", err, UniqueCode)
 		return err
 	}
 	if err != nil {
@@ -61,13 +61,12 @@ func InsertDataNode(ctx context.Context, m *model.KLineNode) error {
 	}
 	return nil
 }
-func QueryDataNode(ctx context.Context, cnName, contractDate string, ts int64) (*model.KLineNode, error) {
+func QueryDataNode(ctx context.Context, UniqueCode string, ts int64) (*model.KLineNode, error) {
 	collection := Trader1024Db.Collection(kLineDataCollectionName)
 	var result *model.KLineNode
 	err := collection.FindOne(ctx,
 		bson.D{
-			{"contractcnname", cnName},
-			{"contractdate", contractDate},
+			{"uniquecode", UniqueCode},
 			{"timestamp", ts},
 		},
 	).Decode(&result)
@@ -82,13 +81,12 @@ func QueryDataNode(ctx context.Context, cnName, contractDate string, ts int64) (
 	return result, nil
 }
 
-func QueryAllDataNodeByContract(ctx context.Context, subjectName string, contractDate string) ([]*model.KLineNode, error) {
+func QueryAllDataNodeByContract(ctx context.Context, UniqueCode string) ([]*model.KLineNode, error) {
 	collection := Trader1024Db.Collection(kLineDataCollectionName)
 	var result []*model.KLineNode
 	cursor, err := collection.Find(ctx,
 		bson.D{
-			{"contractcnname", subjectName},
-			{"contractdate", contractDate},
+			{"uniquecode", UniqueCode},
 		},
 	)
 	if err != nil {

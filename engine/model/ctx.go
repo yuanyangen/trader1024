@@ -1,9 +1,9 @@
 package model
 
-type PortfolioStrategy func(req *ContractEngineContext)
+type PortfolioStrategy func(req *TradeObjectEngineContext)
 
-type ContractEngineContext struct {
-	Contract     *Contract
+type TradeObjectEngineContext struct {
+	TradeObject  *TradeObject
 	Kline        *KLine
 	CurrentKNode *KLineNode
 	Ts           int64

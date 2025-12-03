@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/yuanyangen/trader1024/engine/model"
 	"io"
 	"net/http"
 	"net/url"
@@ -12,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/yuanyangen/trader1024/engine/model"
 )
 
 // 数据是从 http://quote.eastmoney.com/zs000905.html#fullScreenChart 这个页面获取的。 真难找。。
@@ -32,24 +33,24 @@ type EastMoney struct {
 //	"f61": "换手率",
 //}
 
-func (em *EastMoney) CrawlAllMainMarket(ctx context.Context) ([]*model.Contract, error) {
+func (em *EastMoney) CrawlAllMainMarket(ctx context.Context) ([]*model.TradeObject, error) {
 	//allSubject, err := mongo.QueryAllSubject(ctx)
 	//if err != nil {
 	//	return nil, err
 	//}
-	out := []*model.Contract{}
+	out := []*model.TradeObject{}
 	//for _, v := range allSubject {
 	//	out = append(out, GetContractByCnName(v.CNName, ""))
 	//}
 	return out, nil
 }
 
-func (em *EastMoney) CrawlAllAvailableMainMarket() []*model.Contract {
+func (em *EastMoney) CrawlAllAvailableMainMarket() []*model.TradeObject {
 
 	return nil
 }
 
-func (em *EastMoney) CrawlDaily(contract *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KLineNode, error) {
+func (em *EastMoney) CrawlDaily(contract *model.TradeObject, startTime time.Time, endTime time.Time) ([]*model.KLineNode, error) {
 	startDate := startTime.Format("20060102")
 	endDate := endTime.Format("20060102")
 	req := &EastMoneyReq{
@@ -65,11 +66,11 @@ func (em *EastMoney) CrawlDaily(contract *model.Contract, startTime time.Time, e
 	return em.doCrawlHistoryData(req, "2006-01-02")
 }
 
-func (em *EastMoney) CrawlWeekly(market *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KLineNode, error) {
+func (em *EastMoney) CrawlWeekly(market *model.TradeObject, startTime time.Time, endTime time.Time) ([]*model.KLineNode, error) {
 	return nil, nil
 }
 
-func (em *EastMoney) CrawlMinute(contract *model.Contract, startTime time.Time, endTime time.Time) ([]*model.KLineNode, error) {
+func (em *EastMoney) CrawlMinute(contract *model.TradeObject, startTime time.Time, endTime time.Time) ([]*model.KLineNode, error) {
 	var res []*model.KLineNode
 	endTs := time.Now()
 	for {

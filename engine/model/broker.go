@@ -1,6 +1,6 @@
 package model
 
 type Broker interface {
-	GetCurrentLivePositions(contract *Contract) *ContractPosition
+	GetPositionsByContract(contract *TradeObject) *ContractPositions
 	AddOrder(order *Order) error
 }

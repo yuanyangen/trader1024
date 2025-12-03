@@ -2,6 +2,7 @@ package eastmoney
 
 import (
 	"context"
+
 	"github.com/yuanyangen/trader1024/dal/mongo"
 	"github.com/yuanyangen/trader1024/engine/model"
 )
@@ -122,7 +123,7 @@ func getVendorId4(code string, date string) string {
 }
 
 // date的格式是"20230809"
-func GetContractByCnName(ctx context.Context, cnName string, date string) (*model.Contract, error) {
+func GetContractByCnName(ctx context.Context, cnName string, date string) (*model.TradeObject, error) {
 	s, err := mongo.QuerySubject(ctx, cnName)
 	if err != nil {
 		return nil, err
@@ -138,7 +139,7 @@ func GetContractByCnName(ctx context.Context, cnName string, date string) (*mode
 		panic("contract not support")
 	}
 
-	return &model.Contract{
+	return &model.TradeObject{
 		SubjectDO:  s,
 		ContractDO: c,
 	}, nil

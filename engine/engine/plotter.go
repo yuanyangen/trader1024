@@ -2,7 +2,7 @@ package engine
 
 import (
 	"github.com/go-echarts/go-echarts/charts"
-	"github.com/yuanyangen/trader1024/engine/account/local_account"
+	"github.com/yuanyangen/trader1024/engine/local_broker"
 	"github.com/yuanyangen/trader1024/engine/model"
 	"net/http"
 	"sort"
@@ -26,7 +26,7 @@ func (ps *WatcherBackend) httpHandler(w http.ResponseWriter, _ *http.Request) {
 	sort.Slice(ps.plotterInfos, func(i, j int) bool {
 		return ps.plotterInfos[i].Name() > ps.plotterInfos[j].Name()
 	})
-	local_account.DefaultLocalAccount.DoPlot(p)
+	local_broker.DefaultLocalAccount.DoPlot(p)
 	for _, v := range ps.plotterInfos {
 		v.DoPlot(p)
 	}
