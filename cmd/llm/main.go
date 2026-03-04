@@ -2,132 +2,58 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"os"
+	"time"
 
-	"github.com/cloudwego/eino-ext/components/model/ark"
-	"github.com/cloudwego/eino/components/model"
-	"github.com/cloudwego/eino/components/prompt"
-	"github.com/cloudwego/eino/schema"
+	"github.com/yuanyangen/trader1024/engine/engine/llm"
+	"github.com/yuanyangen/trader1024/engine/model"
 )
 
 func main() {
+	// 创建上下文
 	ctx := context.Background()
-	// 创建llm
-	log.Printf("===create llm===\n")
-	cm := createArkChatModel(ctx)
-	// cm := createOllamaChatModel(ctx)
-	log.Printf("create llm success\n\n")
 
-	// 使用模版创建messages
-	log.Printf("===create messages===\n")
-	messages := createMessagesFromTemplate()
-	log.Printf("messages: %+v\n\n", messages)
+	// 初始化LLM上下文
+	llmCtx := &model.LLMContext{
+		UniqId: "test-run-1",
+		Date:   time.Now().Format("2006-01-02"),
+	}
+	ctx = model.SetLLmContext(ctx, llmCtx)
 
-	log.Printf("===llm generate===\n")
+	// 示例：分析科技行业的投资机会
+	industry := "technology"
 
-	go func() {
-		streamResult := stream(ctx, cm, messages)
-		reportStream(streamResult)
-	}()
+	// 执行投资分析
+	fmt.Printf("正在分析 %s 行业的投资机会...\n\n", industry)
 
-	result := generate(ctx, cm, messages)
-	log.Printf("result: %+v\n\n", result)
-
-	log.Printf("===llm stream generate===\n")
-
-}
-
-func createArkChatModel(ctx context.Context) model.ToolCallingChatModel {
-	key := os.Getenv("ARK_API_KEY")
-	modelName := "doubao-seed-1-6-250615"
-	baseURL := "https://ark.cn-beijing.volces.com/api/v3"
-	chatModel, err := ark.NewChatModel(ctx, &ark.ChatModelConfig{
-		BaseURL: baseURL,
-		Model:   modelName,
-		APIKey:  key,
-	})
+	recommendation, err := llm.RunInvestmentAnalysis(ctx, industry)
 	if err != nil {
-		log.Fatalf("create ark chat model failed, err=%v", err)
+		log.Fatalf("分析失败: %v", err)
 	}
-	return chatModel
-}
 
-func generate(ctx context.Context, llm model.ToolCallingChatModel, in []*schema.Message) *schema.Message {
-	result, err := llm.Generate(ctx, in)
+	// 打印分析结果
+	fmt.Printf("行业：%s\n", recommendation.Industry)
+	fmt.Printf("综合评分：%.2f\n", recommendation.OverallScore)
+	fmt.Printf("置信度：%.1f%%\n", recommendation.Confidence*100)
+	fmt.Printf("建议操作：%s\n", recommendation.RecommendAction)
+	fmt.Printf("分析：%s\n\n", recommendation.Analysis)
+
+	// 打印支持性事件
+	fmt.Println("支持性事件：")
+	for _, impact := range recommendation.SupportingEvents {
+		fmt.Printf("- 事件ID：%s\n", impact.EventID)
+		fmt.Printf("  影响评分：%.2f (置信度：%.1f%%)\n", impact.ImpactScore, impact.Confidence*100)
+		fmt.Printf("  分析：%s\n\n", impact.Analysis)
+	}
+
+	// 输出JSON格式结果
+	jsonResult, err := json.MarshalIndent(recommendation, "", "  ")
 	if err != nil {
-		log.Fatalf("llm generate failed: %v", err)
+		log.Fatalf("JSON编码失败: %v", err)
 	}
-	return result
+
+	fmt.Println("JSON格式结果：")
+	fmt.Println(string(jsonResult))
 }
-
-func stream(ctx context.Context, llm model.ToolCallingChatModel, in []*schema.Message) *schema.StreamReader[*schema.Message] {
-	result, err := llm.Stream(ctx, in)
-	if err != nil {
-		log.Fatalf("llm generate failed: %v", err)
-	}
-	return result
-}
-
-func reportStream(sr *schema.StreamReader[*schema.Message]) {
-	defer sr.Close()
-
-	for {
-		message, err := sr.Recv()
-		if err == io.EOF {
-			return
-		}
-		if err != nil {
-			log.Fatalf("recv failed: %v", err)
-		}
-		if message.Content != "" {
-			fmt.Printf("%v", message.Content)
-		}
-	}
-}
-
-func createTemplate() prompt.ChatTemplate {
-	// 创建模板，使用 FString 格式
-	return prompt.FromMessages(schema.FString,
-		// 系统消息模板
-		schema.SystemMessage("你是一个{role}。你需要用{style}的语气回答问题。你的目标是帮助程序员保持积极乐观的心态，提供技术建议的同时也要关注他们的心理健康。"),
-
-		// 插入需要的对话历史（新对话的话这里不填）
-		schema.MessagesPlaceholder("chat_history", true),
-
-		// 用户消息模板
-		schema.UserMessage("问题: {question}"),
-	)
-}
-
-func createMessagesFromTemplate() []*schema.Message {
-	template := createTemplate()
-
-	// 使用模板生成消息
-	messages, err := template.Format(context.Background(), map[string]any{
-		"role":     "程序员鼓励师",
-		"style":    "积极、温暖且专业",
-		"question": "我的代码一直报错，感觉好沮丧，该怎么办？",
-		// 对话历史（这个例子里模拟两轮对话历史）
-		"chat_history": []*schema.Message{
-			schema.UserMessage("你好"),
-			schema.AssistantMessage("嘿！我是你的程序员鼓励师！记住，每个优秀的程序员都是从 Debug 中成长起来的。有什么我可以帮你的吗？", nil),
-			schema.UserMessage("我觉得自己写的代码太烂了"),
-			schema.AssistantMessage("每个程序员都经历过这个阶段！重要的是你在不断学习和进步。让我们一起看看代码，我相信通过重构和优化，它会变得更好。记住，Rome wasn't built in a day，代码质量是通过持续改进来提升的。", nil),
-		},
-	})
-	if err != nil {
-		log.Fatalf("format template failed: %v\n", err)
-	}
-	return messages
-}
-
-// 输出结果
-//func main() {
-//	messages := createMessagesFromTemplate()
-//	fmt.Printf("formatted message: %v", messages)
-//}
-
-// formatted message: [system: 你是一个程序员鼓励师。你需要用积极、温暖且专业的语气回答问题。你的目标是帮助程序员保持积极乐观的心态，提供技术建议的同时也要关注他们的心理健康。 user: 你好 assistant: 嘿！我是你的程序员鼓励师！记住，每个优秀的程序员都是从 Debug 中成长起来的。有什么我可以帮你的吗？ user: 我觉得自己写的代码太烂了 assistant: 每个程序员都经历过这个阶段！重要的是你在不断学习和进步。让我们一起看看代码，我相信通过重构和优化，它会变得更好。记住，Rome wasn't built in a day，代码质量是通过持续改进来提升的。 user: 问题: 我的代码一直报错，感觉好沮丧，该怎么办？]
